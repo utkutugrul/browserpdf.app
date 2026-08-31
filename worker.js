@@ -154,6 +154,9 @@ export default {
 
       const pathParts = url.pathname.split('/').filter(Boolean);
       let lang = 'en';
+      // Captured before the language-prefix strip below, whose split/join
+      // silently drops a trailing slash from prefixed paths.
+      const hadTrailingSlash = url.pathname.length > 1 && url.pathname.endsWith('/');
 
       // /es or /es/ -> keep trailing slash for relative link resolution
       if (pathParts.length === 1 && SUPPORTED_LANGS.has(pathParts[0]) && !url.pathname.endsWith('/')) {
@@ -170,10 +173,41 @@ export default {
       // Normalize empty asset path
       if (!url.pathname || url.pathname === '') url.pathname = '/';
 
+      // Duplicate-URL hygiene: /merge/ serves the same page as /merge. Left to
+      // the assets binding this is a temporary 307, and behind a language
+      // prefix it used to slip through as a 200 (the split/join above already
+      // dropped the slash), so redirect permanently here instead. Language
+      // roots like /es/ keep their slash: the path is '/' after the strip.
+      if (hadTrailingSlash && url.pathname.length > 1) {
+        const canonical = url.pathname.replace(/\/+$/, '');
+        return Response.redirect(
+          `${url.origin}${lang === 'en' ? '' : `/${lang}`}${canonical}${url.search}`,
+          301,
+        );
+      }
+
       const pagePath = url.pathname === '' ? '/' : url.pathname;
       const assetRequest = new Request(url.toString(), request);
       const response = await env.ASSETS.fetch(assetRequest);
       const type = response.headers.get('content-type') || '';
+
+      // The assets binding answers /merge.html with a temporary 307 whose
+      // Location also lacks any language prefix, dropping /tr/merge.html
+      // visitors into English. Re-anchor the target in the visitor's language
+      // and make the redirect permanent.
+      if (response.status >= 300 && response.status < 400) {
+        const loc = response.headers.get('Location');
+        if (loc) {
+          const target = new URL(loc, url);
+          if (target.origin === url.origin) {
+            const path = lang === 'en'
+              ? target.pathname
+              : `/${lang}${target.pathname === '/' ? '/' : target.pathname}`;
+            return Response.redirect(`${url.origin}${path}${target.search}`, 301);
+          }
+        }
+        return response;
+      }
 
       if (!type.includes('text/html')) {
         return response;

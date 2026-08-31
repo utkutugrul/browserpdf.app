@@ -1027,7 +1027,8 @@
     "consent.manage": "Preferencias de cookies",
     "consent.learn_more_aria": "Más información sobre cómo BrowserPDF usa Google Analytics",
     "common.footer_source": "Código abierto",
-    "redact.js_flattening_page": "Eliminando el contenido cubierto en la página {i}…"
+    "redact.js_flattening_page": "Eliminando el contenido cubierto en la página {i}…",
+    "common.related_tools": "Herramientas relacionadas"
   },
   "fr": {
     "common.privacy_badge": "S'exécute entièrement dans votre navigateur",
@@ -2057,7 +2058,8 @@
     "consent.manage": "Préférences de cookies",
     "consent.learn_more_aria": "En savoir plus sur l'utilisation de Google Analytics par BrowserPDF",
     "common.footer_source": "Open source",
-    "redact.js_flattening_page": "Suppression du contenu recouvert sur la page {i}…"
+    "redact.js_flattening_page": "Suppression du contenu recouvert sur la page {i}…",
+    "common.related_tools": "Outils associés"
   },
   "de": {
     "common.privacy_badge": "Läuft vollständig in Ihrem Browser",
@@ -3087,7 +3089,8 @@
     "consent.manage": "Cookie-Einstellungen",
     "consent.learn_more_aria": "Mehr darüber erfahren, wie BrowserPDF Google Analytics verwendet",
     "common.footer_source": "Open Source",
-    "redact.js_flattening_page": "Abgedeckter Inhalt auf Seite {i} wird entfernt…"
+    "redact.js_flattening_page": "Abgedeckter Inhalt auf Seite {i} wird entfernt…",
+    "common.related_tools": "Verwandte Werkzeuge"
   },
   "pt": {
     "common.privacy_badge": "Funciona inteiramente no seu navegador",
@@ -4117,7 +4120,8 @@
     "consent.manage": "Preferências de cookies",
     "consent.learn_more_aria": "Saiba mais sobre como o BrowserPDF usa o Google Analytics",
     "common.footer_source": "Código aberto",
-    "redact.js_flattening_page": "Removendo o conteúdo coberto na página {i}…"
+    "redact.js_flattening_page": "Removendo o conteúdo coberto na página {i}…",
+    "common.related_tools": "Ferramentas relacionadas"
   },
   "ru": {
     "common.privacy_badge": "Работает полностью в вашем браузере",
@@ -5147,7 +5151,8 @@
     "consent.manage": "Настройки файлов cookie",
     "consent.learn_more_aria": "Подробнее о том, как BrowserPDF использует Google Analytics",
     "common.footer_source": "Открытый исходный код",
-    "redact.js_flattening_page": "Удаление закрытого содержимого на странице {i}…"
+    "redact.js_flattening_page": "Удаление закрытого содержимого на странице {i}…",
+    "common.related_tools": "Похожие инструменты"
   },
   "ja": {
     "common.privacy_badge": "すべてブラウザ内で実行",
@@ -6177,7 +6182,8 @@
     "consent.manage": "Cookie の設定",
     "consent.learn_more_aria": "BrowserPDF による Google アナリティクスの使用について詳しく見る",
     "common.footer_source": "オープンソース",
-    "redact.js_flattening_page": "ページ {i} の覆われた内容を削除しています…"
+    "redact.js_flattening_page": "ページ {i} の覆われた内容を削除しています…",
+    "common.related_tools": "関連ツール"
   },
   "ko": {
     "common.privacy_badge": "브라우저에서 전적으로 실행됩니다",
@@ -7207,7 +7213,8 @@
     "consent.manage": "쿠키 환경설정",
     "consent.learn_more_aria": "BrowserPDF의 Google 애널리틱스 사용 방식에 대해 자세히 알아보기",
     "common.footer_source": "오픈소스",
-    "redact.js_flattening_page": "{i}페이지의 가려진 내용을 제거하는 중…"
+    "redact.js_flattening_page": "{i}페이지의 가려진 내용을 제거하는 중…",
+    "common.related_tools": "관련 도구"
   },
   "zh": {
     "common.privacy_badge": "完全在您的浏览器中运行",
@@ -8237,7 +8244,8 @@
     "consent.manage": "Cookie 偏好设置",
     "consent.learn_more_aria": "详细了解 BrowserPDF 如何使用 Google Analytics",
     "common.footer_source": "开源",
-    "redact.js_flattening_page": "正在删除第 {i} 页被覆盖的内容…"
+    "redact.js_flattening_page": "正在删除第 {i} 页被覆盖的内容…",
+    "common.related_tools": "相关工具"
   },
   "zh-TW": {
     "common.privacy_badge": "完全在您的瀏覽器中執行",
@@ -9267,7 +9275,8 @@
     "consent.manage": "Cookie 偏好設定",
     "consent.learn_more_aria": "進一步了解 BrowserPDF 如何使用 Google Analytics",
     "common.footer_source": "開源",
-    "redact.js_flattening_page": "正在移除第 {i} 頁被覆蓋的內容…"
+    "redact.js_flattening_page": "正在移除第 {i} 頁被覆蓋的內容…",
+    "common.related_tools": "相關工具"
   },
   "ar": {
     "common.privacy_badge": "يعمل بالكامل في متصفحك",
@@ -10297,7 +10306,8 @@
     "consent.manage": "تفضيلات ملفات تعريف الارتباط",
     "consent.learn_more_aria": "معرفة المزيد حول كيفية استخدام BrowserPDF لخدمة Google Analytics",
     "common.footer_source": "مفتوح المصدر",
-    "redact.js_flattening_page": "جارٍ إزالة المحتوى المغطى في الصفحة {i}…"
+    "redact.js_flattening_page": "جارٍ إزالة المحتوى المغطى في الصفحة {i}…",
+    "common.related_tools": "أدوات ذات صلة"
   },
   "th": {
     "common.privacy_badge": "ทำงานทั้งหมดในเบราว์เซอร์ของคุณ",
@@ -11327,7 +11337,8 @@
     "consent.manage": "การตั้งค่าคุกกี้",
     "consent.learn_more_aria": "เรียนรู้เพิ่มเติมเกี่ยวกับวิธีที่ BrowserPDF ใช้ Google Analytics",
     "common.footer_source": "โอเพนซอร์ส",
-    "redact.js_flattening_page": "กำลังลบเนื้อหาที่ถูกปิดทับในหน้า {i}…"
+    "redact.js_flattening_page": "กำลังลบเนื้อหาที่ถูกปิดทับในหน้า {i}…",
+    "common.related_tools": "เครื่องมือที่เกี่ยวข้อง"
   },
   "uk": {
     "common.privacy_badge": "Працює повністю у вашому браузері",
@@ -12357,7 +12368,8 @@
     "consent.manage": "Налаштування файлів cookie",
     "consent.learn_more_aria": "Докладніше про те, як BrowserPDF використовує Google Analytics",
     "common.footer_source": "Відкритий код",
-    "redact.js_flattening_page": "Видалення закритого вмісту на сторінці {i}…"
+    "redact.js_flattening_page": "Видалення закритого вмісту на сторінці {i}…",
+    "common.related_tools": "Схожі інструменти"
   },
   "cs": {
     "common.privacy_badge": "Běží výhradně ve vašem prohlížeči",
@@ -13387,7 +13399,8 @@
     "consent.manage": "Nastavení souborů cookie",
     "consent.learn_more_aria": "Zjistěte více o tom, jak BrowserPDF používá Google Analytics",
     "common.footer_source": "Otevřený zdrojový kód",
-    "redact.js_flattening_page": "Odstraňování zakrytého obsahu na stránce {i}…"
+    "redact.js_flattening_page": "Odstraňování zakrytého obsahu na stránce {i}…",
+    "common.related_tools": "Související nástroje"
   },
   "tr": {
     "common.privacy_badge": "Tamamen tarayıcınızda çalışır",
@@ -14417,7 +14430,8 @@
     "consent.manage": "Çerez tercihleri",
     "consent.learn_more_aria": "BrowserPDF'in Google Analytics'i nasıl kullandığı hakkında daha fazla bilgi",
     "common.footer_source": "Açık kaynak",
-    "redact.js_flattening_page": "{i}. sayfadaki kapatılan içerik kaldırılıyor…"
+    "redact.js_flattening_page": "{i}. sayfadaki kapatılan içerik kaldırılıyor…",
+    "common.related_tools": "İlgili araçlar"
   },
   "nl": {
     "common.privacy_badge": "Werkt volledig in uw browser",
@@ -15447,7 +15461,8 @@
     "consent.manage": "Cookievoorkeuren",
     "consent.learn_more_aria": "Meer informatie over hoe BrowserPDF Google Analytics gebruikt",
     "common.footer_source": "Open source",
-    "redact.js_flattening_page": "Afgedekte inhoud op pagina {i} wordt verwijderd…"
+    "redact.js_flattening_page": "Afgedekte inhoud op pagina {i} wordt verwijderd…",
+    "common.related_tools": "Gerelateerde tools"
   },
   "pl": {
     "common.privacy_badge": "Działa w całości w przeglądarce Pani/Pana",
@@ -16477,7 +16492,8 @@
     "consent.manage": "Preferencje plików cookie",
     "consent.learn_more_aria": "Dowiedz się więcej o tym, jak BrowserPDF korzysta z Google Analytics",
     "common.footer_source": "Otwarty kod źródłowy",
-    "redact.js_flattening_page": "Usuwanie zakrytej treści na stronie {i}…"
+    "redact.js_flattening_page": "Usuwanie zakrytej treści na stronie {i}…",
+    "common.related_tools": "Powiązane narzędzia"
   },
   "it": {
     "common.privacy_badge": "Funziona interamente nel tuo browser",
@@ -17507,7 +17523,8 @@
     "consent.manage": "Preferenze dei cookie",
     "consent.learn_more_aria": "Scopri di più su come BrowserPDF usa Google Analytics",
     "common.footer_source": "Open source",
-    "redact.js_flattening_page": "Rimozione del contenuto coperto nella pagina {i}…"
+    "redact.js_flattening_page": "Rimozione del contenuto coperto nella pagina {i}…",
+    "common.related_tools": "Strumenti correlati"
   },
   "vi": {
     "common.privacy_badge": "Chạy hoàn toàn trong trình duyệt của bạn",
@@ -18537,7 +18554,8 @@
     "consent.manage": "Tùy chọn cookie",
     "consent.learn_more_aria": "Tìm hiểu thêm về cách BrowserPDF sử dụng Google Analytics",
     "common.footer_source": "Mã nguồn mở",
-    "redact.js_flattening_page": "Đang xóa nội dung bị che trên trang {i}…"
+    "redact.js_flattening_page": "Đang xóa nội dung bị che trên trang {i}…",
+    "common.related_tools": "Công cụ liên quan"
   },
   "id": {
     "common.privacy_badge": "Berjalan sepenuhnya di browser Anda",
@@ -19567,7 +19585,8 @@
     "consent.manage": "Preferensi cookie",
     "consent.learn_more_aria": "Pelajari lebih lanjut tentang cara BrowserPDF menggunakan Google Analytics",
     "common.footer_source": "Sumber terbuka",
-    "redact.js_flattening_page": "Menghapus konten yang tertutup di halaman {i}…"
+    "redact.js_flattening_page": "Menghapus konten yang tertutup di halaman {i}…",
+    "common.related_tools": "Alat terkait"
   },
   "sv": {
     "common.privacy_badge": "Körs helt i din webbläsare",
@@ -20597,7 +20616,8 @@
     "consent.manage": "Cookie-inställningar",
     "consent.learn_more_aria": "Läs mer om hur BrowserPDF använder Google Analytics",
     "common.footer_source": "Öppen källkod",
-    "redact.js_flattening_page": "Tar bort övertäckt innehåll på sida {i}…"
+    "redact.js_flattening_page": "Tar bort övertäckt innehåll på sida {i}…",
+    "common.related_tools": "Relaterade verktyg"
   },
   "hi": {
     "hub.privacy_note": "यहाँ हर टूल आपकी फ़ाइलों को पूरी तरह इसी ब्राउज़र टैब में प्रोसेस करता है। कुछ भी आपके डिवाइस के बाहर अपलोड, प्रसारित या संग्रहीत नहीं होता।",
@@ -21627,6 +21647,7 @@
     "consent.manage": "कुकी प्राथमिकताएँ",
     "consent.learn_more_aria": "जानें कि BrowserPDF, Google Analytics का उपयोग कैसे करता है",
     "common.footer_source": "ओपन सोर्स",
-    "redact.js_flattening_page": "पेज {i} पर ढका हुआ कंटेंट हटाया जा रहा है…"
+    "redact.js_flattening_page": "पेज {i} पर ढका हुआ कंटेंट हटाया जा रहा है…",
+    "common.related_tools": "मिलते-जुलते टूल"
   }
 }

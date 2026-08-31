@@ -141,6 +141,36 @@ test('localized page resolves js/, css/ and the worker-injected scripts', async 
   expect(failures, `unexpected failed requests: ${failures.join(', ')}`).toEqual([]);
 });
 
+// Duplicate-URL variants must consolidate permanently (301, not the assets
+// binding's 307) onto the canonical clean URL, and a language-prefixed
+// variant must land back inside that language rather than falling to English.
+test('duplicate URL variants 301 to the canonical clean URL', async ({ page }) => {
+  const cases = [
+    ['/compress/', '/compress'],
+    ['/compress.html', '/compress'],
+    ['/index.html', '/'],
+    ['/tr/compress/', '/tr/compress'],
+    ['/tr/compress.html', '/tr/compress'],
+  ];
+  for (const [from, to] of cases) {
+    const resp = await page.request.get(from, { maxRedirects: 0 });
+    expect(resp.status(), `${from} should redirect permanently`).toBe(301);
+    expect(new URL(resp.headers()['location'], resp.url()).pathname, `${from} target`).toBe(to);
+  }
+});
+
+// The static related-tools block is the site's internal linking: it must
+// render, translate, and keep the language prefix in its relative links.
+test('related tools: block renders and localizes with the language prefix', async ({ page }) => {
+  await open(page, 'compress');
+  await expect(page.locator('.related-links a')).toHaveCount(4);
+  await page.goto('/tr/compress');
+  await expect(page.locator('.related-tools h2')).toBeVisible();
+  await expect(page.locator('.related-tools h2')).not.toHaveText('Related tools');
+  const href = await page.locator('.related-links a').first().evaluate((a) => a.href);
+  expect(href, 'relative link must resolve inside /tr/').toMatch(/\/tr\/[a-z-]+$/);
+});
+
 // "size" strings look like "40.3 KB" or "Estimated: ~1.0 MB (…)".
 function parseSize(text) {
   const m = /~?([\d.]+)\s*(B|KB|MB)/.exec(text);
