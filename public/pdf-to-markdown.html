@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>PDF to Markdown Converter: Free with OCR | BrowserPDF</title>
+<meta name="description" content="Convert PDF to Markdown for free, entirely in your browser, with OCR for scanned pages in 14 languages. No upload, no signup, no watermarks.">
+<link rel="canonical" href="https://browserpdf.app/pdf-to-markdown">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="PDF to Markdown Converter: Free, Private, Runs in Your Browser">
+<meta property="og:description" content="Convert PDF to Markdown for free, entirely in your browser. Preserves headings, lists, and formatting, with automatic OCR for scanned pages. No upload, no signup, no server.">
+<meta property="og:url" content="https://browserpdf.app/pdf-to-markdown">
+<meta property="og:image" content="https://browserpdf.app/og/pdf-to-markdown.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Preview of the PDF to Markdown tool: a PDF page converting into clean Markdown text.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PDF to Markdown Converter: Free, Private, Runs in Your Browser">
+<meta name="twitter:description" content="Convert PDF to Markdown for free, entirely in your browser. Preserves headings, lists, and formatting, with automatic OCR for scanned pages. No upload, no signup, no server.">
+<meta name="twitter:image" content="https://browserpdf.app/og/pdf-to-markdown.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"PDF to Markdown - BrowserPDF","description":"Convert PDF to Markdown for free, entirely in your browser, with OCR for scanned pages in 14 languages. No upload, no signup, no watermarks.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/pdf-to-markdown","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["100% client-side: no file is ever uploaded","Free, no watermarks, no signup, no usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"PDF to Markdown","item":"https://browserpdf.app/pdf-to-markdown"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does PDF to Markdown work with scanned PDFs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Pages without a text layer are automatically OCR'd on your device with Tesseract.js; you can select from 14 recognition languages. Scanned pages come out as plain paragraphs rather than structured Markdown."}},{"@type":"Question","name":"Are headings, lists, and bold text preserved?","acceptedAnswer":{"@type":"Answer","text":"Yes, heuristically: headings are inferred from font-size ratios, and bullet or numbered lists and bold/italic runs are detected from the PDF's font metadata. Unusual or multi-column layouts can misfire, so skim the result."}},{"@type":"Question","name":"Is there a file size or page limit?","acceptedAnswer":{"@type":"Answer","text":"There is no artificial limit. Processing happens in your browser's memory, so very large files are bounded by your device; files over 150MB are rejected to keep the tab responsive."}}]}]}</script>
+</head>
+<body>
+<div class="app">
+
+  <noscript>
+    <div class="noscript-banner" data-i18n="common.noscript">These tools run entirely in your browser, which means they need JavaScript to work. Nothing is uploaded either way; enable JavaScript to use this page.</div>
+  </noscript>
+
+  <header class="site-header">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="url(#g-brand)"/>
+        <defs>
+          <linearGradient id="g-brand" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0" stop-color="#7b76f0"/>
+            <stop offset="1" stop-color="#4f46d6"/>
+          </linearGradient>
+        </defs>
+        <path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/>
+        <path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">browser<span class="brand-accent">pdf</span></span>
+    </a>
+
+    <div class="privacy-badge" data-i18n-title="common.privacy_badge_title" title="Everything happens in this tab only; no file is ever uploaded anywhere.">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span data-i18n="common.privacy_badge">Runs entirely in your browser</span>
+    </div>
+
+    <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="header-github" aria-label="GitHub"><svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <button id="themeToggle" class="theme-toggle" type="button" data-i18n-aria="common.theme_toggle" aria-label="Toggle dark / light theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
+
+    <section class="intro">
+      <h1 data-i18n="pdf-to-markdown.h1">Convert your PDF files to Markdown</h1>
+      <p data-i18n="pdf-to-markdown.intro">Supports both text-based and scanned PDFs. Everything runs on your device: your file is never sent to a server.</p>
+    </section>
+
+    <section class="dropzone-section">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="common.dropzone_aria" aria-label="Click or drag and drop to upload a PDF file">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 16V4"/>
+          <path d="M6 10l6-6 6 6"/>
+          <path d="M4 20h16"/>
+        </svg>
+        <p class="dropzone-title" data-i18n="common.dropzone_title">Drag your PDF file here</p>
+        <p class="dropzone-subtitle"><span data-i18n="common.dropzone_or">or</span> <span class="link-like" data-i18n="common.dropzone_link">choose from your computer</span></p>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+      </div>
+
+      <div class="options-panel">
+        <div class="option-block">
+          <div class="option-header">
+            <div class="option-title">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>
+              </svg>
+              <span data-i18n="pdf-to-markdown.ocr_language">OCR language</span>
+              <span class="option-hint" data-i18n="pdf-to-markdown.ocr_language_hint">for scanned pages, most widely used</span>
+            </div>
+            <span id="langCount" class="option-count">1 selected</span>
+          </div>
+          <div class="lang-chips" role="group" data-i18n-aria="pdf-to-markdown.ocr_languages_aria" aria-label="OCR languages">
+            <button type="button" class="lang-chip" data-lang="eng" aria-pressed="true"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_eng">English</span></button>
+            <button type="button" class="lang-chip" data-lang="tur" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_tur">Turkish</span></button>
+            <button type="button" class="lang-chip" data-lang="spa" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_spa">Spanish</span></button>
+            <button type="button" class="lang-chip" data-lang="chi_sim" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_chi_sim">Chinese (Simplified)</span></button>
+            <button type="button" class="lang-chip" data-lang="hin" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_hin">Hindi</span></button>
+            <button type="button" class="lang-chip" data-lang="ara" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_ara">Arabic</span></button>
+            <button type="button" class="lang-chip" data-lang="por" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_por">Portuguese</span></button>
+            <button type="button" class="lang-chip" data-lang="rus" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_rus">Russian</span></button>
+            <button type="button" class="lang-chip" data-lang="fra" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_fra">French</span></button>
+            <button type="button" class="lang-chip" data-lang="deu" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_deu">German</span></button>
+            <button type="button" class="lang-chip" data-lang="jpn" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_jpn">Japanese</span></button>
+            <button type="button" class="lang-chip" data-lang="ita" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_ita">Italian</span></button>
+            <button type="button" class="lang-chip" data-lang="kor" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_kor">Korean</span></button>
+            <button type="button" class="lang-chip" data-lang="vie" aria-pressed="false"><svg class="chip-check" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="common.ocrlang_vie">Vietnamese</span></button>
+          </div>
+        </div>
+
+        <div class="option-divider"></div>
+
+        <label class="option-block option-block-row switch-row">
+          <div class="option-title">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="6" rx="1"/>
+              <rect x="3" y="14" width="18" height="6" rx="1"/>
+            </svg>
+            <span data-i18n="pdf-to-markdown.page_separators">Page separators</span>
+            <span class="option-hint" data-i18n="pdf-to-markdown.page_separators_hint">insert a divider between pages</span>
+          </div>
+          <span class="switch">
+            <input type="checkbox" id="pageBreaks" class="switch-input" checked>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <section id="progressSection" class="progress-section" hidden>
+      <div class="progress-header">
+        <span id="progressStatus" data-i18n="common.preparing">Preparing…</span>
+        <button id="cancelBtn" class="btn btn-ghost btn-small" type="button" data-i18n="pdf-to-markdown.btn_cancel">Cancel</button>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <canvas id="pageCanvas" class="page-canvas" hidden></canvas>
+    </section>
+
+    <section id="errorSection" class="error-banner" hidden role="alert">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span id="errorText"></span>
+    </section>
+
+    <section id="resultSection" class="result-section" hidden>
+      <div class="result-toolbar">
+        <div class="tabs" role="tablist">
+          <button class="tab active" id="tabSource" role="tab" aria-selected="true" type="button" data-i18n="pdf-to-markdown.tab_markdown">Markdown</button>
+          <button class="tab" id="tabPreview" role="tab" aria-selected="false" type="button" data-i18n="pdf-to-markdown.tab_preview">Preview</button>
+        </div>
+        <div class="result-actions">
+          <button id="copyBtn" class="btn btn-secondary" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span data-i18n="pdf-to-markdown.btn_copy">Copy</span>
+          </button>
+          <button id="downloadBtn" class="btn btn-primary" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            <span data-i18n="pdf-to-markdown.btn_download">Download (.md)</span>
+          </button>
+        </div>
+      </div>
+      <div class="result-panes">
+        <div id="paneSource" class="pane pane-source">
+          <textarea id="markdownOutput" readonly spellcheck="false" data-i18n-aria="pdf-to-markdown.output_aria" aria-label="Generated Markdown"></textarea>
+        </div>
+        <div id="panePreview" class="pane pane-preview" hidden>
+          <div id="previewContent" class="preview-content"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about">
+      <h2>How it works</h2>
+      <ul class="about-list">
+        <li><strong>Text-based PDFs</strong> are parsed directly in the browser with pdf.js, preserving headings, bold and italic text, and bullet or numbered lists.</li>
+        <li><strong>Scanned pages</strong> automatically fall back to on-device OCR with Tesseract.js, supporting 14 languages including English, Spanish, Chinese, Arabic, and Hindi.</li>
+        <li><strong>Nothing is uploaded.</strong> There is no backend: conversion happens entirely in this browser tab, and both libraries are integrity-checked before they run.</li>
+      </ul>
+    </section>
+
+    <section class="about faq">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3>Does PDF to Markdown work with scanned PDFs?</h3>
+          <p>Yes. Pages without a text layer are automatically OCR'd on your device with Tesseract.js; you can select from 14 recognition languages. Scanned pages come out as plain paragraphs rather than structured Markdown.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Are headings, lists, and bold text preserved?</h3>
+          <p>Yes, heuristically: headings are inferred from font-size ratios, and bullet or numbered lists and bold/italic runs are detected from the PDF's font metadata. Unusual or multi-column layouts can misfire, so skim the result.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is there a file size or page limit?</h3>
+          <p>There is no artificial limit. Processing happens in your browser's memory, so very large files are bounded by your device; files over 150MB are rejected to keep the tab responsive.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="privacy-note">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span><strong>Privacy:</strong> your PDF is processed entirely in this browser tab. Nothing is uploaded, transmitted, or stored anywhere outside your device.</span>
+    </p>
+    <p class="site-footer-credits">
+      Built with open-source libraries:
+      <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener noreferrer">pdf.js</a> and
+      <a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener noreferrer">Tesseract.js</a>.
+      Both are verified with a SHA-384 integrity check before being loaded.
+      &middot;
+      <a href="privacy">Privacy</a> &middot;
+      <a href="terms">Terms</a> &middot;
+      <a href="accessibility">Accessibility</a> &middot;
+      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Open source</span></a>
+    </p>
+  </footer>
+</div>
+
+<script type="module" src="js/pdf-to-markdown.js"></script>
+<script src="js/theme.js" defer></script>
+</body>
+</html>

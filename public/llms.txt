@@ -1,0 +1,49 @@
+# BrowserPDF
+
+> A free, client-side suite of twenty-nine PDF and Markdown tools. Everything runs entirely in the browser tab: no file is ever uploaded to a server, and there are no watermarks or usage limits.
+
+## Key facts
+
+- 100% client-side: no backend, no upload, no tracking, no signup.
+- Completely free: no premium tier, no watermarks added to output.
+- pdf.js, Tesseract.js, and pdf-lib are loaded from jsDelivr at pinned versions and verified client-side with a cryptographic hash before they run.
+- Available in 22 languages (English, Spanish, French, German, Portuguese, Italian, Russian, Japanese, Korean, Chinese Simplified/Traditional, Arabic, Hindi, Turkish, Dutch, Polish, Indonesian, Vietnamese, Thai, Ukrainian, Czech, Swedish).
+- Source code is public: https://github.com/utkutugrul/browserpdf.app (custom license, see LICENSE.md in the repo).
+
+## Tools
+
+- [PDF to Markdown](/pdf-to-markdown): converts PDFs to Markdown, preserving headings, bold/italic, and lists. Scanned pages fall back to in-browser OCR (Tesseract.js) with 14 selectable languages.
+- [Merge PDFs](/merge): combines multiple PDF files into one, in a user-chosen order.
+- [Split PDF](/split): extracts selected pages into a new PDF, or splits every page into its own file.
+- [Markdown Viewer](/markdown-viewer): live-rendered preview of pasted or dropped Markdown.
+- [Compress PDF](/compress): shrinks file size by re-rendering pages as compressed images at a chosen quality level.
+- [PDF ⇄ Images](/images): exports PDF pages as PNG images, or builds a PDF from a set of images.
+- [Markdown to PDF](/markdown-to-pdf): lays out Markdown (headings, lists, emphasis) onto paginated PDF pages.
+- [Fill & Sign](/fill-sign): fills detected PDF form fields and adds a signature, drawn or typed, placed by clicking a page.
+- [PDF to Word](/pdf-to-word): converts a PDF to an editable .docx with headings, lists, and emphasis preserved; scanned pages fall back to OCR.
+- [Extract Text](/extract-text): pulls all text out of a PDF as plain .txt, with OCR fallback for scanned pages.
+- [Rotate PDF](/rotate): rotates individual pages or the whole document in 90-degree steps.
+- [Organize PDF](/organize): reorders, rotates, and deletes pages in one view.
+- [Add Page Numbers](/page-numbers): stamps page numbers with a chosen position, format, and starting value.
+- [Add Watermark](/watermark): stamps a text watermark (e.g. DRAFT) across every page at a chosen size and opacity.
+- [Make Searchable (OCR)](/ocr-pdf): adds an invisible OCR text layer to scanned PDFs so they become selectable and searchable.
+
+- [Word to PDF](/word-to-pdf): converts .docx to PDF in the browser (mammoth + layout).
+- [PDF to Excel](/pdf-to-excel): clusters PDF text into rows/columns and writes .xlsx.
+- [Excel to PDF](/excel-to-pdf): renders a spreadsheet sheet to a landscape PDF.
+- [JPG / PNG to PDF](/jpg-to-pdf): builds a multi-page PDF from images.
+- [Crop PDF](/crop): trims margins via crop/media boxes with live preview.
+- [Delete PDF Pages](/delete-pages): removes selected pages into a new PDF.
+- [Unlock PDF](/unlock): removes password protection from a PDF. Requires the correct password; does not crack or bypass passwords.
+- [Protect PDF](/protect): adds password encryption and configurable permissions (printing, copying, modifying, etc.) to a PDF.
+- [Add Text](/add-text): types custom text onto a PDF page, with a chosen font, size, and color.
+- [Add Image](/add-image): stamps an image, logo, or photo onto a PDF page.
+- [Highlight PDF](/highlight): highlights text in a PDF with a chosen color and opacity.
+- [Redact PDF](/redact): permanently removes sensitive text or areas from a PDF, not just a visual overlay.
+- [Edit Metadata](/edit-metadata): views and edits a PDF's title, author, subject, and keywords.
+- [PDF Viewer](/view-pdf): opens and reads PDF files in the browser, with zoom, page navigation, and printing.
+
+## Pages
+
+- [Homepage](/): suite overview and links to each tool.
+- [Privacy Policy](/privacy), [Terms of Service](/terms), [Accessibility Statement](/accessibility).

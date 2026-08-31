@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>Compress PDF for Free in Your Browser | BrowserPDF</title>
+<meta name="description" content="Reduce PDF file size for free, entirely in your browser. Best for scanned or image-heavy PDFs. No upload, no signup, no server.">
+<link rel="canonical" href="https://browserpdf.app/compress">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="Compress PDF for Free: Shrink File Size, Runs in Your Browser">
+<meta property="og:description" content="Reduce PDF file size for free, entirely in your browser. Best for scanned or image-heavy PDFs. No upload, no signup, no server.">
+<meta property="og:url" content="https://browserpdf.app/compress">
+<meta property="og:image" content="https://browserpdf.app/og/compress.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Preview of the Compress PDF tool: a large PDF being shrunk into a smaller file.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Compress PDF for Free: Shrink File Size, Runs in Your Browser">
+<meta name="twitter:description" content="Reduce PDF file size for free, entirely in your browser. Best for scanned or image-heavy PDFs. No upload, no signup, no server.">
+<meta name="twitter:image" content="https://browserpdf.app/og/compress.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Compress PDF - BrowserPDF","description":"Reduce PDF file size for free, entirely in your browser. Best for scanned or image-heavy PDFs. No upload, no signup, no server.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/compress","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["100% client-side: no file is ever uploaded","Free, no watermarks, no signup, no usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Compress PDF","item":"https://browserpdf.app/compress"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much smaller will my PDF get?","acceptedAnswer":{"@type":"Answer","text":"It depends on the file. Scanned and image-heavy PDFs shrink the most; already-small text-only PDFs may not shrink at all, and the tool tells you so honestly. A live estimate updates as you move the quality slider, before you download anything."}},{"@type":"Question","name":"Will the text stay selectable after compressing?","acceptedAnswer":{"@type":"Answer","text":"No. Compression works by re-rendering each page as a compressed image, so text stops being selectable and searchable. For text PDFs you want to keep searchable, this is the wrong tool."}},{"@type":"Question","name":"Can I control the quality level?","acceptedAnswer":{"@type":"Answer","text":"Yes. A continuous slider trades file size against sharpness, with a live estimated output size so you can pick the balance you want."}}]}]}</script>
+</head>
+<body>
+<div class="app">
+
+  <noscript>
+    <div class="noscript-banner" data-i18n="common.noscript">These tools run entirely in your browser, which means they need JavaScript to work. Nothing is uploaded either way; enable JavaScript to use this page.</div>
+  </noscript>
+
+  <header class="site-header">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="url(#g-brand)"/>
+        <defs>
+          <linearGradient id="g-brand" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0" stop-color="#7b76f0"/>
+            <stop offset="1" stop-color="#4f46d6"/>
+          </linearGradient>
+        </defs>
+        <path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/>
+        <path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">browser<span class="brand-accent">pdf</span></span>
+    </a>
+
+    <div class="privacy-badge" data-i18n-title="common.privacy_badge_title" title="Everything happens in this tab only; no file is ever uploaded anywhere.">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span data-i18n="common.privacy_badge">Runs entirely in your browser</span>
+    </div>
+
+    <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="header-github" aria-label="GitHub"><svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <button id="themeToggle" class="theme-toggle" type="button" data-i18n-aria="common.theme_toggle" aria-label="Toggle dark / light theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
+
+    <section class="intro">
+      <h1 data-i18n="compress.h1">Compress a PDF</h1>
+      <p data-i18n="compress.intro">Shrink a PDF's file size for easier sharing. Everything runs on your device: your file is never sent to a server.</p>
+    </section>
+
+    <div class="callout" data-i18n="compress.callout">
+      This works by re-rendering each page as a compressed image. It's great for scanned documents and photo-heavy PDFs, but the text will no longer be selectable or searchable afterward. For text-based PDFs you want to keep searchable, this isn't the right tool.
+    </div>
+
+    <section class="dropzone-section">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="common.dropzone_aria" aria-label="Click or drag and drop to upload a PDF file">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 16V4"/>
+          <path d="M6 10l6-6 6 6"/>
+          <path d="M4 20h16"/>
+        </svg>
+        <p class="dropzone-title" data-i18n="common.dropzone_title">Drag your PDF file here</p>
+        <p class="dropzone-subtitle"><span data-i18n="common.dropzone_or">or</span> <span class="link-like" data-i18n="common.dropzone_link">choose from your computer</span></p>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+      </div>
+
+      <div id="optionsSection" class="options-panel" hidden>
+        <div class="option-block">
+          <div class="option-header">
+            <div class="option-title">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 3v4a1 1 0 0 1-1 1H3"/>
+                <path d="M21 8h-4a1 1 0 0 1-1-1V3"/>
+                <path d="M3 16h4a1 1 0 0 1 1 1v4"/>
+                <path d="M16 21v-4a1 1 0 0 1 1-1h4"/>
+              </svg>
+              <span data-i18n="compress.level_label">Compression level</span>
+            </div>
+            <span id="levelLabel" class="option-count" data-i18n="compress.level_balanced">Balanced</span>
+          </div>
+          <input type="range" id="levelSlider" class="quality-slider" min="0" max="100" value="50" data-i18n-aria="compress.slider_aria" aria-label="Compression level, smaller file to higher quality">
+          <div class="slider-ticks">
+            <span data-i18n="compress.tick_smaller">Smaller file</span>
+            <span data-i18n="compress.tick_higher">Higher quality</span>
+          </div>
+          <span id="estimateLabel" class="option-count"></span>
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block option-block-row">
+          <span id="fileSummary" class="file-list-count"></span>
+          <button id="compressBtn" class="btn btn-primary" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            <span data-i18n="compress.btn_compress">Compress &amp; download</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="resultSummary" class="callout" hidden></div>
+    </section>
+
+    <section id="progressSection" class="progress-section" hidden>
+      <div class="progress-header">
+        <span id="progressStatus" data-i18n="common.preparing">Preparing…</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </section>
+
+    <section id="errorSection" class="error-banner" hidden role="alert">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span id="errorText"></span>
+    </section>
+
+    <section class="about">
+      <h2 data-i18n="common.how_it_works">How it works</h2>
+      <ul class="about-list">
+        <li><strong data-i18n="compress.about_1_title">Each page is rendered</strong> <span data-i18n="compress.about_1_body">with pdf.js at a resolution tied to your chosen level, then re-encoded as a JPEG and rebuilt into a new PDF with pdf-lib, at the same page size as the original.</span></li>
+        <li><strong data-i18n="compress.about_2_title">This is a real tradeoff, not free compression:</strong> <span data-i18n="compress.about_2_body">lower levels mean a smaller file but blurrier text and images. Try "Balanced" first.</span></li>
+        <li><strong data-i18n="compress.about_3_title">Nothing is uploaded.</strong> <span data-i18n="compress.about_3_body">Compression happens entirely in this browser tab.</span></li>
+      </ul>
+    </section>
+
+    <section class="about faq">
+      <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3 data-i18n="compress.faq_1_q">How much smaller will my PDF get?</h3>
+          <p data-i18n="compress.faq_1_a">It depends on the file. Scanned and image-heavy PDFs shrink the most; already-small text-only PDFs may not shrink at all, and the tool tells you so honestly. A live estimate updates as you move the quality slider, before you download anything.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="compress.faq_2_q">Will the text stay selectable after compressing?</h3>
+          <p data-i18n="compress.faq_2_a">No. Compression works by re-rendering each page as a compressed image, so text stops being selectable and searchable. For text PDFs you want to keep searchable, this is the wrong tool.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="compress.faq_3_q">Can I control the quality level?</h3>
+          <p data-i18n="compress.faq_3_a">Yes. A continuous slider trades file size against sharpness, with a live estimated output size so you can pick the balance you want.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="privacy-note">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="common.privacy_note">your PDF is processed entirely in this browser tab. Nothing is uploaded, transmitted, or stored anywhere outside your device.</span></span>
+    </p>
+    <p class="site-footer-credits">
+      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener noreferrer">pdf.js</a> <span data-i18n="common.credits_and">and</span> <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="common.verified_hash_plural">libraries, verified with a cryptographic hash before being loaded.</span>
+      &middot;
+      <a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot;
+      <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot;
+      <a href="accessibility" data-i18n="common.footer_accessibility">Accessibility</a> &middot;
+      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Open source</span></a>
+    </p>
+  </footer>
+</div>
+
+<script type="module" src="js/i18n.js"></script>
+<script type="module" src="js/compress.js"></script>
+<script src="js/theme.js" defer></script>
+</body>
+</html>

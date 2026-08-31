@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>BrowserPDF: Free, Private PDF Tools That Run in Your Browser</title>
+<meta name="description" content="Convert, merge, split, compress, and sign PDFs for free, no watermarks. Everything runs in your browser: no upload, no signup, no server sees your files.">
+<link rel="canonical" href="https://browserpdf.app/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="BrowserPDF: Free, Private PDF Tools That Run in Your Browser">
+<meta property="og:description" content="Convert, merge, split, compress, and sign PDFs for free, no watermarks. Everything runs entirely in your browser: no upload, no signup, no server ever sees your files.">
+<meta property="og:url" content="https://browserpdf.app/">
+<meta property="og:image" content="https://browserpdf.app/og/browserpdf.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="BrowserPDF: a free, client-side suite of PDF and Markdown tools.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://browserpdf.app/og/browserpdf.png">
+<meta name="twitter:title" content="BrowserPDF: Free, Private PDF Tools That Run in Your Browser">
+<meta name="twitter:description" content="Convert, merge, split, compress, and sign PDFs for free, no watermarks. Everything runs entirely in your browser: no upload, no signup, no server ever sees your files.">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"BrowserPDF","description":"A free, client-side suite of twenty-nine PDF and Markdown tools: convert (Markdown, Word, text, images), organize (merge, split, reorder, rotate), edit (page numbers, watermark, fill and sign), secure (unlock, protect), compress, and OCR, all running entirely in your browser with nothing ever uploaded and no watermarks added.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["PDF to Markdown conversion with OCR fallback","PDF to Word (.docx) conversion","Extract plain text from PDF with OCR fallback","Merge multiple PDFs into one","Split a PDF into separate pages or ranges","Organize: reorder, rotate, and delete PDF pages","Rotate PDF pages","Add page numbers to a PDF","Add a text watermark to a PDF","Live Markdown viewer with instant preview","Compress PDF file size","Make scanned PDFs searchable with in-browser OCR","Convert between PDF pages and images in both directions","Convert Markdown to a paginated PDF","Fill PDF form fields and add a drawn or typed signature","Remove password protection from a PDF (unlock)","Add password encryption and permissions to a PDF (protect)","Stamp an image or logo onto a PDF page","Type custom text onto a PDF page","Highlight text in a PDF with adjustable color and opacity","Permanently redact sensitive text or areas in a PDF","View and edit PDF metadata such as title, author, and keywords","View, zoom, and navigate PDF files in the browser","Crop PDF page margins","Delete selected pages from a PDF","Convert Excel or CSV to PDF","Convert JPG or PNG images into a single PDF","Convert a PDF to an Excel spreadsheet (.xlsx)","Convert a Word .docx document to PDF","Completely free, no watermarks, no usage limits","100% client-side, no upload, analytics only with consent","SHA-384 verified library loading"]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is BrowserPDF really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every tool is fully functional with no account, no premium tier, no watermarks, and no usage limits. There is no backend that could enforce any of those anyway."}},{"@type":"Question","name":"Are my files uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. Each tool processes your file inside the browser tab using JavaScript and WebAssembly. There is no upload endpoint at all, which you can verify yourself: open your browser's developer tools and watch the network panel while you work."}},{"@type":"Question","name":"Is there a file size limit?","acceptedAnswer":{"@type":"Answer","text":"We don't impose one. The practical limit is your device's memory, since all processing happens locally. Very large files simply take longer on slower hardware."}},{"@type":"Question","name":"Do scanned PDFs work?","acceptedAnswer":{"@type":"Answer","text":"Yes. Tools that read text (PDF to Markdown, PDF to Word, Extract Text, Make Searchable) fall back to OCR that runs on your device, with 14 selectable languages."}},{"@type":"Question","name":"Which browsers are supported?","acceptedAnswer":{"@type":"Answer","text":"Current versions of Chrome, Edge, Firefox, and Safari, on desktop and mobile. Older browsers without WebAssembly support won't run the OCR-based tools."}},{"@type":"Question","name":"How can I trust this?","acceptedAnswer":{"@type":"Answer","text":"The code is auditable, the open-source libraries it uses are pinned to exact versions and verified with a cryptographic hash before they run, and the strict Content-Security-Policy prevents anything else from loading. Your files never appear in network traffic because no request carrying them is ever made."}}]}]}</script>
+</head>
+<body>
+<div class="app">
+
+  <noscript>
+    <div class="noscript-banner">These tools run entirely in your browser, which means they need JavaScript to work. Nothing is uploaded either way; enable JavaScript to use this page.</div>
+  </noscript>
+
+  <header class="site-header">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="url(#g-brand)"/>
+        <defs>
+          <linearGradient id="g-brand" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0" stop-color="#7b76f0"/>
+            <stop offset="1" stop-color="#4f46d6"/>
+          </linearGradient>
+        </defs>
+        <path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/>
+        <path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">browser<span class="brand-accent">pdf</span></span>
+    </a>
+
+    <div class="privacy-badge" title="Everything happens in this tab only; no file is ever uploaded anywhere." data-i18n-title="common.privacy_badge_title">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span data-i18n="common.privacy_badge">Runs entirely in your browser</span>
+    </div>
+
+    <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="header-github" aria-label="GitHub"><svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark / light theme" data-i18n-aria="common.theme_toggle">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="hub-intro">
+      <h1 data-i18n="hub.h1">Private PDF tools that run in your browser</h1>
+      <p data-i18n="hub.intro">Your files never leave your device, so your documents stay private by design. Twenty-nine free, open-source PDF and Markdown tools that run locally: no account, no upload, no watermarks.</p>
+    </section>
+
+    <input type="search" id="toolFilter" class="text-input tool-filter" data-i18n-placeholder="hub.filter" placeholder="Filter tools&hellip;" aria-label="Filter the tool list">
+
+    <div class="tool-groups">
+      <section>
+        <h2 class="tool-group-title" data-i18n="hub.group_convert">Convert</h2>
+        <div class="tool-grid">
+      <a class="tool-card" href="pdf-to-markdown">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 4h6l4 4v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>
+            <path d="M9 12h6M9 15h6M9 9h2"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_pdf_to_markdown">PDF to Markdown</span>
+          <p data-i18n="hub.tool_pdf_to_markdown_desc">Convert PDFs to clean Markdown, with automatic OCR for scanned pages.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="pdf-to-word">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"/>
+            <path d="M8.5 13l1.2 5 1.8-4 1.8 4 1.2-5"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_pdf_to_word">PDF to Word</span>
+          <p data-i18n="hub.tool_pdf_to_word_desc">Convert to an editable .docx, with headings and lists preserved.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="word-to-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6"/>
+            <path d="M8 13h8M8 17h5"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_word_to_pdf">Word to PDF</span>
+          <p data-i18n="hub.tool_word_to_pdf_desc">Convert a .docx to PDF entirely in your browser.</p>
+        </div>
+      </a>
+
+
+      <a class="tool-card" href="extract-text">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_extract_text">Extract Text</span>
+          <p data-i18n="hub.tool_extract_text_desc">Pull all text out as plain .txt, with OCR for scanned pages.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="images">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_images">PDF &harr; Images</span>
+          <p data-i18n="hub.tool_images_desc">Export pages as images, or build a PDF from images.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="markdown-to-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="1" y="7" width="7" height="10" rx="1"/>
+            <path d="M10 12h4m0 0l-1.5-1.5M14 12l-1.5 1.5"/>
+            <rect x="16" y="5" width="7" height="10" rx="1"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_markdown_to_pdf">Markdown to PDF</span>
+          <p data-i18n="hub.tool_markdown_to_pdf_desc">The reverse direction: turn Markdown into a clean PDF.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="pdf-to-excel">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_pdf_to_excel">PDF to Excel</span>
+          <p data-i18n="hub.tool_pdf_to_excel_desc">Pull table-like text into an editable .xlsx spreadsheet.</p>
+        </div>
+      </a>
+      <a class="tool-card" href="excel-to-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M8 13h2l2 3 2-3h2"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_excel_to_pdf">Excel to PDF</span>
+          <p data-i18n="hub.tool_excel_to_pdf_desc">Turn a spreadsheet into a clean PDF, sheet by sheet.</p>
+        </div>
+      </a>
+      <a class="tool-card" href="jpg-to-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_jpg_to_pdf">JPG / PNG to PDF</span>
+          <p data-i18n="hub.tool_jpg_to_pdf_desc">Combine photos or scans into one PDF file.</p>
+        </div>
+      </a>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="tool-group-title" data-i18n="hub.group_organize">Organize &amp; edit</h2>
+        <div class="tool-grid">
+      <a class="tool-card" href="merge">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="7" width="11" height="13" rx="1.5"/>
+            <rect x="9" y="4" width="11" height="13" rx="1.5"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_merge">Merge PDFs</span>
+          <p data-i18n="hub.tool_merge_desc">Combine multiple PDFs into one file, in the order you choose.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="split">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="4" width="14" height="16" rx="1.5"/>
+            <path d="M5 12h14" stroke-dasharray="2 2"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_split">Split PDF</span>
+          <p data-i18n="hub.tool_split_desc">Pull out page ranges, or split every page into its own file.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="organize">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_organize">Organize PDF</span>
+          <p data-i18n="hub.tool_organize_desc">Reorder, rotate, and delete pages in one view.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="rotate">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_rotate">Rotate PDF</span>
+          <p data-i18n="hub.tool_rotate_desc">Fix sideways pages, one at a time or all at once.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="page-numbers">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="9" x2="20" y2="9"/>
+            <line x1="4" y1="15" x2="20" y2="15"/>
+            <line x1="10" y1="3" x2="8" y2="21"/>
+            <line x1="16" y1="3" x2="14" y2="21"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_page_numbers">Add Page Numbers</span>
+          <p data-i18n="hub.tool_page_numbers_desc">Stamp numbers in the corner, format, and start you choose.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="watermark">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_watermark">Add Watermark</span>
+          <p data-i18n="hub.tool_watermark_desc">Stamp DRAFT or CONFIDENTIAL across every page.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="fill-sign">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_fill_sign">Fill &amp; Sign</span>
+          <p data-i18n="hub.tool_fill_sign_desc">Fill form fields and drop in a signature, drawn or typed.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="crop">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2v14a2 2 0 0 0 2 2h14"/>
+            <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_crop">Crop PDF</span>
+          <p data-i18n="hub.tool_crop_desc">Trim margins from every page with a live preview.</p>
+        </div>
+      </a>
+      <a class="tool-card" href="delete-pages">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_delete_pages">Delete PDF Pages</span>
+          <p data-i18n="hub.tool_delete_pages_desc">Mark pages to remove and download a leaner PDF.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="add-text">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7V4h16v3"/>
+            <path d="M9 20h6"/>
+            <path d="M12 4v16"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_add_text">Add Text to PDF</span>
+          <p data-i18n="hub.tool_add_text_desc">Type text onto any page, wherever you click.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="add-image">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_add_image">Add Image to PDF</span>
+          <p data-i18n="hub.tool_add_image_desc">Stamp a logo, photo, or image onto your pages.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="highlight">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 11l-4 4v4h4l4-4"/>
+            <path d="M14 6l4 4-7 7-4-4z"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_highlight">Highlight PDF</span>
+          <p data-i18n="hub.tool_highlight_desc">Highlight text with a virtual highlighter pen.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="edit-metadata">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6"/>
+            <path d="M9 13h6M9 17h4"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_edit_metadata">Edit Metadata</span>
+          <p data-i18n="hub.tool_edit_metadata_desc">View and edit PDF title, author, subject, and keywords.</p>
+        </div>
+      </a>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="tool-group-title" data-i18n="hub.group_security">Security</h2>
+        <div class="tool-grid">
+      <a class="tool-card" href="unlock">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_unlock">Unlock PDF</span>
+          <p data-i18n="hub.tool_unlock_desc">Remove a password from a protected PDF.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="protect">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_protect">Protect PDF</span>
+          <p data-i18n="hub.tool_protect_desc">Add password encryption to a PDF.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="redact">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="0.8"/>
+            <rect x="9" y="9" width="6" height="6" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_redact">Redact PDF</span>
+          <p data-i18n="hub.tool_redact_desc">Permanently black out sensitive text or areas.</p>
+        </div>
+      </a>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="tool-group-title" data-i18n="hub.group_optimize">Optimize &amp; view</h2>
+        <div class="tool-grid">
+      <a class="tool-card" href="compress">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3v4a1 1 0 0 1-1 1H3"/>
+            <path d="M21 8h-4a1 1 0 0 1-1-1V3"/>
+            <path d="M3 16h4a1 1 0 0 1 1 1v4"/>
+            <path d="M16 21v-4a1 1 0 0 1 1-1h4"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_compress">Compress PDF</span>
+          <p data-i18n="hub.tool_compress_desc">Shrink file size for easier sharing.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="ocr-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_ocr">Make Searchable (OCR)</span>
+          <p data-i18n="hub.tool_ocr_desc">Add an invisible OCR text layer so scanned PDFs become searchable.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="markdown-viewer">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_markdown_viewer">Markdown Viewer</span>
+          <p data-i18n="hub.tool_markdown_viewer_desc">Paste or drop Markdown and see it rendered live, side by side.</p>
+        </div>
+      </a>
+
+      <a class="tool-card" href="view-pdf">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/>
+            <path d="M15 2v5h5"/>
+            <circle cx="12" cy="13" r="1.5"/>
+          </svg>
+        </div>
+        <div class="tool-card-body">
+          <span class="tool-card-title" data-i18n="hub.tool_view_pdf">PDF Viewer</span>
+          <p data-i18n="hub.tool_view_pdf_desc">Open and read PDFs with zoom, navigation, and print.</p>
+        </div>
+      </a>
+        </div>
+      </section>
+    </div>
+
+    <section class="about">
+      <h2 data-i18n="hub.why_client_side">Why client-side</h2>
+      <ul class="about-list">
+        <li><strong data-i18n="hub.about_1_title">Nothing is uploaded.</strong> <span data-i18n="hub.about_1_body">There is no backend and no upload endpoint. Every tool runs in this tab only, so we literally cannot see, store, or access the files you open.</span></li>
+        <li><strong data-i18n="hub.about_2_title">Verified libraries.</strong> <span data-i18n="hub.about_2_body">The open-source libraries each tool relies on are fetched, checked against a pinned cryptographic hash, and only then executed. A tampered download is rejected, not silently run.</span></li>
+        <li><strong data-i18n="hub.about_3_title">No account, analytics only with consent.</strong> <span data-i18n="hub.about_3_body">No signup. Google Analytics loads only if you accept the cookie banner, and even then it never sees your files or your IP address. Our host also sees standard aggregate traffic stats, like any web host does.</span></li>
+        <li><strong data-i18n="hub.about_4_title">Completely free, no watermarks.</strong> <span data-i18n="hub.about_4_body">There's no premium tier and no backend to enforce one: every tool is fully functional, with no watermark added to your files and no page or usage limits beyond what your own browser can handle.</span></li>
+      </ul>
+    </section>
+
+    <section class="about faq">
+      <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_1_q">Is BrowserPDF really free?</h3>
+          <p data-i18n="hub.faq_1_a">Yes. Every tool is fully functional with no account, no premium tier, no watermarks, and no usage limits. There is no backend that could enforce any of those anyway.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_2_q">Are my files uploaded anywhere?</h3>
+          <p data-i18n="hub.faq_2_a">No. Each tool processes your file inside the browser tab using JavaScript and WebAssembly. There is no upload endpoint at all, which you can verify yourself: open your browser's developer tools and watch the network panel while you work.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_3_q">Is there a file size limit?</h3>
+          <p data-i18n="hub.faq_3_a">We don't impose one. The practical limit is your device's memory, since all processing happens locally. Very large files simply take longer on slower hardware.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_4_q">Do scanned PDFs work?</h3>
+          <p data-i18n="hub.faq_4_a">Yes. Tools that read text (PDF to Markdown, PDF to Word, Extract Text, Make Searchable) fall back to OCR that runs on your device, with 14 selectable languages.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_5_q">Which browsers are supported?</h3>
+          <p data-i18n="hub.faq_5_a">Current versions of Chrome, Edge, Firefox, and Safari, on desktop and mobile. Older browsers without WebAssembly support won't run the OCR-based tools.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="hub.faq_6_q">How can I trust this?</h3>
+          <p data-i18n="hub.faq_6_a">The code is auditable, the open-source libraries it uses are pinned to exact versions and verified with a cryptographic hash before they run, and the strict Content-Security-Policy prevents anything else from loading. Your files never appear in network traffic because no request carrying them is ever made.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p class="privacy-note">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="hub.privacy_note">every tool here processes your files entirely in this browser tab. Nothing is uploaded, transmitted, or stored anywhere outside your device.</span></span>
+    </p>
+    <p class="site-footer-credits">
+      Built with open-source libraries:
+      <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener noreferrer">pdf.js</a>,
+      <a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener noreferrer">Tesseract.js</a>, and
+      <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a>.
+      All are verified with a cryptographic hash before being loaded.
+      &middot;
+      <a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot;
+      <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot;
+      <a href="accessibility" data-i18n="common.footer_accessibility">Accessibility</a> &middot;
+      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Open source</span></a>
+    </p>
+  </footer>
+</div>
+
+<script type="module" src="js/i18n.js"></script>
+<script src="js/theme.js" defer></script>
+<script src="js/hub.js" defer></script>
+</body>
+</html>

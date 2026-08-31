@@ -1,0 +1,11 @@
+.wrangler/
+.DS_Store
+node_modules/
+test-fixtures/
+gonder.md
+.dev.vars*
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

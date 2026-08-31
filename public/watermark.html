@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>Add a Watermark to a PDF for Free | BrowserPDF</title>
+<meta name="description" content="Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, entirely in your browser. No upload, no signup.">
+<link rel="canonical" href="https://browserpdf.app/watermark">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="Add a Watermark to a PDF for Free: Runs in Your Browser">
+<meta property="og:description" content="Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, entirely in your browser. No upload, no signup.">
+<meta property="og:url" content="https://browserpdf.app/watermark">
+<meta property="og:image" content="https://browserpdf.app/og/watermark.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Preview of the Add Watermark tool: a DRAFT watermark stamped across every PDF page.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Add a Watermark to a PDF for Free: Runs in Your Browser">
+<meta name="twitter:description" content="Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, entirely in your browser. No upload, no signup.">
+<meta name="twitter:image" content="https://browserpdf.app/og/watermark.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Watermark - BrowserPDF","description":"Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, entirely in your browser. No upload, no signup.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/watermark","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["100% client-side: no file is ever uploaded","Free, no watermarks, no signup, no usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Watermark","item":"https://browserpdf.app/watermark"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can this remove an existing watermark?","acceptedAnswer":{"@type":"Answer","text":"No. This tool only adds watermarks to your own documents; it cannot strip marks from files you receive."}},{"@type":"Question","name":"What can I customize?","acceptedAnswer":{"@type":"Answer","text":"The text, diagonal or horizontal placement, size, opacity, and color (gray, red, or blue), with a live preview of the first page before you download."}},{"@type":"Question","name":"Why did some characters disappear from my watermark?","acceptedAnswer":{"@type":"Answer","text":"The built-in PDF fonts cover Latin (Western European) characters only. Unsupported characters are skipped with a warning instead of failing the whole file."}}]}]}</script>
+</head>
+<body>
+<div class="app">
+
+  <noscript>
+    <div class="noscript-banner" data-i18n="common.noscript">These tools run entirely in your browser, which means they need JavaScript to work. Nothing is uploaded either way; enable JavaScript to use this page.</div>
+  </noscript>
+
+  <header class="site-header">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="url(#g-brand)"/>
+        <defs>
+          <linearGradient id="g-brand" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0" stop-color="#7b76f0"/>
+            <stop offset="1" stop-color="#4f46d6"/>
+          </linearGradient>
+        </defs>
+        <path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/>
+        <path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">browser<span class="brand-accent">pdf</span></span>
+    </a>
+
+    <div class="privacy-badge" data-i18n-title="common.privacy_badge_title" title="Everything happens in this tab only; no file is ever uploaded anywhere.">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span data-i18n="common.privacy_badge">Runs entirely in your browser</span>
+    </div>
+
+    <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="header-github" aria-label="GitHub"><svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <button id="themeToggle" class="theme-toggle" type="button" data-i18n-aria="common.theme_toggle" aria-label="Toggle dark / light theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
+
+    <section class="intro">
+      <h1 data-i18n="watermark.h1">Add a Watermark</h1>
+      <p data-i18n="watermark.intro">Stamp text like DRAFT or CONFIDENTIAL across every page, diagonal or straight, at the opacity you choose. Nothing leaves this tab.</p>
+    </section>
+
+    <div class="callout">
+      <span data-i18n="watermark.callout_1">We never watermark your files; this tool is for when</span> <em data-i18n="watermark.callout_you">you</em> <span data-i18n="watermark.callout_2">want to stamp your own documents.</span>
+    </div>
+
+    <section class="dropzone-section">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="common.dropzone_aria" aria-label="Click or drag and drop to upload a PDF file">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 16V4"/>
+          <path d="M6 10l6-6 6 6"/>
+          <path d="M4 20h16"/>
+        </svg>
+        <p class="dropzone-title" data-i18n="common.dropzone_title">Drag your PDF file here</p>
+        <p class="dropzone-subtitle"><span data-i18n="common.dropzone_or">or</span> <span class="link-like" data-i18n="common.dropzone_link">choose from your computer</span></p>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+      </div>
+
+      <div id="optionsSection" class="options-panel" hidden>
+        <div class="option-block">
+          <div class="option-title">
+            <span data-i18n="watermark.text_label">Watermark text</span>
+          </div>
+          <input type="text" id="watermarkText" class="text-input" value="DRAFT" maxlength="60" data-i18n-aria="watermark.text_label" aria-label="Watermark text">
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block option-block-row">
+          <div class="option-title">
+            <span data-i18n="watermark.style_label">Style</span>
+          </div>
+          <select id="styleSelect" class="select-input" data-i18n-aria="watermark.style_aria" aria-label="Watermark orientation">
+            <option value="diagonal" selected data-i18n-opt="watermark.style_diagonal">Diagonal (45&deg;)</option>
+            <option value="horizontal" data-i18n-opt="watermark.style_horizontal">Horizontal</option>
+          </select>
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block option-block-row">
+          <div class="option-title">
+            <span data-i18n="watermark.color_label">Color</span>
+          </div>
+          <select id="colorSelect" class="select-input" data-i18n-aria="watermark.color_aria" aria-label="Watermark color">
+            <option value="gray" selected data-i18n-opt="watermark.color_gray">Gray</option>
+            <option value="red" data-i18n-opt="watermark.color_red">Red</option>
+            <option value="blue" data-i18n-opt="watermark.color_blue">Blue</option>
+          </select>
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block">
+          <div class="option-header">
+            <div class="option-title"><span data-i18n="watermark.size_label">Text size</span></div>
+            <span id="sizeValue" class="option-count">56 pt</span>
+          </div>
+          <input type="range" id="sizeSlider" class="quality-slider" min="24" max="120" value="56" data-i18n-aria="watermark.size_aria" aria-label="Watermark text size in points">
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block">
+          <div class="option-header">
+            <div class="option-title"><span data-i18n="watermark.opacity_label">Opacity</span></div>
+            <span id="opacityValue" class="option-count">15%</span>
+          </div>
+          <input type="range" id="opacitySlider" class="quality-slider" min="5" max="50" value="15" data-i18n-aria="watermark.opacity_aria" aria-label="Watermark opacity percentage">
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-block option-block-row">
+          <span id="fileSummary" class="file-list-count"></span>
+          <button id="applyBtn" class="btn btn-primary" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            <span data-i18n="watermark.btn_apply">Add watermark &amp; download</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="charWarning" class="callout" hidden></div>
+
+      <div id="previewPanel" class="preview-panel" hidden>
+        <span id="previewTitle" class="preview-panel-title" data-i18n="watermark.preview_title">Live preview (first page)</span>
+        <div class="preview-canvas-wrap"><canvas id="previewCanvas"></canvas></div>
+      </div>
+
+      <div id="chainRow" class="chain-row" hidden></div>
+    </section>
+
+    <section id="progressSection" class="progress-section" hidden>
+      <div class="progress-header">
+        <span id="progressStatus" data-i18n="common.preparing">Preparing…</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </section>
+
+    <section id="errorSection" class="error-banner" hidden role="alert">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span id="errorText"></span>
+    </section>
+
+    <section class="about">
+      <h2 data-i18n="common.how_it_works">How it works</h2>
+      <ul class="about-list">
+        <li><strong data-i18n="watermark.about_1_title">The watermark is drawn into each page</strong> <span data-i18n="watermark.about_1_body">with pdf-lib (bold Helvetica, gray, at your chosen size, color, and opacity), centered straight or at 45&deg;. The live preview shows the first page exactly as it will download.</span></li>
+        <li><strong data-i18n="watermark.about_2_title">Character support:</strong> <span data-i18n="watermark.about_2_body">the built-in PDF fonts cover Latin (Western European) characters. Unsupported characters are skipped with a warning rather than failing mid-file.</span></li>
+        <li><strong data-i18n="watermark.about_3_title">This is a visual stamp, not security.</strong> <span data-i18n="watermark.about_3_body">A determined user can remove a watermark; it deters casual misuse and marks status, nothing more.</span></li>
+      </ul>
+    </section>
+
+    <section class="about faq">
+      <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3 data-i18n="watermark.faq_1_q">Can this remove an existing watermark?</h3>
+          <p data-i18n="watermark.faq_1_a">No. This tool only adds watermarks to your own documents; it cannot strip marks from files you receive.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="watermark.faq_2_q">What can I customize?</h3>
+          <p data-i18n="watermark.faq_2_a">The text, diagonal or horizontal placement, size, opacity, and color (gray, red, or blue), with a live preview of the first page before you download.</p>
+        </div>
+        <div class="faq-item">
+          <h3 data-i18n="watermark.faq_3_q">Why did some characters disappear from my watermark?</h3>
+          <p data-i18n="watermark.faq_3_a">The built-in PDF fonts cover Latin (Western European) characters only. Unsupported characters are skipped with a warning instead of failing the whole file.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="privacy-note">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="common.privacy_note">your PDF is processed entirely in this browser tab. Nothing is uploaded, transmitted, or stored anywhere outside your device.</span></span>
+    </p>
+    <p class="site-footer-credits">
+      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="common.verified_hash">library, verified with a cryptographic hash before being loaded.</span>
+      &middot;
+      <a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot;
+      <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot;
+      <a href="accessibility" data-i18n="common.footer_accessibility">Accessibility</a> &middot;
+      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Open source</span></a>
+    </p>
+  </footer>
+</div>
+
+<script type="module" src="js/watermark.js"></script>
+<script src="js/theme.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "browserpdf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A free, client-side suite of PDF and Markdown tools. Everything runs in the browser tab: nothing is uploaded anywhere, and there are no watermarks or usage limits.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/utkutugrul/browserpdf.app.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "pdf-lib": "^1.17.1"
+  }
+}

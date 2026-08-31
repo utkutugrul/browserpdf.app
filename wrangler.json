@@ -1,0 +1,21 @@
+{
+  "name": "browserpdf",
+  "compatibility_date": "2025-01-01",
+  "main": "worker.js",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "routes": [
+    {
+      "pattern": "browserpdf.app",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.browserpdf.app",
+      "custom_domain": true
+    }
+  ]
+}
