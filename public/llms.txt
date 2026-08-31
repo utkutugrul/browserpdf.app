@@ -4,7 +4,8 @@
 
 ## Key facts
 
-- 100% client-side: no backend, no upload, no tracking, no signup.
+- 100% client-side: no backend, no upload, no signup. The files you process never leave your device.
+- Analytics: optional, consent-gated Google Analytics (opt-in banner, page views only, proxied first-party so Google never sees the visitor's IP). It never touches the files being processed.
 - Completely free: no premium tier, no watermarks added to output.
 - pdf.js, Tesseract.js, and pdf-lib are loaded from jsDelivr at pinned versions and verified client-side with a cryptographic hash before they run.
 - Available in 22 languages (English, Spanish, French, German, Portuguese, Italian, Russian, Japanese, Korean, Chinese Simplified/Traditional, Arabic, Hindi, Turkish, Dutch, Polish, Indonesian, Vietnamese, Thai, Ukrainian, Czech, Swedish).

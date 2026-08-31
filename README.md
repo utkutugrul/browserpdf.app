@@ -34,7 +34,7 @@ Vibe coded.
 - **Add Text** (`add-text.html`): place typed text anywhere on a page, with font, size, and colour controls.
 - **Add Image** (`add-image.html`): drop an image onto a page and position it.
 - **Highlight** (`highlight.html`): draw translucent highlight rectangles over a page.
-- **Redact** (`redact.html`): black out regions of a page.
+- **Redact** (`redact.html`): black out regions of a page; pages with a box are rebuilt as flat images so the covered content is removed from the file, not just hidden.
 - **Edit Metadata** (`edit-metadata.html`): read and rewrite title, author, subject, keywords, creator, and producer.
 - **PDF Viewer** (`view-pdf.html`): read a PDF with page navigation, zoom, fit-to-width, and printing.
 
@@ -83,7 +83,7 @@ BASE_URL=https://browserpdf.app npm test
 
 Remote runs go serial with retries on purpose. Each test opens a fresh browser context that re-fetches the pinned libraries, and running them in parallel from one IP gets those fetches throttled, which shows up as a random tool timing out; the same test passes on its own every time.
 
-Not covered yet: `add-text`, `add-image`, `highlight`, `redact`, and `crop` need pointer placement on a rendered page; `ocr-pdf` is minutes-slow; `excel-to-pdf` and `word-to-pdf` need `.xlsx` / `.docx` fixtures that aren't generated yet.
+Not covered yet: `ocr-pdf` is minutes-slow to run end to end. Everything else is covered, including the pointer-placement tools (raw mouse events on the placement canvas) and `excel-to-pdf` / `word-to-pdf`, which get minimal generated `.xlsx` / `.docx` fixtures.
 
 ## How each tool works
 
