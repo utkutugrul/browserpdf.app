@@ -6,13 +6,13 @@
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="index, follow">
 <title>Privacy Policy | BrowserPDF</title>
-<meta name="description" content="BrowserPDF's privacy policy: every tool runs client-side, no files are ever uploaded, transmitted, or stored on our servers.">
+<meta name="description" content="BrowserPDF's privacy policy: document processing happens in the browser tab and BrowserPDF has no file-upload endpoint.">
 <link rel="canonical" href="https://browserpdf.app/privacy">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrowserPDF">
 <meta property="og:title" content="Privacy Policy | BrowserPDF">
-<meta property="og:description" content="BrowserPDF's privacy policy: every tool runs client-side, no files are ever uploaded, transmitted, or stored on our servers.">
+<meta property="og:description" content="BrowserPDF's privacy policy: document processing happens in the browser tab and BrowserPDF has no file-upload endpoint.">
 <meta property="og:url" content="https://browserpdf.app/privacy">
 <meta property="og:image" content="https://browserpdf.app/og/browserpdf.png">
 <meta property="og:image:width" content="1200">
@@ -22,7 +22,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Privacy Policy | BrowserPDF">
-<meta name="twitter:description" content="BrowserPDF's privacy policy: every tool runs client-side, no files are ever uploaded, transmitted, or stored on our servers.">
+<meta name="twitter:description" content="BrowserPDF's privacy policy: document processing happens in the browser tab and BrowserPDF has no file-upload endpoint.">
 <meta name="twitter:image" content="https://browserpdf.app/og/browserpdf.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
 <div class="app">
 
   <header class="site-header">
@@ -60,19 +61,19 @@
     </button>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <a class="nav-back" href="/">&larr; All tools</a>
 
     <article class="prose">
       <h1>Privacy Policy</h1>
-      <p class="prose-updated">Last updated: August 5, 2026</p>
+      <p class="prose-updated">Last updated: September 6, 2026</p>
 
       <div class="callout">
-        <strong>Short version:</strong> every tool runs entirely in your browser. <strong>We cannot see your files</strong> (no upload, no server-side processing). We use basic Cloudflare traffic analytics, and, only if you accept the cookie banner, Google Analytics; neither ever includes document contents.
+        <strong>Short version:</strong> document processing happens in your browser tab. <strong>We cannot see your files</strong> because BrowserPDF has no file-processing backend or file-upload endpoint. Cloudflare receives ordinary hosting traffic; Google Analytics storage remains denied unless you accept it. Neither receives document contents.
       </div>
 
       <h2>What we don't collect (your files)</h2>
-      <p>We do not operate a backend for file processing. There is no upload endpoint. PDFs and other documents you open in any tool are read, processed, and downloaded again entirely within your browser tab. We never receive a copy of your files, their contents, extracted text, passwords you type into a tool, or any data derived from the document.</p>
+      <p>We do not operate a backend for file processing. BrowserPDF has no file-upload endpoint. PDFs and other documents you open in any tool are read, processed, and downloaded again within your browser tab. The tools provide no file-upload route through which BrowserPDF could receive a copy of your files, their contents, extracted text, passwords you type into a tool, or data derived from the document.</p>
       <p>We do not require an account, and we do not ask for your name, email address, or other personal information just to use a tool.</p>
 
       <h2>What is stored locally on your device</h2>
@@ -84,14 +85,14 @@
         <li><strong>Edge / zone analytics</strong> that come with hosting on Cloudflare Workers (request counts, bandwidth, status codes, rough geography, popular paths). This is standard hosting telemetry.</li>
         <li><strong>Cloudflare Web Analytics</strong> (cookieless measurement of page views and performance, when enabled for this site). That may load a small Cloudflare script (for example from <code>static.cloudflareinsights.com</code>) to report aggregate page metrics.</li>
       </ul>
-      <p>These analytics are about <em>site traffic</em> (which HTML pages load, roughly from where). They are <strong>not</strong> about the PDF, Word, Excel, or image files you open inside a tool. There is no analytics packing of file bytes, extracted text, or tool form fields, because that work never leaves your tab.</p>
+      <p>These analytics are about <em>site traffic</em> (which HTML pages load, roughly from where). They are <strong>not</strong> about the PDF, Word, Excel, or image files you open inside a tool. There is no analytics packing of file bytes, extracted text, or tool form fields, because document processing happens locally and BrowserPDF has no file-upload endpoint.</p>
       <p>We do <strong>not</strong> use social media pixels, advertising conversion trackers, or cross-site fingerprinting. The only other measurement tool is the consent-gated Google Analytics described next. See also <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare's privacy policy</a>.</p>
 
-      <h2>Google Analytics (only with your consent)</h2>
-      <p>If you click <strong>Accept</strong> on the cookie banner shown on your first visit, we load Google Analytics to understand aggregate site traffic. Until you make a choice, and if you click <strong>Reject</strong>, Google Analytics runs in a reduced mode that sets no cookies and does not identify you individually.</p>
+      <h2>Google Analytics measurement and storage choices</h2>
+      <p>If Google Analytics is configured, its code may load in consent-denied mode to measure aggregate site traffic. <code>analytics_storage</code> remains denied until you click <strong>Accept</strong>, and clicking <strong>Reject</strong> keeps it denied. Advertising storage remains denied in either case.</p>
       <ul>
         <li><strong>Delivery.</strong> Google Analytics loads through Cloudflare's Google Tag Gateway, which proxies it through our own domain rather than loading it directly from Google's servers, and strips your IP address before forwarding the request, so Google does not receive it.</li>
-        <li><strong>What it can see.</strong> Pages visited, approximate location (derived without your raw IP), device and browser type, and how you arrived at the site. It cannot see the files you open in any tool, since that processing never leaves your browser tab.</li>
+        <li><strong>What it can see.</strong> Pages visited, approximate location (derived without your raw IP), device and browser type, and how you arrived at the site. It cannot see the files you open in any tool, because document processing happens locally and BrowserPDF has no file-upload endpoint.</li>
         <li><strong>Cookies.</strong> Once accepted, Google Analytics sets cookies to distinguish returning visitors. These are the only cookies this site sets; everything else (theme, language, your consent choice) uses <code>localStorage</code>, not cookies.</li>
         <li><strong>Changing your mind.</strong> Click <strong>Cookie preferences</strong> in the footer of any page at any time to change your choice.</li>
       </ul>
@@ -101,18 +102,18 @@
       <p>Loading this site involves a small number of third parties whose technical logs we do not fully control:</p>
       <ul>
         <li><strong>Hosting provider (Cloudflare).</strong> Static assets and the Worker are served via Cloudflare. Cloudflare keeps ordinary access logs (IP, requested path, timestamp, user agent) and provides the aggregate analytics described above. Document contents are not part of that. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare's privacy policy</a>.</li>
-        <li><strong>jsDelivr (CDN).</strong> Open-source libraries (pdf.js, Tesseract.js, pdf-lib, and similar) load from jsDelivr. Your browser requests those library files from jsDelivr subject to <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net" target="_blank" rel="noopener noreferrer">jsDelivr's privacy policy</a>. We pin versions and verify hashes before execution; we do not control jsDelivr's own logs. Your document files are never sent to jsDelivr.</li>
+        <li><strong>jsDelivr (CDN).</strong> Open-source libraries (pdf.js, Tesseract.js, pdf-lib, and similar) load from jsDelivr. Your browser requests those library files from jsDelivr subject to <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net" target="_blank" rel="noopener noreferrer">jsDelivr's privacy policy</a>. We pin versions and verify hashes before execution; we do not control jsDelivr's own logs. BrowserPDF has no document-upload path to jsDelivr.</li>
       </ul>
       <p>Neither pathway is used to inspect what you do with a file after the page has loaded.</p>
 
       <h2>Children's privacy</h2>
       <p>This site does not knowingly collect personal information from anyone, including children, because it does not collect personal information at all.</p>
 
-      <h2>Open-source code</h2>
-      <p>Every claim in this policy follows from how the site is built, not a promise layered on top of it, so you don't have to take our word for it: the source code is published on <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer">GitHub</a>, where you can verify directly that no upload endpoint exists. Reusing the code yourself, as opposed to using this hosted Service, is governed by a separate license, not this policy; see the <a href="terms">Terms of Service</a> for a summary and <code>LICENSE.md</code> in the repository for the complete terms.</p>
+      <h2>Source-available code</h2>
+      <p>Every claim in this policy follows from how the site is built, not a promise layered on top of it, so you don't have to take our word for it: the source code is published on <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer">GitHub</a>, where you can verify directly that no file-upload endpoint exists. Reusing the code yourself, as opposed to using this hosted Service, is governed by a custom license, not this policy; see the <a href="terms">Terms of Service</a> for a summary and <code>LICENSE.md</code> in the repository for the complete terms.</p>
 
       <h2>Changes to this policy</h2>
-      <p>If this policy changes, we'll update the date at the top of this page. Since the core fact (nothing is uploaded) is a property of how the site is built rather than a promise we could quietly break, we don't expect this policy to change often.</p>
+      <p>If this policy changes, we'll update the date at the top of this page. The absence of a document file-upload endpoint is a property of how the site is built and can be inspected in the source code.</p>
 
       <h2>Contact</h2>
       <p>Questions about this policy can be sent to <a href="mailto:info@browserpdf.app">info@browserpdf.app</a>.</p>
@@ -125,7 +126,7 @@
       <a href="privacy">Privacy</a> &middot;
       <a href="terms">Terms</a> &middot;
       <a href="accessibility">Accessibility</a> &middot;
-      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Open source</span></a>
+      <a href="https://github.com/utkutugrul/browserpdf.app" target="_blank" rel="noopener noreferrer" class="footer-github"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="common.footer_source">Source available</span></a>
     </p>
   </footer>
 </div>

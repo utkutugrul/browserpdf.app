@@ -33,6 +33,61 @@ const SUPPORTED_LANGS = new Set([
 const ALL_LANGS = ['en','es','fr','de','pt','it','ru','ja','ko','zh','zh-TW',
   'ar','hi','tr','nl','pl','id','vi','th','uk','cs','sv'];
 
+const LOCALIZED_SERVICE_META = Object.freeze({
+  '/workflows': 'workflows',
+  '/privacy-scan': 'privacy_scan',
+  '/document-doctor': 'doctor',
+});
+
+function escapeAttribute(value) {
+  return String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+function replaceMetaContent(html, attribute, name, value) {
+  const pattern = new RegExp(`(<meta\\s+${attribute}="${name}"\\s+content=")[^"]*(")`, 'i');
+  return html.replace(pattern, `$1${escapeAttribute(value)}$2`);
+}
+
+function localizeServiceMetadata(html, lang, pagePath, dictionary) {
+  const prefix = LOCALIZED_SERVICE_META[pagePath];
+  if (!prefix) return html;
+  const title = dictionary[`${prefix}.meta_title`];
+  const description = dictionary[`${prefix}.meta_description`];
+  const jsonName = dictionary[`${prefix}.jsonld_name`];
+  const jsonDescription = dictionary[`${prefix}.jsonld_description`];
+  const breadcrumbName = dictionary[`${prefix}.breadcrumb_name`];
+  const homeName = dictionary['common.home'];
+  if (![title, description, jsonName, jsonDescription, breadcrumbName, homeName].every(Boolean)) return html;
+
+  const localizedUrl = `https://browserpdf.app/${lang}${pagePath}`;
+  const localizedHome = `https://browserpdf.app/${lang}/`;
+  let output = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeAttribute(title)}</title>`);
+  output = replaceMetaContent(output, 'name', 'description', description);
+  output = replaceMetaContent(output, 'property', 'og:title', title);
+  output = replaceMetaContent(output, 'property', 'og:description', description);
+  output = replaceMetaContent(output, 'property', 'og:url', localizedUrl);
+  output = replaceMetaContent(output, 'name', 'twitter:title', title);
+  output = replaceMetaContent(output, 'name', 'twitter:description', description);
+  return output.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/i, (match, open, raw, close) => {
+    try {
+      const data = JSON.parse(raw);
+      const application = data['@graph']?.find((item) => item['@type'] === 'SoftwareApplication');
+      const breadcrumbs = data['@graph']?.find((item) => item['@type'] === 'BreadcrumbList');
+      if (!application || !breadcrumbs?.itemListElement?.[0] || !breadcrumbs.itemListElement[1]) return match;
+      application.name = jsonName;
+      application.description = jsonDescription;
+      application.url = localizedUrl;
+      breadcrumbs.itemListElement[0].name = homeName;
+      breadcrumbs.itemListElement[0].item = localizedHome;
+      breadcrumbs.itemListElement[1].name = breadcrumbName;
+      breadcrumbs.itemListElement[1].item = localizedUrl;
+      return `${open}${JSON.stringify(data)}${close}`;
+    } catch {
+      return match;
+    }
+  });
+}
+
 function buildHreflang(pagePath) {
   let html = '';
   for (const lang of ALL_LANGS) {
@@ -60,7 +115,7 @@ function withSecurityHeaders(response, csp) {
   out.headers.set('Cache-Control', 'no-store');
   out.headers.set('X-Frame-Options', 'DENY');
   out.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  out.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
+  out.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=(), tools=(self)');
   out.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   out.headers.set('Cross-Origin-Resource-Policy', 'same-site');
   out.headers.set('X-Content-Type-Options', 'nosniff');
@@ -127,9 +182,11 @@ function gtagBootstrapScript(nonce, measurementId) {
   return `<script async nonce="${nonce}" src="/metrics/gtag/js?id=${measurementId}"></script><script nonce="${nonce}">gtag('js', new Date());gtag('config', '${measurementId}');</script>`;
 }
 
-const CONSENT_BANNER_HTML = `<div id="consent-banner" class="consent-banner" hidden role="dialog" aria-live="polite" aria-label="Cookie consent"><p class="consent-banner-text"><span data-i18n="consent.text">We'd like to use Google Analytics to understand site traffic (your IP address isn't shared with Google). This never involves the files you process, those always stay on your device.</span> <a href="/privacy" data-i18n="consent.learn_more" data-i18n-aria="consent.learn_more_aria" aria-label="Learn more about how BrowserPDF uses Google Analytics">Learn more</a></p><div class="consent-banner-actions"><button type="button" class="btn btn-secondary" id="consent-reject" data-i18n="consent.reject">Reject</button><button type="button" class="btn btn-primary" id="consent-accept" data-i18n="consent.accept">Accept</button></div></div><script src="/js/consent.js" defer></script>`;
+const CONSENT_BANNER_HTML = `<div id="consent-banner" class="consent-banner" hidden role="region" aria-label="Analytics preferences" data-i18n-aria="consent.region_aria"><p class="consent-banner-text"><span data-i18n="consent.text">Allow analytics storage to help us understand site traffic? Analytics never receives your document files. Advertising storage stays disabled either way.</span> <a href="/privacy" data-i18n="consent.learn_more" data-i18n-aria="consent.learn_more_aria" aria-label="Learn more about how BrowserPDF uses Google Analytics">Learn more</a></p><div class="consent-banner-actions"><button type="button" class="btn btn-secondary" id="consent-reject" data-i18n="consent.reject">Reject</button><button type="button" class="btn btn-secondary" id="consent-accept" data-i18n="consent.accept">Accept</button></div></div><script src="/js/consent.js" defer></script>`;
 
 const CONSENT_MANAGE_HTML = `<p class="site-footer-credits"><button type="button" id="consent-manage" class="consent-manage-btn" data-i18n="consent.manage">Cookie preferences</button></p>`;
+const PWA_HEAD_HTML = `<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#5b52e0">`;
+const PWA_PANEL_HTML = `<aside id="pwaPanel" class="pwa-panel" hidden aria-labelledby="pwaTitle"><details><summary id="pwaTitle" data-i18n="pwa.title">Offline shell settings</summary><p data-i18n="pwa.capability">Only a small static shell and an intentional connection fallback are cached. Document tools and external processing libraries are not enabled for offline use.</p><p id="pwaStorage" data-i18n="pwa.storage_unknown">Browser storage estimate unavailable.</p><div class="pwa-actions"><button id="pwaPersist" class="btn btn-ghost btn-small" type="button" data-i18n="pwa.persist">Ask browser to keep shell data</button><button id="pwaRemove" class="btn btn-ghost btn-small" type="button" data-i18n="pwa.remove">Remove offline shell data</button><button id="pwaUpdate" class="btn btn-secondary btn-small" type="button" hidden data-i18n="pwa.update">Activate available update</button></div><p id="pwaStatus" role="status" aria-live="polite"></p></details></aside><script type="module" src="/js/pwa.js"></script>`;
 
 export default {
   async fetch(request, env) {
@@ -150,6 +207,25 @@ export default {
             'cache-control': 'public, max-age=3600',
           },
         });
+      }
+
+      // The offline fallback is the sole cacheable HTML document. It is a
+      // fixed, script-free asset and deliberately bypasses nonce injection;
+      // every normal page continues through the no-store HTMLRewriter path.
+      if (url.pathname === '/offline.html') {
+        // Static Assets canonicalizes `.html` paths with a 307. Fetch its
+        // canonical internal path so this public endpoint stays a cacheable
+        // 200 and cannot fall through to the normal nonce-rewrite pipeline.
+        const assetUrl = new URL(url);
+        assetUrl.pathname = '/offline';
+        const staticResponse = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+        const offline = new Response(staticResponse.body, staticResponse);
+        offline.headers.set('Content-Type', 'text/html; charset=utf-8');
+        offline.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+        offline.headers.set('Content-Security-Policy', "default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        offline.headers.set('X-Content-Type-Options', 'nosniff');
+        offline.headers.set('X-BrowserPDF-Static-Offline', '1');
+        return offline;
       }
 
       const pathParts = url.pathname.split('/').filter(Boolean);
@@ -188,7 +264,7 @@ export default {
 
       const pagePath = url.pathname === '' ? '/' : url.pathname;
       const assetRequest = new Request(url.toString(), request);
-      const response = await env.ASSETS.fetch(assetRequest);
+      let response = await env.ASSETS.fetch(assetRequest);
       const type = response.headers.get('content-type') || '';
 
       // The assets binding answers /merge.html with a temporary 307 whose
@@ -213,6 +289,16 @@ export default {
         return response;
       }
 
+      if (lang !== 'en' && LOCALIZED_SERVICE_META[pagePath]) {
+        const translationsUrl = new URL('/translations.json', url.origin);
+        const translationsResponse = await env.ASSETS.fetch(new Request(translationsUrl.toString()));
+        if (translationsResponse.ok) {
+          const translations = await translationsResponse.json();
+          const localized = localizeServiceMetadata(await response.text(), lang, pagePath, translations[lang] || {});
+          response = new Response(localized, response);
+        }
+      }
+
       const nonce = crypto.randomUUID();
       const headInject = CONSENT_DEFAULT_SCRIPT + gtagBootstrapScript(nonce, env.GTAG_MEASUREMENT_ID);
 
@@ -230,6 +316,7 @@ export default {
             element(el) {
               el.prepend(headInject, { html: true });
               el.append(buildHreflang(pagePath), { html: true });
+              el.append(PWA_HEAD_HTML, { html: true });
             },
           })
           .on('link[rel="canonical"]', {
@@ -244,7 +331,7 @@ export default {
           .on('body', {
             element(el) {
               el.prepend('<script type="module" src="/js/i18n.js"></script>', { html: true });
-              el.append(CONSENT_BANNER_HTML, { html: true });
+              el.append(PWA_PANEL_HTML + CONSENT_BANNER_HTML, { html: true });
             },
           })
           .on('footer.site-footer', {
@@ -263,12 +350,13 @@ export default {
           .on('head', {
             element(el) {
               el.prepend(headInject, { html: true });
+              el.append(PWA_HEAD_HTML, { html: true });
             },
           })
           .on('body', {
             element(el) {
               el.prepend('<script type="module" src="/js/i18n.js"></script>', { html: true });
-              el.append(CONSENT_BANNER_HTML, { html: true });
+              el.append(PWA_PANEL_HTML + CONSENT_BANNER_HTML, { html: true });
             },
           })
           .on('footer.site-footer', {

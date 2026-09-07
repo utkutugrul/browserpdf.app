@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>Local PDF Workflows & Batch Processing | BrowserPDF</title>
+<meta name="description" content="Run multi-step PDF recipes and a one-at-a-time batch queue in your browser tab. BrowserPDF has no file-upload endpoint; outputs never overwrite originals.">
+<link rel="canonical" href="https://browserpdf.app/workflows">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="Local PDF Workflows & Batch Processing | BrowserPDF">
+<meta property="og:description" content="Build and run honest, local multi-step PDF recipes with a bounded batch queue.">
+<meta property="og:url" content="https://browserpdf.app/workflows">
+<meta property="og:image" content="https://browserpdf.app/og/browserpdf.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Local PDF Workflows & Batch Processing | BrowserPDF">
+<meta name="twitter:description" content="Build and run local multi-step PDF recipes with a bounded batch queue.">
+<meta name="twitter:image" content="https://browserpdf.app/og/browserpdf.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"PDF Workflows - BrowserPDF","description":"Run three reviewed PDF recipes over a bounded, concurrency-one local queue. Originals are not overwritten.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/workflows","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Three explicit starter recipes","Concurrency-one local batch queue","Resumable BrowserPDF-owned workflow storage"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"PDF Workflows","item":"https://browserpdf.app/workflows"}]}]}</script>
+</head>
+<body>
+<a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
+<div class="app">
+  <noscript><div class="noscript-banner" data-i18n="common.noscript">JavaScript is required to use this page.</div></noscript>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="BrowserPDF home">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#5b52e0"/><path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/><path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6"/></svg>
+      <span class="brand-name">browser<span class="brand-accent">pdf</span></span>
+    </a>
+    <div class="privacy-badge" data-i18n-title="common.privacy_badge_title" title="Document processing happens in this browser tab."><span data-i18n="common.privacy_badge">Documents processed in this tab</span></div>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark / light theme" data-i18n-aria="common.theme_toggle">◐</button>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
+    <section class="tool-header workflow-header">
+      <p class="eyebrow" data-i18n="workflows.eyebrow">Local automation</p>
+      <h1 data-i18n="workflows.h1">PDF workflows</h1>
+      <p class="tool-subtitle" data-i18n="workflows.intro">Choose a verified starter recipe, review every permanent or lossy change, then process PDFs one at a time on this device.</p>
+    </section>
+
+    <div id="workflowError" class="error-box" role="alert" hidden></div>
+    <section class="workflow-builder" aria-labelledby="recipeHeading">
+      <div class="workflow-panel">
+        <h2 id="recipeHeading" data-i18n="workflows.choose_recipe">1. Choose a recipe</h2>
+        <fieldset id="recipeChoices" class="recipe-grid">
+          <legend class="visually-hidden" data-i18n="workflows.recipe_legend">Starter workflow recipes</legend>
+        </fieldset>
+        <div id="recipeOptions" class="workflow-options" aria-live="polite"></div>
+      </div>
+
+      <aside class="workflow-panel workflow-review" aria-labelledby="reviewHeading">
+        <h2 id="reviewHeading" data-i18n="workflows.review_changes">2. Review changes</h2>
+        <ol id="workflowSteps" class="workflow-step-list"></ol>
+        <p class="device-warning"><strong data-i18n="workflows.device_limit_title">Device limit:</strong> <span data-i18n="workflows.device_limit">PDFs are held in local browser storage and processed with concurrency 1. Large or image-heavy batches may exhaust your device's memory or storage.</span></p>
+        <p data-i18n="workflows.non_overwrite">Original files are never overwritten. Every output gets a deterministic new name; duplicate names receive a numeric suffix.</p>
+      </aside>
+    </section>
+
+    <section class="workflow-panel workflow-files" aria-labelledby="filesHeading">
+      <h2 id="filesHeading" data-i18n="workflows.add_files">3. Add PDFs</h2>
+      <div id="workflowDropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="workflows.drop_aria" aria-label="Choose PDF files or drop them here">
+        <input id="workflowFileInput" type="file" accept="application/pdf,.pdf" multiple hidden>
+        <strong data-i18n="workflows.drop_title">Choose PDFs or drop them here</strong>
+        <span data-i18n="workflows.drop_help">Up to 20 files and 250 MB total per local queue.</span>
+      </div>
+      <div class="workflow-actions">
+        <button id="runWorkflowBtn" class="btn btn-primary" type="button" disabled data-i18n="workflows.run">Run queue</button>
+        <button id="cancelWorkflowBtn" class="btn btn-secondary" type="button" disabled data-i18n="workflows.cancel">Cancel after current boundary</button>
+        <button id="clearWorkflowBtn" class="btn btn-ghost" type="button" disabled data-i18n="workflows.clear">Clear queue</button>
+      </div>
+      <p id="queueLive" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="queue-table-wrap">
+        <table class="queue-table">
+          <caption data-i18n="workflows.queue_caption">Local batch queue</caption>
+          <thead><tr><th scope="col" data-i18n="workflows.file">File</th><th scope="col" data-i18n="workflows.status">Status</th><th scope="col" data-i18n="workflows.output">Output</th><th scope="col" data-i18n="workflows.actions">Actions</th></tr></thead>
+          <tbody id="queueBody"><tr><td colspan="4" class="queue-empty" data-i18n="workflows.empty">No PDFs added yet.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="workflow-actions">
+        <button id="downloadZipBtn" class="btn btn-secondary" type="button" hidden data-i18n="workflows.download_zip">Download successful outputs as ZIP</button>
+      </div>
+    </section>
+
+    <section class="about">
+      <h2 data-i18n="workflows.scope_title">Verified scope</h2>
+      <p data-i18n="workflows.scope_body">The privacy recipe scans and clears only standard PDF document-info fields. It does not claim to remove hidden content, attachments, scripts, annotations, or identifying pixels.</p>
+    </section>
+    <section class="about related-tools"><h2 data-i18n="common.related_tools">Related tools</h2><nav class="related-links" data-i18n-aria="common.related_tools" aria-label="Related tools"><a href="privacy-scan" data-i18n="hub.privacy_scan_title">Check detectable privacy risks</a><a href="document-doctor" data-i18n="hub.document_doctor_title">Check PDF structure and rendering</a><a href="merge" data-i18n="hub.tool_merge">Merge PDFs</a></nav></section>
+  </main>
+  <footer class="site-footer"><p class="privacy-note"><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="workflows.privacy_note">selected PDFs and passwords stay on this device. Passwords are held only in memory and are not saved with resumable workflows.</span></p><p class="site-footer-credits"><a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot; <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot; <a href="accessibility" data-i18n="common.footer_accessibility">Accessibility</a></p></footer>
+</div>
+<script type="module" src="js/i18n.js"></script>
+<script src="js/theme.js" defer></script>
+<script type="module" src="js/workflows.js"></script>
+</body>
+</html>

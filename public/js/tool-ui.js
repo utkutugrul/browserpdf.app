@@ -1,6 +1,7 @@
 'use strict';
 
 import { t, getLang } from './i18n.js';
+import { createWorkflowStore } from './core/workflow-store.js';
 
 // Shared page-scaffolding helpers for tool pages. Every tool page uses the
 // same ids for its dropzone, progress, and error elements, so these helpers
@@ -11,6 +12,48 @@ export const errorText = document.getElementById('errorText');
 export const progressSection = document.getElementById('progressSection');
 const progressStatus = document.getElementById('progressStatus');
 const progressFill = document.getElementById('progressFill');
+
+// Shared semantic state contract for tool workspaces. Adapters supply their
+// existing elements, while processing code remains independent of the DOM.
+export function createTaskState(elements = {}) {
+  const errorRegion = elements.errorSection || document.getElementById('errorSection');
+  const errorMessage = elements.errorText || document.getElementById('errorText');
+  const progressRegion = elements.progressSection || document.getElementById('progressSection');
+  const status = elements.progressStatus || document.getElementById('progressStatus');
+  const track = elements.progressTrack || document.getElementById('progressTrack');
+  const fill = elements.progressFill || document.getElementById('progressFill');
+  const successRegion = elements.successSection || document.getElementById('successSection');
+
+  return {
+    showError(message) {
+      if (errorMessage) errorMessage.textContent = message;
+      if (errorRegion) errorRegion.hidden = false;
+    },
+    hideError() {
+      if (errorRegion) errorRegion.hidden = true;
+      if (errorMessage) errorMessage.textContent = '';
+    },
+    setProgress(percent, text) {
+      const value = Math.max(0, Math.min(100, Math.round(percent)));
+      if (fill) fill.style.setProperty('--progress', String(value));
+      if (track) track.setAttribute('aria-valuenow', String(value));
+      if (status) status.textContent = text;
+    },
+    showProgress(text) {
+      if (progressRegion) progressRegion.hidden = false;
+      this.setProgress(0, text);
+    },
+    hideProgress() {
+      if (progressRegion) progressRegion.hidden = true;
+    },
+    showSuccess() {
+      if (successRegion) successRegion.hidden = false;
+    },
+    hideSuccess() {
+      if (successRegion) successRegion.hidden = true;
+    },
+  };
+}
 
 export function showError(message) {
   errorText.textContent = message;
@@ -167,52 +210,44 @@ export async function renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, ta
   }
 }
 
-/* ---------- Cross-tool result chaining ----------
-A finished tool can stash its output in IndexedDB and send the user to
-another tool, which picks the file up on load. IndexedDB (rather than
-sessionStorage) because PDFs routinely exceed storage quotas for strings. */
+/* ---------- Cross-tool workflow handoff ----------
+Outputs are stored in BrowserPDF's versioned workflow database. References in
+the URL make each handoff page-local and resumable; expiry cleanup touches only
+records owned by that workflow, never another database or origin store. */
 
-const CHAIN_DB = 'browserpdf-chain';
-const CHAIN_STORE = 'files';
-
-function openChainDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(CHAIN_DB, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(CHAIN_STORE);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+async function stashForChain(bytes, name, targetSlug) {
+  const store = createWorkflowStore();
+  await store.cleanupExpired();
+  const workflowId = crypto.randomUUID();
+  const file = {
+    id: `${workflowId}:input`, name, type: 'application/pdf', bytes: new Uint8Array(bytes),
+  };
+  await store.putWorkflowBundle({
+    id: workflowId,
+    kind: 'handoff',
+    orderedSteps: [{ id: `tool:${targetSlug}`, parameters: {} }],
+    currentStep: 0,
+    fileRefs: [file.id],
+    cleanup: { policy: 'expire', scope: workflowId },
+  }, [file]);
+  return { workflowId, fileId: file.id };
 }
 
-async function stashForChain(bytes, name) {
-  const db = await openChainDb();
-  await new Promise((resolve, reject) => {
-    const tx = db.transaction(CHAIN_STORE, 'readwrite');
-    tx.objectStore(CHAIN_STORE).put({ bytes, name, ts: Date.now() }, 'pending');
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
-  });
-  db.close();
-}
-
-// Consumes (reads and deletes) a stashed file; returns a File or null.
-// Entries older than 5 minutes are treated as stale and discarded.
+// Loads the URL-addressed handoff without deleting it, allowing reload or back
+// navigation until the workflow's bounded expiry.
 export async function takeChainedFile() {
   try {
-    const db = await openChainDb();
-    const entry = await new Promise((resolve, reject) => {
-      const tx = db.transaction(CHAIN_STORE, 'readwrite');
-      const store = tx.objectStore(CHAIN_STORE);
-      const get = store.get('pending');
-      get.onsuccess = () => {
-        store.delete('pending');
-        resolve(get.result || null);
-      };
-      get.onerror = () => reject(get.error);
-    });
-    db.close();
-    if (!entry || Date.now() - entry.ts > 5 * 60 * 1000) return null;
-    return new File([entry.bytes], entry.name, { type: 'application/pdf' });
+    const params = new URLSearchParams(window.location.search);
+    const workflowId = params.get('workflow');
+    const fileId = params.get('file');
+    if (!workflowId || !fileId || !fileId.startsWith(`${workflowId}:`)) return null;
+    const store = createWorkflowStore();
+    await store.cleanupExpired();
+    const workflow = await store.getWorkflow(workflowId);
+    if (!workflow || !workflow.fileRefs.includes(fileId)) return null;
+    const entry = await store.getFile(fileId);
+    if (!entry || entry.workflowId !== workflowId) return null;
+    return new File([entry.bytes], entry.name, { type: entry.type || 'application/pdf' });
   } catch {
     return null;
   }
@@ -236,9 +271,10 @@ export function offerChain(bytes, name, targets) {
     btn.textContent = t(hubKey, target.label);
     btn.addEventListener('click', async () => {
       try {
-        await stashForChain(bytes, name);
+        const handoff = await stashForChain(bytes, name, target.slug);
         const lang = getLang();
-        window.location.href = lang === 'en' ? '/' + target.slug : `/${lang}/${target.slug}`;
+        const path = lang === 'en' ? '/' + target.slug : `/${lang}/${target.slug}`;
+        window.location.href = `${path}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (err) {
         console.warn('Could not hand the file to the next tool:', err);
       }

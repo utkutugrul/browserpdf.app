@@ -29,7 +29,7 @@ A short **Markdown to PDF** demo. Edit this text, then download it as a PDF.
 
 - Headings, lists, and *emphasis* all lay out automatically
 - Long paragraphs wrap and paginate on their own
-- Nothing leaves your browser
+- Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint
 
 1. Write your Markdown
 2. Check the preview

@@ -1,0 +1,6 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; background: #f7f7fb; color: #20202a; }
+body { margin: 0; padding: 2rem; }
+main { max-width: 38rem; margin: 10vh auto; padding: 2rem; border: 1px solid #d8d8e3; border-radius: 1rem; background: #fff; }
+h1 { margin-top: 0; }
+p { line-height: 1.6; }
+@media (prefers-color-scheme: dark) { :root { background: #17171d; color: #f2f2f7; } main { background: #202028; border-color: #42424f; } }

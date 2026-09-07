@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "BrowserPDF",
+  "short_name": "BrowserPDF",
+  "description": "Private document tools that process selected files in the browser tab.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#5b52e0",
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

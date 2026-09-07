@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="index, follow">
+<title>Detect PDF Privacy Risks Locally | BrowserPDF</title>
+<meta name="description" content="Inspect detectable PDF metadata, attachments, actions, forms, invisible text, and sensitive text patterns locally in your browser tab.">
+<link rel="canonical" href="https://browserpdf.app/privacy-scan">
+<meta property="og:type" content="website"><meta property="og:site_name" content="BrowserPDF">
+<meta property="og:title" content="Detect PDF Privacy Risks Locally | BrowserPDF">
+<meta property="og:description" content="A bounded, local inspection of detectable PDF privacy risks.">
+<meta property="og:url" content="https://browserpdf.app/privacy-scan"><meta property="og:image" content="https://browserpdf.app/og/browserpdf.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Detect PDF Privacy Risks Locally | BrowserPDF"><meta name="twitter:description" content="A bounded, local inspection of detectable PDF privacy risks."><meta name="twitter:image" content="https://browserpdf.app/og/browserpdf.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"PDF Privacy Scan - BrowserPDF","description":"Inspect a bounded set of detectable PDF structures and document-text patterns locally without opening links or executing embedded scripts.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/privacy-scan","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Bounded detectable-structure inspection","Bounded sensitive-pattern locations","Verified standard document-info cleanup"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"PDF Privacy Scan","item":"https://browserpdf.app/privacy-scan"}]}]}</script>
+</head>
+<body>
+<a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
+<div class="app">
+  <noscript><div class="noscript-banner" data-i18n="common.noscript">JavaScript is required to use this page.</div></noscript>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="BrowserPDF home"><svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#5b52e0"/><path d="M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z" fill="none" stroke="white" stroke-width="1.6"/><path d="M18 6v6h6" fill="none" stroke="white" stroke-width="1.6"/></svg><span class="brand-name">browser<span class="brand-accent">pdf</span></span></a>
+    <div class="privacy-badge" data-i18n-title="common.privacy_badge_title" title="Document processing happens in this browser tab."><span data-i18n="common.privacy_badge">Documents processed in this tab</span></div>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark / light theme" data-i18n-aria="common.theme_toggle">◐</button>
+  </header>
+  <main id="main-content" tabindex="-1">
+    <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
+    <section class="intro privacy-scan-intro">
+      <p class="eyebrow" data-i18n="privacy_scan.eyebrow">Local inspection</p>
+      <h1 data-i18n="privacy_scan.h1">Check detectable PDF privacy risks</h1>
+      <p data-i18n="privacy_scan.intro">Inspect a bounded set of detectable PDF structures and document-text patterns without uploading, opening links, or running embedded scripts.</p>
+    </section>
+    <aside class="trust-proof" aria-labelledby="scanProof"><div><strong id="scanProof" data-i18n="hub.privacy_proof_title">Your documents stay in this tab</strong><span data-i18n="privacy_scan.proof">BrowserPDF has no file-upload endpoint. The selected PDF and any raw text matches stay in this browser tab.</span></div></aside>
+
+    <section class="privacy-scan-workspace" aria-labelledby="scanFileHeading" aria-busy="false">
+      <h2 id="scanFileHeading" data-i18n="privacy_scan.choose">Choose one PDF</h2>
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="privacy_scan.drop_aria" aria-label="Choose one PDF or drop it here">
+        <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
+        <strong data-i18n="privacy_scan.drop_title">Choose a PDF or drop it here</strong>
+        <span data-i18n="privacy_scan.drop_help">The file is held only in page memory.</span>
+      </div>
+      <div id="selectedFile" class="scan-file" hidden><span id="selectedFileName"></span><span id="selectedFileSize"></span></div>
+      <div class="btn-row"><button id="scanBtn" class="btn btn-primary" type="button" disabled data-i18n="privacy_scan.scan">Scan detectable risks</button><button id="clearBtn" class="btn btn-ghost" type="button" disabled data-i18n="merge.btn_clear">Clear all</button></div>
+    </section>
+
+    <section id="progressSection" class="progress-section" hidden aria-live="polite"><div class="progress-header"><span id="progressStatus" data-i18n="common.preparing">Preparing…</span></div><div id="progressTrack" class="progress-track" role="progressbar" aria-labelledby="progressStatus" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill" class="progress-fill"></div></div></section>
+    <section id="errorSection" class="error-banner" role="alert" hidden><span id="errorText"></span></section>
+
+    <section id="scanResults" class="scan-results" aria-labelledby="resultsHeading" hidden>
+      <div class="section-heading"><div><h2 id="resultsHeading" data-i18n="privacy_scan.results">Detectable findings</h2><p id="resultSummary"></p></div></div>
+      <ul id="findingList" class="finding-list"></ul>
+      <details id="sensitiveDetails" class="sensitive-details" hidden><summary data-i18n="privacy_scan.raw_matches">Show raw sensitive-pattern matches</summary><p class="device-warning" data-i18n="privacy_scan.raw_warning">Raw matches can contain private text. They remain collapsed and are never exposed to WebMCP.</p><ol id="sensitiveMatches"></ol></details>
+    </section>
+
+    <section id="cleanupPanel" class="scan-cleanup" aria-labelledby="cleanupHeading" hidden>
+      <h2 id="cleanupHeading" data-i18n="privacy_scan.cleanup_title">Optional verified cleanup</h2>
+      <label class="cleanup-choice"><input id="metadataCleanup" type="checkbox"><span><strong data-i18n="privacy_scan.cleanup_metadata">Remove standard document metadata</strong><small data-i18n="privacy_scan.cleanup_loss">Permanently removes detected Title, Author, Subject, Keywords, Creator, Producer, and document dates from a new copy only. Other categories are preserved and rescanned.</small></span></label>
+      <p id="signatureWarning" class="device-warning" hidden data-i18n="privacy_scan.signature_warning">A signature field is detectable. Rewriting the PDF can invalidate an existing digital signature.</p>
+      <button id="cleanupBtn" class="btn btn-secondary" type="button" disabled data-i18n="privacy_scan.cleanup">Create and verify cleaned copy</button>
+    </section>
+
+    <section id="successSection" class="merge-result" role="status" aria-live="polite" hidden><div><h2 data-i18n="privacy_scan.ready">Verified cleaned PDF ready</h2><p id="successText"></p><ul id="lossManifest"></ul></div><button id="downloadBtn" class="btn btn-primary" type="button" data-i18n="privacy_scan.download">Download cleaned copy</button></section>
+    <section class="about"><h2 data-i18n="privacy_scan.limits_title">Important limits</h2><p data-i18n="privacy_scan.limits">This is not a comprehensive privacy, safety, malware, steganography, or hidden-content scan. It reports only the detectable structures and document-text patterns listed above. Pattern matches can be false positives. Embedded links and scripts are inspected as inert structure and never followed or executed.</p></section>
+    <section class="about related-tools"><h2 data-i18n="common.related_tools">Related tools</h2><nav class="related-links" data-i18n-aria="common.related_tools" aria-label="Related tools"><a href="document-doctor" data-i18n="hub.document_doctor_title">Check PDF structure and rendering</a><a href="edit-metadata" data-i18n="hub.tool_edit_metadata">Edit Metadata</a><a href="workflows" data-i18n="hub.tool_workflows">PDF Workflows</a></nav></section>
+  </main>
+  <footer class="site-footer"><p class="privacy-note"><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="privacy_scan.footer">the selected PDF, scan details, and cleaned copy stay in this browser tab.</span></p><p class="site-footer-credits"><a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot; <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot; <a href="accessibility" data-i18n="common.footer_accessibility">Accessibility</a></p></footer>
+</div>
+<script type="module" src="js/i18n.js"></script><script src="js/theme.js" defer></script><script type="module" src="js/privacy-scan.js"></script>
+</body>
+</html>

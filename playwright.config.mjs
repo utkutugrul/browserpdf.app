@@ -25,6 +25,7 @@ export default defineConfig({
   use: {
     baseURL,
     acceptDownloads: true,
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

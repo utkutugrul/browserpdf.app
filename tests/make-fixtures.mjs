@@ -3,7 +3,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { createCanvas } from '@napi-rs/canvas';
+import {
+  PDFDocument, PDFArray, PDFHexString, PDFName, PDFNumber, PDFString,
+  StandardFonts, TextRenderingMode, beginText, endText, moveText,
+  rgb, setFontAndSize, setTextRenderingMode, showText,
+} from 'pdf-lib';
 
 export const FIXTURE_DIR = path.resolve(import.meta.dirname, '../test-fixtures/generated');
 
@@ -99,6 +104,147 @@ async function writeForm(file) {
   writeFileSync(file, await doc.save());
 }
 
+async function writePrivacyFixtures(richFile, cleanFile, signedFile) {
+  const doc = await PDFDocument.create();
+  doc.setTitle('Private fixture title');
+  doc.setAuthor('BrowserPDF fixture author');
+  doc.setSubject('Metadata cleanup verification');
+  doc.setKeywords(['privacy', 'fixture']);
+  const page = doc.addPage([612, 792]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  page.drawText('Contact qa@example.test or 415-555-0123. SSN 123-45-6789.', { x: 54, y: 720, size: 11, font });
+  page.pushOperators(
+    beginText(), setFontAndSize(font.name, 10), setTextRenderingMode(TextRenderingMode.Invisible),
+    moveText(54, 690), showText(font.encodeText('Invisible review note')), endText(),
+  );
+  await doc.attach(new TextEncoder().encode('inert fixture attachment'), 'catalog-note.txt', {
+    mimeType: 'text/plain', description: 'Catalog fixture',
+  });
+  const catalogAttachment = doc.embeddedFiles.at(-1);
+  await catalogAttachment.embed();
+  doc.context.lookup(catalogAttachment.ref).set(PDFName.of('AFRelationship'), PDFName.of('Data'));
+  doc.addJavaScript('fixture-script', "app.alert('THIS MUST NEVER EXECUTE')");
+
+  const context = doc.context;
+  const xmp = context.stream(new TextEncoder().encode('<?xpacket begin=""><x:xmpmeta xmlns:x="adobe:ns:meta/"><fixture>present</fixture></x:xmpmeta><?xpacket end="w"?>'), {
+    Type: PDFName.of('Metadata'), Subtype: PDFName.of('XML'),
+  });
+  doc.catalog.set(PDFName.of('Metadata'), context.register(xmp));
+
+  const uriAction = context.register(context.obj({ S: PDFName.of('URI'), URI: PDFString.of('https://example.invalid/never-open') }));
+  const link = context.register(context.obj({
+    Type: PDFName.of('Annot'), Subtype: PDFName.of('Link'),
+    Rect: context.obj([PDFNumber.of(50), PDFNumber.of(640), PDFNumber.of(260), PDFNumber.of(665)]),
+    A: uriAction,
+  }));
+  const attachmentStream = context.register(context.flateStream(new TextEncoder().encode('page attachment')));
+  const fileSpec = context.register(context.obj({
+    Type: PDFName.of('Filespec'), F: PDFString.of('page-note.txt'),
+    EF: context.obj({ F: attachmentStream }),
+  }));
+  const fileAnnotation = context.register(context.obj({
+    Type: PDFName.of('Annot'), Subtype: PDFName.of('FileAttachment'),
+    Rect: context.obj([PDFNumber.of(50), PDFNumber.of(600), PDFNumber.of(70), PDFNumber.of(620)]), FS: fileSpec,
+  }));
+  const textField = context.register(context.obj({
+    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
+    T: PDFString.of('contact_email'), V: PDFString.of(''), Rect: context.obj([54, 540, 314, 564]),
+    F: PDFNumber.of(4), P: page.ref,
+  }));
+  page.node.set(PDFName.of('Annots'), context.obj([link, fileAnnotation, textField]));
+  const pageScript = context.register(context.obj({ S: PDFName.of('JavaScript'), JS: PDFString.of("app.alert('PAGE MUST NEVER EXECUTE')") }));
+  page.node.set(PDFName.of('AA'), context.obj({ O: pageScript }));
+
+  doc.catalog.set(PDFName.of('AcroForm'), context.obj({
+    Fields: context.obj([textField]), CO: context.obj([textField]),
+    DA: PDFString.of('/Helvetica 10 Tf 0 g'),
+  }));
+  writeFileSync(richFile, await doc.save({ useObjectStreams: false }));
+
+  const clean = await PDFDocument.create();
+  const cleanPage = clean.addPage([320, 240]);
+  const cleanFont = await clean.embedFont(StandardFonts.Helvetica);
+  cleanPage.drawText('Clean fixture', { x: 32, y: 180, size: 14, font: cleanFont });
+  const cleanInfo = clean.context.lookup(clean.context.trailerInfo.Info);
+  for (const key of ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer', 'CreationDate', 'ModDate']) cleanInfo?.delete(PDFName.of(key));
+  writeFileSync(cleanFile, await clean.save({ useObjectStreams: false }));
+
+  const signed = await PDFDocument.create();
+  signed.addPage([320, 240]).drawText('Signature warning fixture', { x: 32, y: 180, size: 14 });
+  const signatureValue = signed.context.obj({
+    Type: PDFName.of('Sig'), Filter: PDFName.of('Adobe.PPKLite'), SubFilter: PDFName.of('adbe.pkcs7.detached'),
+    ByteRange: PDFArray.withContext(signed.context), Contents: PDFHexString.of('00'),
+  });
+  signatureValue.lookup(PDFName.of('ByteRange'), PDFArray).push(PDFNumber.of(0));
+  signatureValue.lookup(PDFName.of('ByteRange'), PDFArray).push(PDFNumber.of(1));
+  signatureValue.lookup(PDFName.of('ByteRange'), PDFArray).push(PDFNumber.of(2));
+  signatureValue.lookup(PDFName.of('ByteRange'), PDFArray).push(PDFNumber.of(3));
+  const signature = signed.context.register(signatureValue);
+  const signatureField = signed.context.register(signed.context.obj({
+    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Sig'),
+    T: PDFString.of('fixture_signature'), V: signature, Rect: signed.context.obj([20, 20, 180, 48]),
+    F: PDFNumber.of(4), P: signed.getPage(0).ref,
+  }));
+  signed.getPage(0).node.set(PDFName.of('Annots'), signed.context.obj([signatureField]));
+  signed.catalog.set(PDFName.of('AcroForm'), signed.context.obj({ Fields: signed.context.obj([signatureField]), SigFlags: PDFNumber.of(3) }));
+  writeFileSync(signedFile, await signed.save({ useObjectStreams: false }));
+}
+
+async function writeDoctorFixtures(taggedFile, truncatedTreeFile, brokenBoxFile, malformedFile, renderFailureFile) {
+  const tagged = await PDFDocument.create();
+  tagged.setTitle('Tagged readiness fixture');
+  const taggedPage = tagged.addPage([320, 240]);
+  taggedPage.drawText('Tagged readiness signal fixture', { x: 32, y: 180, size: 14 });
+  tagged.catalog.set(PDFName.of('Lang'), PDFString.of('en-US'));
+  tagged.catalog.set(PDFName.of('MarkInfo'), tagged.context.obj({ Marked: true }));
+  const figure = tagged.context.register(tagged.context.obj({
+    Type: PDFName.of('StructElem'), S: PDFName.of('Figure'), Alt: PDFString.of('Fixture figure alternative text'),
+  }));
+  tagged.catalog.set(PDFName.of('StructTreeRoot'), tagged.context.register(tagged.context.obj({
+    Type: PDFName.of('StructTreeRoot'), K: tagged.context.obj([figure]),
+  })));
+  writeFileSync(taggedFile, await tagged.save({ useObjectStreams: false }));
+
+  const truncated = await PDFDocument.create();
+  truncated.addPage([320, 240]).drawText('Bounded structure traversal fixture', { x: 32, y: 180, size: 14 });
+  const nodes = [];
+  for (let index = 0; index < 1005; index++) {
+    nodes.push(truncated.context.register(truncated.context.obj({
+      Type: PDFName.of('StructElem'), S: PDFName.of('Figure'), Alt: PDFString.of(`Figure ${index + 1}`),
+    })));
+  }
+  truncated.catalog.set(PDFName.of('StructTreeRoot'), truncated.context.register(truncated.context.obj({
+    Type: PDFName.of('StructTreeRoot'), K: truncated.context.obj(nodes),
+  })));
+  writeFileSync(truncatedTreeFile, await truncated.save({ useObjectStreams: false }));
+
+  const broken = await PDFDocument.create();
+  const brokenPage = broken.addPage([320, 240]);
+  brokenPage.drawText('Invalid page box fixture', { x: 32, y: 180, size: 14 });
+  brokenPage.node.set(PDFName.of('MediaBox'), broken.context.obj([0, 0, 0, 240]));
+  brokenPage.node.set(PDFName.of('CropBox'), broken.context.obj([0, 0, 400, 300]));
+  writeFileSync(brokenBoxFile, await broken.save({ useObjectStreams: false }));
+
+  const malformed = await PDFDocument.create();
+  malformed.addPage([320, 240]).drawText('Malformed object fixture', { x: 32, y: 180, size: 14 });
+  const malformedValue = malformed.context.register(malformed.context.obj({
+    Marker: PDFString.of('DOCTOR_MALFORMED_MARKER'), Value: PDFString.of('keep'),
+  }));
+  malformed.catalog.set(PDFName.of('DoctorFixture'), malformedValue);
+  const malformedBytes = Buffer.from(await malformed.save({ useObjectStreams: false }));
+  const malformedText = malformedBytes.toString('latin1');
+  const markerAt = malformedText.indexOf('/Marker (DOCTOR_MALFORMED_MARKER)');
+  const valueAt = malformedText.indexOf('/Value (keep)', markerAt);
+  if (markerAt < 0 || valueAt < 0) throw new Error('Could not locate malformed fixture marker.');
+  malformedBytes.write('/Value [ >> ', valueAt, 'latin1');
+  writeFileSync(malformedFile, malformedBytes);
+
+  const renderFailure = await PDFDocument.create();
+  const renderPage = renderFailure.addPage([50000, 50000]);
+  renderPage.drawText('Bounded render surface fixture', { x: 32, y: 49900, size: 14 });
+  writeFileSync(renderFailureFile, await renderFailure.save({ useObjectStreams: false }));
+}
+
 const crcTable = Array.from({ length: 256 }, (_, n) => {
   let c = n;
   for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
@@ -146,6 +292,28 @@ function writePng(file, size = 96) {
       chunk('IEND', Buffer.alloc(0)),
     ]),
   );
+}
+
+function makeTextPng() {
+  const canvas = createCanvas(1400, 520);
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#000000';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = 'bold 150px Arial, sans-serif';
+  context.fillText('BROWSER PDF', canvas.width / 2, 175);
+  context.fillText('OCR TEST', canvas.width / 2, 365);
+  return canvas.toBuffer('image/png');
+}
+
+async function writeScannedImagePdf(file) {
+  const document = await PDFDocument.create();
+  const image = await document.embedPng(makeTextPng());
+  const page = document.addPage([700, 260]);
+  page.drawImage(image, { x: 0, y: 0, width: 700, height: 260 });
+  writeFileSync(file, await document.save());
 }
 
 // Minimal ZIP writer (stored, no compression): enough to build real .xlsx and
@@ -239,6 +407,19 @@ export default async function globalSetup() {
     { heading: 'Appendix B', body: ['A second page, so merged output is easy to tell apart.'] },
   ]);
   await writeForm(path.join(FIXTURE_DIR, 'form.pdf'));
+  await writePrivacyFixtures(
+    path.join(FIXTURE_DIR, 'privacy-rich.pdf'),
+    path.join(FIXTURE_DIR, 'privacy-clean.pdf'),
+    path.join(FIXTURE_DIR, 'privacy-signed.pdf'),
+  );
+  await writeDoctorFixtures(
+    path.join(FIXTURE_DIR, 'doctor-tagged.pdf'),
+    path.join(FIXTURE_DIR, 'doctor-truncated-tree.pdf'),
+    path.join(FIXTURE_DIR, 'doctor-broken-box.pdf'),
+    path.join(FIXTURE_DIR, 'doctor-malformed.pdf'),
+    path.join(FIXTURE_DIR, 'doctor-render-failure.pdf'),
+  );
+  await writeScannedImagePdf(path.join(FIXTURE_DIR, 'scanned-english.pdf'));
   writePng(path.join(FIXTURE_DIR, 'photo.png'));
   writeXlsx(path.join(FIXTURE_DIR, 'sheet.xlsx'));
   writeDocx(path.join(FIXTURE_DIR, 'letter.docx'));

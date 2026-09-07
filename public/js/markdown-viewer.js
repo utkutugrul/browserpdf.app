@@ -30,7 +30,7 @@ Start typing here, or drop a **.md** file above.
 ## Features
 
 - Live preview as you type
-- Nothing leaves your browser
+- Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint
 - Supports *italic*, **bold**, and \`inline code\`
 
 1. Write Markdown on the left

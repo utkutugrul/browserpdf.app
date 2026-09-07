@@ -3,8 +3,8 @@
 // was broken in production for weeks (minified pdf-lib class names) without any
 // static review catching it: the failure only shows up at runtime.
 //
-// NOT covered yet, on purpose: ocr-pdf is minutes-slow. Everything else is
-// covered, including the pointer-placement tools (raw mouse events on the
+// Every tool is covered, including a bounded one-page English OCR artifact
+// and the pointer-placement tools (raw mouse events on the
 // placement canvas, after scrolling it into view: raw coordinates don't
 // auto-scroll the way locator clicks do).
 import { test, expect } from '@playwright/test';
@@ -103,6 +103,71 @@ for (const c of CASES) {
   });
 }
 
+test('ocr-pdf: a scanned English image becomes a searchable PDF artifact', async ({ page }) => {
+  test.setTimeout(240_000);
+  const originalPath = fx('scanned-english.pdf')[0];
+  const original = readFileSync(originalPath);
+  const originalSnapshot = Buffer.from(original);
+  await open(page, 'ocr-pdf');
+  await page.setInputFiles('#fileInput', originalPath);
+  await expect(page.locator('#optionsSection')).toBeVisible({ timeout: 45_000 });
+  const download = await grabDownload(page, () => page.click('#applyBtn'), /-searchable\.pdf$/);
+  const output = readFileSync(await download.path());
+  expect(readFileSync(originalPath).equals(originalSnapshot), 'OCR must not mutate the selected input file').toBe(true);
+  const artifact = await page.evaluate(async ({ originalValues, outputValues }) => {
+    const { ensurePdfJs, PDFJS_ASSET_URLS } = await import('/js/lib-loader.js');
+    const pdfjs = await ensurePdfJs();
+    const render = async (values) => {
+      const task = pdfjs.getDocument({ data: new Uint8Array(values), ...PDFJS_ASSET_URLS });
+      try {
+        const pdfDocument = await task.promise;
+        const pdfPage = await pdfDocument.getPage(1);
+        const viewport = pdfPage.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        await pdfPage.render({ canvasContext: context, viewport }).promise;
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const content = await pdfPage.getTextContent();
+        return {
+          numPages: pdfDocument.numPages,
+          width: canvas.width,
+          height: canvas.height,
+          text: content.items.map((item) => item.str).join(' '),
+          pixels,
+        };
+      } finally {
+        await task.destroy();
+      }
+    };
+    const before = await render(originalValues);
+    const after = await render(outputValues);
+    let differentPixels = 0;
+    if (before.width === after.width && before.height === after.height) {
+      for (let index = 0; index < before.pixels.length; index += 4) {
+        if (before.pixels[index] !== after.pixels[index]
+          || before.pixels[index + 1] !== after.pixels[index + 1]
+          || before.pixels[index + 2] !== after.pixels[index + 2]
+          || before.pixels[index + 3] !== after.pixels[index + 3]) differentPixels++;
+      }
+    }
+    return {
+      originalPages: before.numPages,
+      outputPages: after.numPages,
+      originalSize: [before.width, before.height],
+      outputSize: [after.width, after.height],
+      differentPixels,
+      outputText: after.text,
+    };
+  }, { originalValues: Array.from(original), outputValues: Array.from(output) });
+  expect(artifact.originalPages).toBe(1);
+  expect(artifact.outputPages).toBe(1);
+  expect(artifact.outputSize).toEqual(artifact.originalSize);
+  expect(artifact.differentPixels, 'the invisible OCR layer must not change any rendered pixel').toBe(0);
+  expect(artifact.outputText).toMatch(/BROWSER\s+PDF/i);
+  expect(artifact.outputText).toMatch(/OCR\s+TEST/i);
+});
+
 test('markdown-to-pdf: renders typed Markdown and exports a PDF', async ({ page }) => {
   await open(page, 'markdown-to-pdf');
   await page.fill('#mdSource', '# Smoke test\n\nA paragraph with **bold** text.\n\n- one\n- two\n');
@@ -163,7 +228,7 @@ test('duplicate URL variants 301 to the canonical clean URL', async ({ page }) =
 // render, translate, and keep the language prefix in its relative links.
 test('related tools: block renders and localizes with the language prefix', async ({ page }) => {
   await open(page, 'compress');
-  await expect(page.locator('.related-links a')).toHaveCount(4);
+  await expect(page.locator('.related-links a')).toHaveCount(5);
   await page.goto('/tr/compress');
   await expect(page.locator('.related-tools h2')).toBeVisible();
   await expect(page.locator('.related-tools h2')).not.toHaveText('Related tools');

@@ -1,15 +1,15 @@
 # BrowserPDF
 
-> A free, client-side suite of twenty-nine PDF and Markdown tools. Everything runs entirely in the browser tab: no file is ever uploaded to a server, and there are no watermarks or usage limits.
+> A free, source-available suite of PDF and Markdown tools. Document processing happens in the browser tab, BrowserPDF has no file-upload endpoint, and output has no added watermarks.
 
 ## Key facts
 
-- 100% client-side: no backend, no upload, no signup. The files you process never leave your device.
-- Analytics: optional, consent-gated Google Analytics (opt-in banner, page views only, proxied first-party so Google never sees the visitor's IP). It never touches the files being processed.
+- Document processing is client-side: BrowserPDF has no file-processing backend or file-upload endpoint, and no signup is required.
+- Analytics: Google Analytics storage is optional and denied until accepted. Advertising storage stays denied. BrowserPDF provides no file-upload endpoint to Analytics.
 - Completely free: no premium tier, no watermarks added to output.
 - pdf.js, Tesseract.js, and pdf-lib are loaded from jsDelivr at pinned versions and verified client-side with a cryptographic hash before they run.
 - Available in 22 languages (English, Spanish, French, German, Portuguese, Italian, Russian, Japanese, Korean, Chinese Simplified/Traditional, Arabic, Hindi, Turkish, Dutch, Polish, Indonesian, Vietnamese, Thai, Ukrainian, Czech, Swedish).
-- Source code is public: https://github.com/utkutugrul/browserpdf.app (custom license, see LICENSE.md in the repo).
+- Application code is source-available: https://github.com/utkutugrul/browserpdf.app (custom license, see LICENSE.md in the repo).
 
 ## Tools
 
@@ -43,6 +43,9 @@
 - [Redact PDF](/redact): permanently removes sensitive text or areas from a PDF, not just a visual overlay.
 - [Edit Metadata](/edit-metadata): views and edits a PDF's title, author, subject, and keywords.
 - [PDF Viewer](/view-pdf): opens and reads PDF files in the browser, with zoom, page navigation, and printing.
+- [PDF Workflows](/workflows): runs three reviewed multi-step recipes over a concurrency-1 local batch queue, with resumable BrowserPDF-owned storage and no original-file overwrite.
+- [PDF Privacy Scan](/privacy-scan): performs a bounded local inspection of detectable metadata, attachments, actions, forms, invisible-text operations, and document-text patterns; its optional cleanup removes only standard document-info metadata from a verified new copy.
+- [Document Doctor](/document-doctor): compares strict and tolerant PDF parsing, reports bounded structure and rendering-readiness signals, and offers explicit verified normalize or lossy page-rebuild copies.
 
 ## Pages
 

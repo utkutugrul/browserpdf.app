@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BrowserPDF SDK clean consumer</title>
+</head>
+<body>
+  <main>
+    <h1>BrowserPDF SDK clean consumer</h1>
+    <p>Select at least two PDFs. Processing stays in this page and downloads start only from the download button.</p>
+    <input id="files" type="file" accept="application/pdf,.pdf" multiple>
+    <button id="run" type="button" disabled>Run SDK example</button>
+    <p id="status" role="status" aria-live="polite">Choose files.</p>
+    <pre id="result"></pre>
+    <button id="download" type="button" hidden>Download normalized copy</button>
+  </main>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

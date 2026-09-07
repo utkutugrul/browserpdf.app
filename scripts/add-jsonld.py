@@ -97,9 +97,9 @@ def build_graph(slug: str, faq: dict, description: str, url: str) -> dict:
                     'priceCurrency': 'USD',
                 },
                 'featureList': [
-                    '100% client-side: no file is ever uploaded',
-                    'Free, no watermarks, no signup, no usage limits',
-                    'Runs in the browser using JavaScript and WebAssembly',
+                    'Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint',
+                    'Free to use with no signup or added watermarks',
+                    'Uses pinned, integrity-verified browser libraries',
                 ],
             },
             {

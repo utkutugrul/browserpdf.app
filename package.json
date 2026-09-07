@@ -2,7 +2,7 @@
   "name": "browserpdf",
   "version": "1.0.0",
   "private": true,
-  "description": "A free, client-side suite of PDF and Markdown tools. Everything runs in the browser tab: nothing is uploaded anywhere, and there are no watermarks or usage limits.",
+  "description": "A free, browser-based PDF and Markdown suite with no document-processing backend or file-upload endpoint and no added watermarks.",
   "type": "module",
   "scripts": {
     "test": "playwright test",
@@ -15,7 +15,9 @@
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
+    "@napi-rs/canvas": "1.0.8",
     "@playwright/test": "^1.62.1",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "6.1.200"
   }
 }
