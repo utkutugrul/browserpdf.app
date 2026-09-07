@@ -30,7 +30,7 @@ The plan implements defensible MVPs for every requested service. It does not cla
 
 ### PDF inspection/diagnostic APIs
 
-- PDF.js 6.1.200 display APIs: `getMetadata`, `getAttachments`, `getJSActions`, `hasJSActions`, `getOpenAction`, `getFieldObjects`, `getPermissions`, `getMarkInfo`, page `getAnnotations`, `getJSActions`, `getTextContent`, `getOperatorList`, `getStructTree`.
+- PDF.js 6.2.108 display APIs: `getMetadata`, `getAttachments`, `getJSActions`, `hasJSActions`, `getOpenAction`, `getFieldObjects`, `getPermissions`, `getMarkInfo`, page `getAnnotations`, `getJSActions`, `getTextContent`, `getOperatorList`, `getStructTree`.
 - pdf-lib 1.17.1: load with `updateMetadata:false` for inspection; use `throwOnInvalidObject:true` for strict diagnosis; use `save()` only as “normalize/reserialize”, never generic repair.
 - Use `AbortSignal.throwIfAborted()` between phases/pages; PDF.js loading tasks must be destroyed on abort. pdf-lib parse/save is not cooperatively cancellable.
 - Post-transform outputs must reopen in both pdf-lib and PDF.js and render representative pages.
@@ -190,7 +190,7 @@ The plan implements defensible MVPs for every requested service. It does not cla
 
 ### Documentation references
 
-- PDF.js 6.1.200 APIs listed in Phase 0.
+- PDF.js 6.2.108 APIs listed in Phase 0.
 - Existing metadata read/write: `public/js/edit-metadata.js:38-108`.
 - Existing text extraction: `public/js/pdf-convert.js:222+`.
 - Existing secure flattening pattern: `public/js/redact.js:340-420`.

@@ -9,12 +9,12 @@ import { t } from './i18n.js';
 
 export const LIBS = {
   pdfjs: {
-    url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.min.mjs',
-    hash: 'sha384-DVT/98LrvV8RwTKMrO+XhNmriXzZXkaBiUEzFou91SiquMt7FvC3TMHs4tMlDQhD',
+    url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.min.mjs',
+    hash: 'sha384-iFreJLYJz3yZXDcGivJRXeHAo/NHOLP/QIK1neoV/fI0muPBJGNUhorvDzwNiIF/',
   },
   pdfjsWorker: {
-    url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.worker.min.mjs',
-    hash: 'sha384-Tfvhzz17zRZraaeJSy+9zZprh8OYQHd3NC7yMUa5APLz8buWdx7MloIddcBGa3oW',
+    url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.worker.min.mjs',
+    hash: 'sha384-TP/IyAALg2YIe4jQVEJ6WwbztilE5pDhTVEmz5gPXnu3JwDPws/1dWcJwLnX/+GJ',
   },
   tesseract: {
     url: 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.esm.min.js',
@@ -42,7 +42,7 @@ export const LIBS = {
   },
 };
 
-const PDFJS_VERSION = '6.1.200';
+const PDFJS_VERSION = '6.2.108';
 
 export const PDFJS_ASSET_URLS = {
   standardFontDataUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/standard_fonts/`,

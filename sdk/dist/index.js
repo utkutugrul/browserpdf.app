@@ -7,7 +7,7 @@ import { normalizePdfStructure } from './core/document-doctor-output.js';
 
 export const PACKAGE_VERSION = '0.1.0';
 export const API_VERSION = 'v1';
-export const PDFJS_VERSION = '6.1.200';
+export const PDFJS_VERSION = '6.2.108';
 export const PDF_LIB_VERSION = '1.17.1';
 
 function abort(signal) {
@@ -33,7 +33,7 @@ function requirePdfLib(pdfLib) {
 }
 
 function requirePdfJs(pdfjs) {
-  if (!pdfjs?.getDocument) throw new TypeError('The exact pdfjs-dist 6.1.200 peer runtime is required.');
+  if (!pdfjs?.getDocument) throw new TypeError('The exact pdfjs-dist 6.2.108 peer runtime is required.');
   if (String(pdfjs.version || '') !== PDFJS_VERSION) {
     throw new RangeError(`PDF.js ${PDFJS_VERSION} is required; received ${String(pdfjs.version || 'unknown')}.`);
   }

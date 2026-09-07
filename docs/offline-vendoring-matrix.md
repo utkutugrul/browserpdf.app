@@ -6,7 +6,7 @@ Status: investigation only. No document tool is enabled or advertised for offlin
 
 | Dependency | Current pinned version | Required local artifacts before any tool can be enabled offline |
 |---|---:|---|
-| PDF.js | 6.1.200 | API module, matching worker module, `standard_fonts/`, packed `cmaps/`, `wasm/`; confirm every requested asset is same-origin and available after network disable |
+| PDF.js | 6.2.108 | API module, matching worker module, `standard_fonts/`, packed `cmaps/`, `wasm/`; confirm every requested asset is same-origin and available after network disable |
 | pdf-lib | 1.17.1 | Browser bundle and integrity/version provenance |
 | encryption pdf-lib fork | 2.7.4 | Browser bundle, password/permission artifacts, license/provenance review |
 | Tesseract.js | 7.0.0 | API module, matching worker, WASM/core assets, and every selectable language traineddata file |

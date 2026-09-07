@@ -6,7 +6,7 @@ Package release `0.1.0` exports the stable API generation as `API_VERSION === 'v
 
 ## Runtime contract
 
-Install exactly `pdf-lib@1.17.1` and `pdfjs-dist@6.1.200` alongside this package. These are exact peer dependencies, not bundled files. Configure PDF.js with the worker from the same installed `pdfjs-dist@6.1.200` package and serve its `standard_fonts`, `cmaps`, and `wasm` directories locally when the input needs them. Do not mix API and worker versions.
+Install exactly `pdf-lib@1.17.1` and `pdfjs-dist@6.2.108` alongside this package. These are exact peer dependencies, not bundled files. Configure PDF.js with the worker from the same installed `pdfjs-dist@6.2.108` package and serve its `standard_fonts`, `cmaps`, and `wasm` directories locally when the input needs them. Do not mix API and worker versions.
 
 ```js
 import * as pdfLib from 'pdf-lib';
@@ -14,11 +14,11 @@ import * as pdfjs from 'pdfjs-dist';
 import { mergeV1, inspectV1, diagnoseV1, normalizeV1 } from '@browserpdf/sdk/v1';
 
 // Copy these files from the exact installed peer into your own static assets.
-pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs-6.1.200/pdf.worker.min.mjs';
+pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs-6.2.108/pdf.worker.min.mjs';
 const pdfjsAssets = {
-  standardFontDataUrl: '/vendor/pdfjs-6.1.200/standard_fonts/',
-  cMapUrl: '/vendor/pdfjs-6.1.200/cmaps/', cMapPacked: true,
-  wasmUrl: '/vendor/pdfjs-6.1.200/wasm/',
+  standardFontDataUrl: '/vendor/pdfjs-6.2.108/standard_fonts/',
+  cMapUrl: '/vendor/pdfjs-6.2.108/cmaps/', cMapPacked: true,
+  wasmUrl: '/vendor/pdfjs-6.2.108/wasm/',
 };
 
 const merged = await mergeV1([firstBlob, secondBlob], { pdfLib, signal });

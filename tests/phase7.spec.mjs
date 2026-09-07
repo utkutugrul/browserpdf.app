@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { FIXTURE_DIR } from './make-fixtures.mjs';
 
@@ -32,6 +32,36 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => { await new Promise((resolve) => server.close(resolve)); });
 
+async function javascriptSources(directory) {
+  const sources = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) sources.push(...await javascriptSources(target));
+    else if (/\.m?js$/.test(entry.name)) sources.push(await readFile(target, 'utf8'));
+  }
+  return sources;
+}
+
+test('site pins the patched PDF.js API and matching worker', async ({ page }) => {
+  await page.goto(`${baseURL}/public/index.html`);
+  const configuration = await page.evaluate(async () => {
+    const { LIBS, PDFJS_ASSET_URLS } = await import('/public/js/lib-loader.js');
+    return {
+      api: LIBS.pdfjs.url,
+      worker: LIBS.pdfjsWorker.url,
+      assets: PDFJS_ASSET_URLS,
+    };
+  });
+  expect(configuration.api).toContain('pdfjs-dist@6.2.108/');
+  expect(configuration.worker).toContain('pdfjs-dist@6.2.108/');
+  expect(configuration.assets.cMapPacked).toBe(true);
+});
+
+test('site does not instantiate PDF.js viewer scripting or rich annotation layers', async () => {
+  const source = (await javascriptSources(path.join(ROOT, 'public/js'))).join('\n');
+  expect(source).not.toMatch(/web\/pdf_viewer|AnnotationLayer|XfaLayer|PDFScriptingManager|renderRichText/);
+});
+
 test('clean browser consumer runs all four SDK APIs with local matched worker/assets and manual download', async ({ page }) => {
   const requests = [];
   let downloads = 0;
@@ -45,7 +75,7 @@ test('clean browser consumer runs all four SDK APIs with local matched worker/as
   await expect(page.locator('#status')).toHaveText('Complete. Download remains manual.', { timeout: 60_000 });
   const result = JSON.parse(await page.locator('#result').textContent());
   expect(result).toEqual({
-    packageVersion: '0.1.0', apiVersion: 'v1', pdfjsVersion: '6.1.200', mergedPages: 5, privacyPages: 3, quickPages: 3,
+    packageVersion: '0.1.0', apiVersion: 'v1', pdfjsVersion: '6.2.108', mergedPages: 5, privacyPages: 3, quickPages: 3,
     deepPages: 3, normalizedPages: 3, normalizedVerified: true,
     normalizeInputUnchanged: true,
     progressOperations: ['merge', 'inspect', 'diagnose', 'normalize'],

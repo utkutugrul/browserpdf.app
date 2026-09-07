@@ -84,7 +84,7 @@ function fakePdfJs({ failPage = false, wait = false, waitPage = false } = {}) {
     destroy: async () => { calls.task++; rejectLoad?.(new DOMException('Aborted', 'AbortError')); },
   };
   return {
-    runtime: { version: '6.1.200', OPS: {}, getDocument: () => { markStarted(); return task; } },
+    runtime: { version: '6.2.108', OPS: {}, getDocument: () => { markStarted(); return task; } },
     calls, started, pageStarted, releasePage,
   };
 }
@@ -95,11 +95,11 @@ test('inspection owns Blob input and destroys PDF.js task/document on success, e
   const success = fakePdfJs();
   const events = [];
   const report = await sdk.inspectV1(new Blob([input]), { pdfjs: success.runtime, onProgress: (event) => events.push(event) });
-  assert.equal(report.pageCount, 1); assert.deepEqual(success.calls, { task: 1, doc: 1 });
+  assert.equal(report.pageCount, 1); assert.equal(success.calls.task, 1); assert.equal(success.calls.doc, 1);
   assert.deepEqual(input, before); assert.equal(events[0].operation, 'inspect');
   const failure = fakePdfJs({ failPage: true });
   await assert.rejects(sdk.inspectV1(input.buffer.slice(0), { pdfjs: failure.runtime }), /page failure/);
-  assert.deepEqual(failure.calls, { task: 1, doc: 1 });
+  assert.equal(failure.calls.task, 1); assert.equal(failure.calls.doc, 1);
   const waiting = fakePdfJs({ wait: true });
   const controller = new AbortController();
   const pending = sdk.inspectV1(input, { pdfjs: waiting.runtime, signal: controller.signal });
@@ -116,7 +116,7 @@ test('all APIs reject pre-aborted signals, enforce the PDF.js version, and remai
   await assert.rejects(sdk.inspectV1(input, { pdfjs: runtime, signal: controller.signal }), (error) => error.name === 'AbortError');
   await assert.rejects(sdk.diagnoseV1(input, { pdfLib, pdfjs: runtime, signal: controller.signal }), (error) => error.name === 'AbortError');
   await assert.rejects(sdk.normalizeV1(input, { pdfLib, pdfjs: runtime, createCanvas: () => ({}), signal: controller.signal }), (error) => error.name === 'AbortError');
-  await assert.rejects(sdk.inspectV1(input, { pdfjs: { ...runtime, version: '6.1.199' } }), /6\.1\.200 is required/);
+  await assert.rejects(sdk.inspectV1(input, { pdfjs: { ...runtime, version: '6.2.107' } }), /6\.2\.108 is required/);
   assert.equal((await pdfLib.PDFDocument.load(await sdk.mergeV1([input, input], { pdfLib }))).getPageCount(), 2);
 });
 
@@ -159,6 +159,7 @@ test('built runtime has no site-bound imports, CDN URLs, or browser-shell access
   const source = (await Promise.all(files.map((name) => readFile(path.join(ROOT, 'dist', name), 'utf8')))).join('\n');
   assert.doesNotMatch(source, /tool-ui|i18n|webmcp|consent|analytics|jsdelivr|unpkg/i);
   assert.doesNotMatch(source, /querySelector|getElementById|localStorage|navigator\.|window\./);
+  assert.doesNotMatch(source, /AnnotationLayer|PDFScriptingManager|renderRichText/);
 });
 
 test('build check rejects unexpected output and deterministic build removes only SDK output', async () => {

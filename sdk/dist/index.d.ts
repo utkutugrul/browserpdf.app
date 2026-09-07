@@ -1,6 +1,6 @@
 export declare const PACKAGE_VERSION: "0.1.0";
 export declare const API_VERSION: "v1";
-export declare const PDFJS_VERSION: "6.1.200";
+export declare const PDFJS_VERSION: "6.2.108";
 export declare const PDF_LIB_VERSION: "1.17.1";
 
 export type PdfInput = Blob | ArrayBuffer | Uint8Array;

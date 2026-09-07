@@ -102,7 +102,7 @@ repository's custom license. Package version `0.1.0` and API generation `v1` are
 separate runtime/type constants. Explicit exports provide merge, privacy inspect,
 doctor quick/deep diagnose, and normalize APIs for
 `Blob | ArrayBuffer | Uint8Array`, with owned copies, AbortSignal, and structured
-progress. It uses exact peer dependencies pdf-lib 1.17.1 and pdfjs-dist 6.1.200;
+progress. It uses exact peer dependencies pdf-lib 1.17.1 and pdfjs-dist 6.2.108;
 the caller supplies the matching local worker/assets and canvas runtime where
 required. There are no CDN strings or site-shell/analytics/WebMCP/DOM imports in
 the SDK build.
