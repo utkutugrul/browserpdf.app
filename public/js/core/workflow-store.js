@@ -127,6 +127,21 @@ export function createWorkflowStore({ indexedDb = globalThis.indexedDB, now = ()
     return withDb([FILES], 'readonly', (tx) => requestResult(tx.objectStore(FILES).index('workflowId').getAll(workflowId)));
   }
 
+  async function getFiles(workflowId, ids) {
+    const unique = [...new Set(ids)].filter((id) => typeof id === 'string' && id.startsWith(`${workflowId}:`)).slice(0, 160);
+    return withDb([FILES], 'readonly', async (tx) => {
+      const values = []; let retainedBytes = 0;
+      for (const id of unique) {
+        const value = await requestResult(tx.objectStore(FILES).get(id));
+        if (value?.workflowId !== workflowId) continue;
+        retainedBytes += value.bytes?.byteLength || 0;
+        if (retainedBytes > 512 * 1024 * 1024) throw new RangeError('This task exceeds the local resource limit.');
+        values.push(value);
+      }
+      return values;
+    });
+  }
+
   async function deleteWorkflow(id) {
     return withDb([WORKFLOWS, FILES], 'readwrite', async (tx) => {
       tx.objectStore(WORKFLOWS).delete(id);
@@ -141,26 +156,51 @@ export function createWorkflowStore({ indexedDb = globalThis.indexedDB, now = ()
     return withDb([WORKFLOWS, FILES], 'readwrite', async (tx) => {
       const workflowStore = tx.objectStore(WORKFLOWS);
       const fileStore = tx.objectStore(FILES);
-      const [workflows, files] = await Promise.all([
-        requestResult(workflowStore.getAll()),
-        requestResult(fileStore.getAll()),
-      ]);
+      const workflows = [];
+      await new Promise((resolve, reject) => {
+        const request = workflowStore.openCursor();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { const cursor = request.result; if (!cursor) { resolve(); return; }
+          const value = cursor.value;
+          workflows.push({ id: value.id, expiresAt: value.expiresAt, fileRefs: value.fileRefs || [] }); cursor.continue(); };
+      });
       const owners = new Map(workflows.map((workflow) => [workflow.id, workflow]));
+      const ownersByFile = new Map();
+      for (const owner of workflows) for (const id of owner.fileRefs || []) ownersByFile.set(id, owner);
       const expiredIds = new Set(workflows.filter((workflow) => workflow.expiresAt <= stamp).map((workflow) => workflow.id));
-      expiredIds.forEach((id) => workflowStore.delete(id));
+      // Expired ownership is deleted through index keys, without reading bytes.
       let removedFiles = 0;
-      for (const file of files) {
-        const owner = owners.get(file.workflowId);
-        const fileExpiry = file.expiresAt || ((file.updatedAt || 0) + WORKFLOW_TTL_MS);
-        const unreferenced = owner && !new Set(owner.fileRefs || []).has(file.id);
-        if (expiredIds.has(file.workflowId) || (!owner && fileExpiry <= stamp) || (unreferenced && fileExpiry <= stamp)) {
-          fileStore.delete(file.id);
-          removedFiles++;
-        }
+      for (const id of expiredIds) {
+        const keys = await requestResult(fileStore.index('workflowId').getAllKeys(id));
+        for (const key of keys) { fileStore.delete(key); removedFiles++; }
+        workflowStore.delete(id);
       }
+      await new Promise((resolve, reject) => {
+        const request = fileStore.openKeyCursor();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const cursor = request.result;
+          if (!cursor) { resolve(); return; }
+          // Live referenced files require only their primary keys. Legacy v2
+          // unreferenced/orphan records are inspected individually for expiry.
+          const owner = ownersByFile.get(cursor.primaryKey);
+          if (owner) { cursor.continue(); return; }
+          const read = fileStore.get(cursor.primaryKey);
+          read.onerror = () => reject(read.error);
+          read.onsuccess = () => {
+            const file = read.result;
+            if (file) {
+              const fileOwner = owners.get(file.workflowId);
+              const expiry = file.expiresAt || ((file.updatedAt || 0) + WORKFLOW_TTL_MS);
+              if (expiredIds.has(file.workflowId) || ((!fileOwner || !(fileOwner.fileRefs || []).includes(file.id)) && expiry <= stamp)) { fileStore.delete(cursor.primaryKey); removedFiles++; }
+            }
+            cursor.continue();
+          };
+        };
+      });
       return { workflows: expiredIds.size, files: removedFiles };
     });
   }
 
-  return { putWorkflow, putWorkflowBundle, getWorkflow, putFile, getFile, listFiles, deleteWorkflow, cleanupExpired };
+  return { putWorkflow, putWorkflowBundle, getWorkflow, putFile, getFile, listFiles, getFiles, deleteWorkflow, cleanupExpired };
 }

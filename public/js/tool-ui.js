@@ -21,10 +21,18 @@ const emptySession = () => ({ taskId: null, original: null, current: null, revis
 // result publication await initialization before using the synchronous delegate.
 export const documentSession = {
   snapshot: (options) => sessionDelegate?.snapshot(options) || emptySession(),
+  current: () => sessionDelegate?.current() || null,
   original: () => sessionDelegate?.original() || null,
+  beginScene: () => sessionDelegate.beginScene(),
+  scene: () => sessionDelegate?.scene() || null,
+  resource: (id) => sessionDelegate?.resource(id) || null,
+  addAsset: (...args) => sessionDelegate.addAsset(...args),
+  changeScene: (state) => sessionDelegate.changeScene(state),
+  publishScene: (...args) => sessionDelegate.publishScene(...args),
   transfer: () => sessionDelegate?.transfer() || { ...emptySession(), history: [], future: [] },
   begin: (...args) => sessionDelegate ? sessionDelegate.begin(...args) : ensureDocumentSession().then((delegate) => delegate.begin(...args)),
   adopt: (...args) => sessionDelegate ? sessionDelegate.adopt(...args) : ensureDocumentSession().then((delegate) => delegate.adopt(...args)),
+  historyTarget: (kind) => sessionDelegate?.historyTarget(kind) || null,
   undo: () => sessionDelegate?.undo() || null,
   redo: () => sessionDelegate?.redo() || null,
   setSelection: (pages) => sessionDelegate?.setSelection(pages),
@@ -59,6 +67,27 @@ export function showDocumentIdentity() {
   identity.textContent = `${t('workspace.original', 'Original')}: ${snapshot.original.name} · ${t('workspace.current', 'Current')}: ${snapshot.current.name} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
 }
 
+// Page operations deliberately bake the current scene into their input. The
+// editable source and objects remain available until the chosen result is adopted.
+export async function getWorkspaceInput({ bakeScene = true, operation } = {}) {
+  await ensureDocumentSession();
+  operation?.signal?.throwIfAborted();
+  if (operation && !operation.isCurrent()) return null;
+  const snapshot = documentSession.snapshot();
+  if (!snapshot.current) throw new Error('Open a document first.');
+  const scene = documentSession.scene();
+  let bytes;
+  if (scene && bakeScene) {
+    const [{ renderScenePdf }, runtime] = await Promise.all([import('./core/object-scene.js'), import('./lib-loader.js')]);
+    const [pdfLib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
+    bytes = (await renderScenePdf({ scene, resource: documentSession.resource, pdfLib, pdfjs, pdfjsAssets: runtime.PDFJS_ASSET_URLS, signal: operation?.signal })).bytes;
+  }
+  if (!bytes) bytes = documentSession.current().bytes;
+  if (operation && !operation.isCurrent()) return null;
+  return { bytes, name: snapshot.current.name, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene,
+    losses: scene?.objects.length ? ['scene-baked'] : [] };
+}
+
 export async function reviewResult(bytes, name, options = {}) {
   if (options.operation && !options.operation.isCurrent()) return Promise.resolve(null);
   if (options.groupOwner !== undefined && options.groupOwner !== resultGroupGeneration) return null;
@@ -86,13 +115,14 @@ export function clearResult() {
   document.getElementById('documentResultGroup')?.remove();
 }
 
-export async function reviewResults(results) {
+export async function reviewResults(results, options = {}) {
+  if (options.operation && !options.operation.isCurrent()) return null;
   if (!Array.isArray(results) || !results.length || results.length > 20) throw new RangeError('Review between 1 and 20 result files.');
   const total = results.reduce((sum, value) => sum + value.bytes.byteLength, 0);
   if (total > 250 * 1024 * 1024) throw new RangeError('This result group is limited to 250 MB.');
   clearResult();
   const owner = resultGroupGeneration, generation = resultGeneration;
-  const ownsGroup = () => owner === resultGroupGeneration;
+  const ownsGroup = () => owner === resultGroupGeneration && (!options.operation || options.operation.isCurrent());
   let selection = 0;
   async function selectArtifact(artifact) {
     const selected = ++selection;
@@ -271,6 +301,8 @@ export function wireDropzone(dropzone, fileInput, onFiles) {
 // Reads a dropped/selected file as PDF bytes with validation; returns
 // { bytes, baseName } or null after showing an error.
 export async function readPdfFile(file, options = {}) {
+  const limit = options.maxBytes || 250 * 1024 * 1024;
+  if (options.maxBytes && file.size > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   const intake = ++intakeGeneration;
   documentOperations.cancel();
   if (file.size > 250 * 1024 * 1024) { showError(t('workspace.file_too_large', 'Choose a PDF smaller than 250 MB.')); return null; }
@@ -345,13 +377,9 @@ export async function renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, ta
   try {
     const page = await doc.getPage(Math.min(pageNumber, doc.numPages));
     const baseViewport = page.getViewport({ scale: 1 });
-    const scale = (targetWidth / baseViewport.width) * (window.devicePixelRatio > 1 ? 1.6 : 1);
-    const viewport = page.getViewport({ scale });
-    canvas.dataset.pdfScale = String(scale);
-    canvas.dataset.pdfPage = String(pageNumber);
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const { renderBoundedPage } = await import('./core/bounded-renderer.js');
+    const viewport = await renderBoundedPage(page, canvas, { scale: (targetWidth / baseViewport.width) * (window.devicePixelRatio > 1 ? 1.6 : 1) });
+    canvas.dataset.pdfScale = String(viewport.scale); canvas.dataset.pdfPage = String(pageNumber);
   } finally {
     await loadingTask.destroy();
   }
@@ -366,28 +394,33 @@ export async function stashForChain(bytes, name, targetSlug, options = {}) {
   await ensureDocumentSession();
   const store = await loadWorkflowStore();
   await store.cleanupExpired();
-  const artifact = sessionCore.createArtifact(bytes, name, options);
+  const artifact = sessionCore.createArtifact(bytes, name, { capabilities: documentSession.snapshot().current?.capabilities, ...options });
   if (!sessionCore.acceptsArtifact(targetSlug, artifact)) throw new Error('This tool does not accept this result format.');
   if (documentSession.snapshot().current) documentSession.adopt(artifact.bytes, artifact.name, artifact);
   let snapshot = documentSession.transfer();
   if (!snapshot.taskId) { documentSession.begin(artifact.bytes, artifact.name, artifact); snapshot = documentSession.transfer(); }
   const workflowId = snapshot.taskId;
-  const file = { ...artifact, id: `${workflowId}:input` };
-  const original = snapshot.original ? { ...snapshot.original, id: `${workflowId}:original` } : null;
-  const past = snapshot.history.map((value, index) => ({ ...value, id: `${workflowId}:past:${index}` }));
-  const future = snapshot.future.map((value, index) => ({ ...value, id: `${workflowId}:future:${index}` }));
+  const descriptor = (value) => ({ name: value.name, type: value.type, capabilities: { ...value.capabilities }, boundary: value.boundary });
+  const files = [];
+  function addFile(value, role) {
+    const existing = files.find((file) => file.bytes === value.bytes || (file.bytes.length === value.bytes.length && file.bytes.every((byte, index) => byte === value.bytes[index])));
+    if (existing) return existing.id;
+    const file = { ...value, id: `${workflowId}:${role}` }; delete file.scene;
+    files.push(file); return file.id;
+  }
+  const file = { id: addFile(artifact, 'input') };
+  const originalRef = snapshot.original ? addFile(snapshot.original, 'original') : null;
+  const resourceEntries = (snapshot.resources || []).map((value, index) => ({ resourceId: value.id, fileRef: addFile(value, `resource:${index}`), ...descriptor(value) }));
+  const checkpoint = (value, role) => value.scene ? { name: value.name, type: value.type, capabilities: value.capabilities, boundary: value.boundary, sourceRef: value.sourceRef, scene: value.scene } : { fileRef: addFile(value, role), ...descriptor(value) };
+  const historyCheckpoints = snapshot.history.map((value, index) => checkpoint(value, `past:${index}`));
+  const futureCheckpoints = snapshot.future.map((value, index) => checkpoint(value, `future:${index}`));
   await store.putWorkflowBundle({
-    id: workflowId,
-    kind: 'handoff',
-    orderedSteps: [{ id: `tool:${targetSlug}`, parameters: {} }],
-    currentStep: 0,
-    fileRefs: [file.id, ...(original ? [original.id] : []), ...past.map((a) => a.id), ...future.map((a) => a.id)],
-    originalRef: original?.id || null,
-    revision: snapshot.revision,
-    selection: snapshot.selection,
-    historyRefs: past.map((a) => a.id), futureRefs: future.map((a) => a.id),
+    id: workflowId, kind: 'handoff', orderedSteps: [{ id: `tool:${targetSlug}`, parameters: {} }], currentStep: 0,
+    fileRefs: files.map((value) => value.id), inputDescriptor: descriptor(artifact), originalRef, originalDescriptor: snapshot.original ? descriptor(snapshot.original) : null, revision: snapshot.revision, selection: snapshot.selection,
+    scene: snapshot.scene, resourceEntries, historyCheckpoints, futureCheckpoints,
+    historyRefs: historyCheckpoints.map((value) => value.fileRef).filter(Boolean), futureRefs: futureCheckpoints.map((value) => value.fileRef).filter(Boolean),
     cleanup: { policy: 'expire', scope: workflowId },
-  }, [file, ...(original ? [original] : []), ...past, ...future]);
+  }, files);
   return { workflowId, fileId: file.id };
 }
 
@@ -404,15 +437,22 @@ export async function takeChainedFile() {
     await store.cleanupExpired();
     const workflow = await store.getWorkflow(workflowId);
     if (!workflow || !workflow.fileRefs.includes(fileId)) return null;
-    const entry = await store.getFile(fileId);
-    if (!entry || entry.workflowId !== workflowId) return null;
-    const file = new File([entry.bytes], entry.name, { type: entry.type || 'application/pdf' });
-    const original = workflow.originalRef && workflow.fileRefs.includes(workflow.originalRef) ? await store.getFile(workflow.originalRef) : null;
-    const owned = await store.listFiles(workflowId);
+    const owned = await store.getFiles(workflowId, workflow.fileRefs);
     const refs = new Map(owned.filter((value) => workflow.fileRefs.includes(value.id)).map((value) => [value.id, value]));
-    const inherited = { taskId: workflow.kind === 'handoff' ? workflowId : undefined, revision: workflow.revision, type: entry.type, capabilities: entry.capabilities, selection: workflow.selection,
-      history: (workflow.historyRefs || []).slice(-5).map((id) => refs.get(id)).filter(Boolean), future: (workflow.futureRefs || []).slice(-5).map((id) => refs.get(id)).filter(Boolean) };
-    if (original?.workflowId === workflowId) inherited.original = sessionCore.createArtifact(original.bytes, original.name, original);
+    const entry = refs.get(fileId);
+    if (!entry || entry.workflowId !== workflowId) return null;
+    const inputDescriptor = workflow.inputDescriptor || entry;
+    const file = new File([entry.bytes], inputDescriptor.name, { type: inputDescriptor.type || 'application/pdf' });
+    const original = workflow.originalRef && workflow.fileRefs.includes(workflow.originalRef) ? refs.get(workflow.originalRef) : null;
+    const restoreCheckpoints = (newEntries, oldRefs, oldScenes) => Array.isArray(newEntries)
+      ? newEntries.slice(-5).map((value) => value.scene ? value : refs.has(value.fileRef) ? { ...refs.get(value.fileRef), ...value } : null).filter(Boolean)
+      : (oldRefs || []).slice(-5).map((id, index) => refs.has(id) ? { ...refs.get(id), scene: oldScenes?.[index] } : null).filter(Boolean);
+    const resources = Array.isArray(workflow.resourceEntries)
+      ? workflow.resourceEntries.map((value) => refs.has(value.fileRef) ? { ...refs.get(value.fileRef), ...value, id: value.resourceId } : null).filter(Boolean)
+      : (workflow.resourceRefs || []).map((id) => refs.get(id)).filter(Boolean).map((a) => ({ ...a, id: a.resourceId }));
+    const inherited = { taskId: workflow.kind === 'handoff' ? workflowId : undefined, revision: workflow.revision, type: inputDescriptor.type, capabilities: inputDescriptor.capabilities, boundary: inputDescriptor.boundary, selection: workflow.selection,
+      history: restoreCheckpoints(workflow.historyCheckpoints, workflow.historyRefs, workflow.historyScenes), future: restoreCheckpoints(workflow.futureCheckpoints, workflow.futureRefs, workflow.futureScenes), scene: workflow.scene, resources };
+    if (original?.workflowId === workflowId) inherited.original = sessionCore.createArtifact(original.bytes, workflow.originalDescriptor?.name || original.name, workflow.originalDescriptor || original);
     Object.defineProperty(file, 'browserpdfSession', { value: inherited });
     return file;
   } catch {
@@ -474,12 +514,9 @@ export async function renderPdfThumbnails(pdfDoc, containerEl, makeTile, onEachP
     onEachProgress?.(i, numPages);
     const page = await pdfDoc.getPage(i);
     const baseViewport = page.getViewport({ scale: 1 });
-    const scale = (220 / baseViewport.width) * (window.devicePixelRatio > 1 ? 1.6 : 1);
-    const viewport = page.getViewport({ scale });
     const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const { renderBoundedPage } = await import('./core/bounded-renderer.js');
+    await renderBoundedPage(page, canvas, { scale: 220 / baseViewport.width, maxDimension: 352, maxPixels: 100000 });
     containerEl.appendChild(makeTile(canvas, i - 1));
   }
 }

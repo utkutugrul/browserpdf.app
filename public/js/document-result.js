@@ -35,6 +35,20 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
   const controls = document.createElement('div'); controls.className = 'btn-row';
   const preview = document.createElement('div'); preview.className = 'document-result-preview'; preview.id = 'documentResultPreview';
   panel.append(heading, identity, status, controls, preview);
+  const lossLabels = {
+    'page-copy-structures-unverified': 'Copied pages may lose document structures that this engine cannot verify.',
+    'page-copy-document-metadata': 'Page copying may lose document metadata.',
+    'page-copy-form-definitions': 'Page copying may lose interactive form definitions.', 'page-copy-bookmarks': 'Page copying may lose bookmarks.',
+    'page-copy-tags': 'Page copying may lose accessibility tags.', 'page-copy-named-resources': 'Page copying may lose named document resources.',
+    'page-copy-labels': 'Page copying may lose page labels.', 'signature-rewrite': 'Rewriting signed content can invalidate existing digital signatures.',
+    'structure-inspection-incomplete': 'Some document structures could not be inspected.', 'crop-hidden-content': 'Cropping hides content; it does not securely remove it.',
+    'scene-baked': 'This operation bakes editable objects into page content. Undo restores the preceding editable scene.',
+  };
+  if (artifact.boundary?.losses?.length) {
+    const losses = document.createElement('ul'); losses.id = 'documentResultLosses';
+    for (const code of artifact.boundary.losses) if (lossLabels[code]) { const item = document.createElement('li'); item.textContent = t(`workspace.loss_${code}`, lossLabels[code]); losses.append(item); }
+    identity.after(losses);
+  }
   function button(label, onClick, id) { const element = document.createElement('button'); element.type = 'button'; element.className = 'btn btn-secondary'; element.textContent = label; if (id) element.id = id; element.addEventListener('click', onClick); controls.append(element); return element; }
   button(t('workspace.download_result', 'Download result'), () => download(artifact), 'downloadResultBtn');
   if (adopt) button(t('workspace.use_result', 'Use this result'), () => { const next = adopt(artifact); identity.textContent = `${t('workspace.original', 'Original')}: ${source?.name || artifact.name} · ${t('workspace.result', 'Result')}: ${artifact.name} · ${t('workspace.revision', 'Revision')} ${next?.revision || 0} · ${(artifact.bytes.length / 1000).toFixed(1)} KB`; status.textContent = t('workspace.current_result', 'This result is now the current document.'); }, 'useResultBtn');
@@ -53,7 +67,7 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
       if (generation !== currentGeneration || pageGeneration !== previewGeneration) return;
       const base = page.getViewport({ scale: 1 });
       const scale = Math.min(1.5, 900 / Math.max(base.width, base.height), Math.sqrt(4000000 / (base.width * base.height)));
-      const viewport = page.getViewport({ scale }); canvas.width = viewport.width; canvas.height = viewport.height;
+      const viewport = page.getViewport({ scale }); canvas.width = Math.max(1, Math.floor(viewport.width)); canvas.height = Math.max(1, Math.floor(viewport.height));
       renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport });
       try { await renderTask.promise; } catch (error) { if (error.name !== 'RenderingCancelledException') throw error; }
       if (generation === currentGeneration && pageGeneration === previewGeneration) pageStatus.textContent = `${requestedPage} / ${requestedDoc.numPages}`;

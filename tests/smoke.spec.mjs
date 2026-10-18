@@ -12,7 +12,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFDict, PDFName, PDFRawStream } from 'pdf-lib';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../test-fixtures/generated');
 const fx = (...names) => names.map((n) => path.join(FIXTURES, n));
@@ -285,6 +285,10 @@ async function placementCanvasBox(page) {
   await page.locator('.page-tile').first().click();
   const canvas = page.locator('#placementCanvas');
   await expect(canvas).toBeVisible();
+  // Shared workspaces publish the requested page before enabling placement.
+  // Legacy Highlight/Redact have no aria-busy attribute and remain supported.
+  await expect.poll(() => canvas.getAttribute('aria-busy')).not.toBe('true');
+  await expect(canvas).not.toHaveCSS('pointer-events', 'none');
   await canvas.scrollIntoViewIfNeeded();
   return canvas.boundingBox();
 }
@@ -359,11 +363,26 @@ test('highlight: draws a highlight without destroying the page text', async ({ p
 test('add-image: the image is embedded into the output PDF', async ({ page }) => {
   await open(page, 'add-image');
   await page.setInputFiles('#fileInput', fx('report.pdf'));
-  await page.setInputFiles('#imageInput', fx('photo.png'));
+  await expect(page.locator('#optionsSection')).toBeVisible();
+  await expect(page.locator('#previewCanvas')).toHaveAttribute('aria-busy', 'false');
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('button', { name: 'Choose image', exact: true }).click(),
+  ]);
+  await chooser.setFiles(fx('photo.png'));
   await expect(page.locator('#imageThumb')).toBeVisible();
   const download = await grabDownload(page, () => page.click('#applyBtn'), /-with-image\.pdf$/);
   const bytes = readFileSync(await download.path());
   expect(bytes.includes('/XObject'), 'output must carry an image XObject').toBe(true);
+  const doc = await PDFDocument.load(bytes);
+  expect(doc.getPageCount()).toBe(3);
+  const xObjects = doc.getPage(0).node.Resources().lookup(PDFName.of('XObject'), PDFDict);
+  expect(xObjects.keys()).toHaveLength(1);
+  const image = xObjects.lookup(xObjects.keys()[0], PDFRawStream);
+  const fixtureImage = readFileSync(fx('photo.png')[0]);
+  expect(image.dict.get(PDFName.of('Subtype')).toString()).toBe('/Image');
+  expect(image.dict.get(PDFName.of('Width')).asNumber()).toBe(fixtureImage.readUInt32BE(16));
+  expect(image.dict.get(PDFName.of('Height')).asNumber()).toBe(fixtureImage.readUInt32BE(20));
 });
 
 test('crop: the output page size shrinks by the chosen insets', async ({ page }) => {
@@ -418,16 +437,29 @@ test('fill-sign: detects every AcroForm field type and writes the values back', 
 
   // A mangled class name used to send every field down the "not supported yet"
   // branch, so assert on the controls themselves, not just the row count.
-  await expect(page.locator('#fieldsList input[type="text"]')).toHaveCount(4);
-  await expect(page.locator('#fieldsList input[type="checkbox"]')).toHaveCount(1);
-  await expect(page.locator('#fieldsList select')).toHaveCount(1);
-  await expect(page.locator('#fieldsList input[type="radio"]')).toHaveCount(2);
-  await expect(page.locator('#fieldsList')).not.toContainText('not supported');
+  const fields = page.locator('#fieldsList');
+  await expect(fields.getByRole('textbox')).toHaveCount(4);
+  await expect(fields.getByRole('checkbox', { name: 'newsletter', exact: true })).toBeEnabled();
+  await expect(fields.getByRole('combobox', { name: 'plan', exact: true })).toBeEnabled();
+  await expect(fields.getByRole('combobox', { name: 'billing', exact: true })).toBeEnabled();
+  await expect(fields).not.toContainText('not supported');
 
-  await page.locator('#fieldsList input[type="text"]').first().fill('Ada Lovelace');
-  await page.locator('#fieldsList input[type="checkbox"]').check();
-  await page.locator('#fieldsList select').selectOption('Professional');
-  await grabDownload(page, () => page.click('#applyBtn'), /\.pdf$/);
+  const textValues = { full_name: 'Ada Lovelace', email: 'ada@example.test', company: 'Analytical Engines', start_date: '2026-10-18' };
+  for (const [name, value] of Object.entries(textValues)) {
+    const control = fields.getByRole('textbox', { name, exact: true });
+    await expect(control).toBeEnabled();
+    await control.fill(value);
+  }
+  await fields.getByRole('checkbox', { name: 'newsletter', exact: true }).check();
+  await fields.getByRole('combobox', { name: 'plan', exact: true }).selectOption('Professional');
+  await fields.getByRole('combobox', { name: 'billing', exact: true }).selectOption('yearly');
+  const download = await grabDownload(page, () => page.click('#applyBtn'), /\.pdf$/);
+  const form = (await PDFDocument.load(readFileSync(await download.path()))).getForm();
+  expect(form.getFields().map((field) => field.getName()).sort()).toEqual([...Object.keys(textValues), 'newsletter', 'plan', 'billing'].sort());
+  for (const [name, value] of Object.entries(textValues)) expect(form.getTextField(name).getText()).toBe(value);
+  expect(form.getCheckBox('newsletter').isChecked()).toBe(true);
+  expect(form.getDropdown('plan').getSelected()).toEqual(['Professional']);
+  expect(form.getRadioGroup('billing').getSelected()).toBe('yearly');
 });
 
 test('protect then unlock: round-trips a password through both tools', async ({ page }) => {

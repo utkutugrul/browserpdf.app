@@ -18,7 +18,7 @@ async function currentText(page, bytes) {
     return pages.join('\n');
   }, bytes ? Array.from(bytes) : null);
 }
-async function applyText(page, text, x = 120, y = 120) { const revision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.fill('#textInput', text); await page.locator('#placementCanvas').click({ position: { x, y } }); await page.click('#applyBtn'); await expect.poll(() => page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBeGreaterThan(revision); await expect(page.locator('#applyBtn')).toBeEnabled(); await expect(page.locator('#downloadResultBtn')).toBeVisible(); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); }
+async function applyText(page, text, x = 120, y = 120) { const revision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.click('#newObjectBtn'); await page.fill('#textInput', text); await page.locator('#placementCanvas').click({ position: { x, y } }); await page.click('#applyBtn'); await expect.poll(() => page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBeGreaterThan(revision); await expect(page.locator('#applyBtn')).toBeEnabled(); await expect(page.locator('#downloadResultBtn')).toBeVisible(); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); }
 
 test('document sessions are typed, bounded, immutable, secret-free and idempotent', () => {
   const session = createDocumentSession(); const input = new Uint8Array([1, 2, 3]);
@@ -51,7 +51,7 @@ test('Add Text preserves Unicode and successive edits before an explicit idempot
   await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#pageGrid .page-tile')).toHaveCount(3);
   await page.locator('#pageGrid .page-tile').first().click();
   await page.fill('#textInput', 'İstanbul ığüşöç'); await page.locator('#placementCanvas').click({ position: { x: 100, y: 150 } });
-  await expect(page.locator('#textGhost')).toHaveText('İstanbul ığüşöç');
+  await expect(page.locator('#objectList option')).toHaveText(/İstanbul ığüşöç/);
   await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file');
   expect(downloads).toBe(0); expect(await currentText(page)).toContain('İstanbul ığüşöç');
   await applyText(page, 'Second edit', 100, 220); const text = await currentText(page);
@@ -86,15 +86,15 @@ test('explicit editor handoff keeps one bounded task and never restores into an 
   expect(await currentText(page)).toContain('Carried edit');
   await page.locator('#chainRow button', { hasText: 'Fill & Sign' }).click(); await expect(page.locator('#signatureSection')).toBeVisible();
   expect(new URL(page.url()).searchParams.get('workflow')).toBe(firstId);
-  const retained = await page.evaluate(async () => { const { createWorkflowStore } = await import('/js/core/workflow-store.js'); const id = new URLSearchParams(location.search).get('workflow'); const workflow = await createWorkflowStore().getWorkflow(id); return { files: workflow.fileRefs.length, history: workflow.historyRefs.length }; });
+  const retained = await page.evaluate(async () => { const { createWorkflowStore } = await import('/js/core/workflow-store.js'); const id = new URLSearchParams(location.search).get('workflow'); const workflow = await createWorkflowStore().getWorkflow(id); return { files: workflow.fileRefs.length, history: (workflow.historyCheckpoints || workflow.historyRefs).length }; });
   expect(retained.files).toBeLessThanOrEqual(12); expect(retained.history).toBeGreaterThan(0);
 });
 
 test('Fill & Sign Unicode values are transactional and repeated Apply never duplicates signatures', async ({ page }) => {
   await open(page, 'fill-sign'); await page.setInputFiles('#fileInput', path.join(fixtures, 'form.pdf')); await expect(page.locator('#fieldsSection')).toBeVisible();
   await page.locator('#fieldsList .field-row').filter({ hasText: 'full_name' }).locator('input').fill('İpek Şahin');
-  await page.click('#sigModeType'); await page.fill('#typeSigInput', 'İpek'); await page.locator('#sigPageGrid .page-tile').first().click(); await page.locator('#placementCanvas').click({ position: { x: 220, y: 350 } });
-  await expect(page.locator('#sigGhost')).toHaveAttribute('src', /^data:image\/png/);
+  await page.click('#sigModeType'); await page.fill('#typeSigInput', 'İpek'); await expect(page.locator('#signaturePreview')).toBeVisible(); await page.locator('#sigPageGrid .page-tile').first().click(); await page.locator('#placementCanvas').click({ position: { x: 220, y: 350 } });
+  await expect(page.locator('#objectList option')).toHaveText(/signature/); await expect.poll(() => page.locator('#signaturePreview').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
   await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file');
   expect(await page.evaluate(async () => { const ui = await import('/js/tool-ui.js'), lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); const doc = await lib.PDFDocument.load(ui.documentSession.snapshot({ includeBytes: true }).current.bytes); return doc.getForm().getTextField('full_name').getText(); })).toBe('İpek Şahin');
   const before = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision);
@@ -106,15 +106,15 @@ test('Fill & Sign Unicode values are transactional and repeated Apply never dupl
   expect(saved.getPage(0).node.Resources().lookupMaybe((await import('pdf-lib')).PDFName.of('XObject'), (await import('pdf-lib')).PDFDict)?.keys()).toHaveLength(1);
 });
 
-test('form and flatten failures leave source and revision untouched and visibly block success', async ({ page }) => {
+test('form and flatten failures preserve chosen bytes and draft revision and visibly block success', async ({ page }) => {
   await open(page, 'fill-sign'); await page.setInputFiles('#fileInput', path.join(fixtures, 'form.pdf')); await expect(page.locator('#fieldsSection')).toBeVisible();
   await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); window.originalSetText = lib.PDFTextField.prototype.setText; lib.PDFTextField.prototype.setText = function (value) { if (value === 'FAIL FIELD') throw new Error('injected field failure'); return window.originalSetText.call(this, value); }; });
-  const input = page.locator('#fieldsList .field-row').filter({ hasText: 'full_name' }).locator('input'); await input.fill('FAIL FIELD'); await page.click('#applyBtn');
-  await expect(page.locator('.field-error')).toContainText('injected field failure'); await expect(page.locator('#errorSection')).toBeVisible(); await expect(page.locator('#documentResult')).toHaveCount(0);
-  expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(0);
+  const input = page.locator('#fieldsList .field-row').filter({ hasText: 'full_name' }).locator('input'); const chosen = await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes]); await input.fill('FAIL FIELD'); const fieldRevision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.click('#applyBtn');
+  await expect(page.locator('.field-error').first()).toContainText('injected field failure'); await expect(page.locator('#errorSection')).toBeVisible(); await expect(page.locator('#documentResult')).toHaveCount(0);
+  expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(fieldRevision); expect(await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes])).toEqual(chosen);
   await input.fill('İpek'); await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); window.originalFlatten = lib.PDFForm.prototype.flatten; lib.PDFForm.prototype.flatten = () => { throw new Error('injected flatten failure'); }; });
-  await page.check('#flattenInput'); await page.click('#applyBtn'); await expect(page.locator('#errorText')).toContainText('could not be flattened');
-  expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(0);
+  await page.check('#flattenInput'); const flattenRevision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.click('#applyBtn'); await expect(page.locator('#errorText')).toContainText('could not be flattened');
+  expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(flattenRevision); expect(await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes])).toEqual(chosen);
   await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); lib.PDFForm.prototype.flatten = window.originalFlatten; lib.PDFTextField.prototype.setText = window.originalSetText; });
   await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); expect(await currentText(page)).toContain('İpek'); expect(await currentText(page)).not.toContain('FAIL FIELD');
 });
@@ -137,40 +137,38 @@ test('typed multi-results and cancelled publication use actual content and recov
   await expect(page.locator('#documentResultStatus')).toContainText('Result: review.pdf'); await expect.poll(() => page.locator('#documentResultPreview canvas').evaluate((canvas) => canvas.width)).toBeGreaterThan(0);
 });
 
-test('Add Image previews selected page 2 and saves exactly the reviewed selected-page stamp', async ({ page }) => {
+test('Add Image previews selected page 2 and saves exactly the reviewed selected-page stamp', async ({ page }, testInfo) => {
   await open(page, 'add-image'); await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#optionsSection')).toBeVisible();
-  await page.setInputFiles('#imageInput', path.join(fixtures, 'photo.png')); await page.selectOption('#pageSelect', '2'); await expect(page.locator('#previewPanel')).toHaveAttribute('data-preview-page', '2'); await expect(page.locator('#previewPanel')).toBeVisible();
-  const previewBefore = await page.locator('#previewCanvas').evaluate((canvas) => ({ url: canvas.toDataURL(), scale: Number(canvas.dataset.pdfScale) }));
+  await page.selectOption('#pageSelect', '2'); await expect(page.locator('#previewCanvas')).toHaveAttribute('data-pdf-page', '2');
+  await page.setInputFiles('#imageInput', path.join(fixtures, 'photo.png')); await expect(page.locator('#objectList option')).toHaveCount(1);
+  await expect.poll(() => page.evaluate(async () => { const ui=await import('/js/tool-ui.js'),canvas=document.querySelector('#previewCanvas'); return canvas.getAttribute('aria-busy')==='false' && Number(canvas.dataset.sceneRevision)===ui.documentSession.snapshot().revision; })).toBe(true);
+  const before = await page.evaluate(async () => { const ui=await import('/js/tool-ui.js'), input=await ui.getWorkspaceInput(),canvas=document.querySelector('#previewCanvas'); return { url:canvas.toDataURL(),scale:Number(canvas.dataset.pdfScale),bytes:[...input.bytes],smoothing:getComputedStyle(canvas).webkitFontSmoothing,context:canvas.getContext('2d').getContextAttributes() }; });
   await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file');
   const comparison = await page.evaluate(async (before) => {
-    const { documentSession } = await import('/js/tool-ui.js'); const { ensurePdfJs, PDFJS_ASSET_URLS } = await import('/js/lib-loader.js');
-    const task = (await ensurePdfJs()).getDocument({ data: documentSession.snapshot({ includeBytes: true }).current.bytes, ...PDFJS_ASSET_URLS }); const doc = await task.promise;
-    try {
-      const p = await doc.getPage(2), viewport = p.getViewport({ scale: before.scale }); const canvas = document.createElement('canvas'); canvas.width = viewport.width; canvas.height = viewport.height; await p.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-      const image = new Image(); image.src = before.url; await image.decode(); const original = document.createElement('canvas'); original.width = image.width; original.height = image.height; original.getContext('2d').drawImage(image, 0, 0);
-      const a = original.getContext('2d').getImageData(0, 0, original.width, original.height), b = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-      let maxTextDifference = 0, stampDifferences = 0, totalDifference = 0;
-      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) for (let channel = 0; channel < 3; channel++) {
-        const i = (y * canvas.width + x) * 4 + channel, difference = Math.abs(a.data[i] - b.data[i]); totalDifference += difference;
-        if (y > canvas.height * .35) stampDifferences += difference; else maxTextDifference = Math.max(maxTextDifference, difference);
-      }
-      return { stampDifferences, maxTextDifference, meanDifference: totalDifference / (canvas.width * canvas.height * 3), text: (await p.getTextContent()).items.map((item) => item.str).join(' ') };
-    } finally { await task.destroy(); }
-  }, previewBefore);
-  // PDF.js/Chrome gives standard-font glyphs slightly different antialiasing
-  // between document instances. The entire image/placement area is exact.
-  expect(comparison.stampDifferences).toBe(0); expect(comparison.maxTextDifference).toBeLessThanOrEqual(40); expect(comparison.meanDifference).toBeLessThan(.15); expect(comparison.text).toContain('Regional Breakdown');
-  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#downloadResultBtn')]); const saved = await PDFDocument.load(await readFile(await download.path()));
-  expect(saved.getPageCount()).toBe(3); expect(saved.getPage(1).node.Resources().lookupMaybe((await import('pdf-lib')).PDFName.of('XObject'), (await import('pdf-lib')).PDFDict)?.keys()).toHaveLength(1);
+    const ui=await import('/js/tool-ui.js'),runtime=await import('/js/lib-loader.js'),pdfjs=await runtime.ensurePdfJs(),bytes=ui.documentSession.current().bytes;
+    const image = new Image(); image.src=before.url; await image.decode(); const preview=document.createElement('canvas');preview.width=image.width;preview.height=image.height;preview.getContext('2d').drawImage(image,0,0);
+    const metrics = (a,b) => { const x=a.getContext('2d').getImageData(0,0,a.width,a.height).data,y=b.getContext('2d').getImageData(0,0,b.width,b.height).data;let maxTextDifference=0,stampDifferences=0,totalDifference=0;for(let row=0;row<a.height;row++)for(let column=0;column<a.width;column++)for(let channel=0;channel<3;channel++){const i=(row*a.width+column)*4+channel,difference=Math.abs(x[i]-y[i]);totalDifference+=difference;if(row>a.height*.35)stampDifferences+=difference;else maxTextDifference=Math.max(maxTextDifference,difference);}return{stampDifferences,maxTextDifference,meanDifference:totalDifference/(a.width*a.height*3)}; };
+    const task=pdfjs.getDocument({data:bytes.slice(),...runtime.PDFJS_ASSET_URLS}),canvas=document.createElement('canvas');
+    // Canvas text rasterization inherits the body's font smoothing. Match the
+    // actual preview's DOM environment instead of comparing a detached canvas.
+    canvas.style.position='fixed';canvas.style.left='-2000px';document.body.append(canvas);
+    try { const doc=await task.promise,p=await doc.getPage(2),viewport=p.getViewport({scale:before.scale});canvas.width=Math.max(1,Math.floor(viewport.width));canvas.height=Math.max(1,Math.floor(viewport.height));await p.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+      return {full:metrics(preview,canvas),smoothing:getComputedStyle(canvas).webkitFontSmoothing,previewSmoothing:before.smoothing,context:canvas.getContext('2d').getContextAttributes(),previewContext:before.context,viewport:{scale:viewport.scale,transform:viewport.transform,width:viewport.width,height:viewport.height,rotation:viewport.rotation,userUnit:p.userUnit},sameSceneBytes:bytes.length===before.bytes.length&&bytes.every((byte,index)=>byte===before.bytes[index]),text:(await p.getTextContent()).items.map((item)=>item.str).join(' '),width:preview.width,height:preview.height};
+    } finally { await task.destroy();canvas.remove();canvas.width=canvas.height=0; }
+  },before);
+  await testInfo.attach('preview-render-diagnostics',{body:JSON.stringify(comparison,null,2),contentType:'application/json'});
+  expect(comparison.sameSceneBytes).toBe(true); expect(comparison.smoothing).toBe(comparison.previewSmoothing);
+  expect(comparison.full.stampDifferences).toBe(0); expect(comparison.full.maxTextDifference).toBeLessThanOrEqual(40); expect(comparison.full.meanDifference).toBeLessThan(.15); expect(comparison.text).toContain('Regional Breakdown');
+  const [download]=await Promise.all([page.waitForEvent('download'),page.click('#downloadResultBtn')]); const saved=await PDFDocument.load(await readFile(await download.path()));expect(saved.getPageCount()).toBe(3);expect(saved.getPage(1).node.Resources().lookupMaybe((await import('pdf-lib')).PDFName.of('XObject'),(await import('pdf-lib')).PDFDict)?.keys()).toHaveLength(1);
 });
 
 test('unsupported preview and export text fail visibly and supported text recovers', async ({ page }) => {
   await open(page, 'add-text'); const errors = []; page.on('pageerror', (error) => errors.push(error.message));
   await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#pageGrid .page-tile')).toHaveCount(3); await page.locator('#pageGrid .page-tile').first().click();
   await page.fill('#textInput', '漢字'); await page.locator('#placementCanvas').click({ position: { x: 100, y: 100 } }); await expect(page.locator('#errorText')).toContainText('does not support');
-  await page.click('#applyBtn'); await expect(page.locator('#errorText')).toContainText('does not support'); await expect(page.locator('#documentResult')).toHaveCount(0);
+  await expect(page.locator('#applyBtn')).toBeDisabled(); await expect(page.locator('#errorText')).toContainText('does not support'); await expect(page.locator('#documentResult')).toHaveCount(0);
   expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(0);
-  await applyText(page, 'Türkçe'); expect(await currentText(page)).toContain('Türkçe'); expect(errors).toEqual([]);
+  await applyText(page, 'Türkçe'); expect(await currentText(page)).toContain('Türkçe'); await page.locator('#objectList').selectOption({index:0}); await page.fill('#textInput','東京'); await expect(page.locator('#errorText')).toContainText('Previous text was retained'); await expect(page.locator('#textInput')).toHaveValue('Türkçe'); const revisionBeforeLimit=await page.evaluate(async()=>(await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.fill('#textInput','A'.repeat(10001)); await expect(page.locator('#errorText')).toContainText('Invalid object text'); await expect(page.locator('#textInput')).toHaveValue('Türkçe'); expect(await page.evaluate(async()=>(await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(revisionBeforeLimit); await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); const [checked] = await Promise.all([page.waitForEvent('download'),page.click('#downloadResultBtn')]); const checkedText=await currentText(page,await readFile(await checked.path())); expect(checkedText).toContain('Türkçe'); expect(checkedText).not.toContain('東京'); expect(errors).toEqual([]);
 });
 
 test('oversized and unreadable inputs fail visibly before reads and keep the current task', async ({ page }) => {
@@ -182,7 +180,7 @@ test('oversized and unreadable inputs fail visibly before reads and keep the cur
 test('rejected replacement preserves the visible editor and its unapplied text', async ({ page }) => {
   await open(page, 'add-text'); await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#pageGrid .page-tile')).toHaveCount(3); await page.locator('#pageGrid .page-tile').first().click(); await page.fill('#textInput', 'Keep this draft'); await page.locator('#placementCanvas').click({ position: { x: 100, y: 100 } });
   await page.evaluate(() => { const input = document.getElementById('fileInput'); Object.defineProperty(input, 'files', { configurable: true, value: [{ name: 'huge.pdf', type: 'application/pdf', size: 251 * 1024 * 1024, arrayBuffer: async () => { throw new Error('must not read'); } }] }); input.dispatchEvent(new Event('change')); });
-  await expect(page.locator('#errorText')).toContainText('250 MB'); await expect(page.locator('#textOptionsSection')).toBeVisible(); await expect(page.locator('#textInput')).toHaveValue('Keep this draft'); await expect(page.locator('#textGhost')).toHaveText('Keep this draft'); await expect(page.locator('#applyBtn')).toBeEnabled();
+  await expect(page.locator('#errorText')).toContainText('80 MB'); await expect(page.locator('#textOptionsSection')).toBeVisible(); await expect(page.locator('#textInput')).toHaveValue('Keep this draft'); await expect(page.locator('#objectList option')).toHaveText(/Keep this draft/); await expect(page.locator('#applyBtn')).toBeEnabled();
 });
 
 test('transient result module failure retries through a fresh module URL without page errors', async ({ page }) => {
@@ -201,13 +199,13 @@ test('transient session module failure leaves intake retryable', async ({ page }
   await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#viewerSection')).toBeVisible(); expect(imports).toBe(2); expect(errors).toEqual([]);
 });
 
-test('malformed PDF replacement preserves the canonical task, pending draft and reviewed result', async ({ page }) => {
+test('malformed replacement preserves chosen bytes and pending objects without reviving a stale result', async ({ page }) => {
   await open(page, 'add-text'); await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#pageGrid .page-tile')).toHaveCount(3); await page.locator('#pageGrid .page-tile').first().click(); await applyText(page, 'Saved first edit');
-  await page.fill('#textInput', 'Pending second edit'); await page.locator('#placementCanvas').click({ position: { x: 100, y: 220 } }); await expect(page.locator('#textGhost')).toHaveText('Pending second edit');
+  await page.fill('#textInput', 'Pending second edit'); await page.locator('#placementCanvas').click({ position: { x: 100, y: 220 } }); await expect(page.locator('#objectList option')).toContainText(['Saved first edit', 'Pending second edit']);
   const before = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot());
   await page.setInputFiles('#fileInput', { name: 'malformed.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\nThis header is valid but the PDF structure is not.') });
-  await expect(page.locator('#errorText')).toContainText('Could not open this PDF'); await expect(page.locator('#textInput')).toHaveValue('Pending second edit'); await expect(page.locator('#textGhost')).toHaveText('Pending second edit'); await expect(page.locator('#documentResult')).toBeVisible();
-  const after = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot()); expect(after.taskId).toBe(before.taskId); expect(after.revision).toBe(before.revision); expect(after.current).toEqual(before.current); await expect(page.locator('#applyBtn')).toBeEnabled();
+  await expect(page.locator('#errorText')).toContainText('Could not open this PDF'); await expect(page.locator('#textInput')).toHaveValue('Pending second edit'); await expect(page.locator('#objectList option')).toContainText(['Saved first edit', 'Pending second edit']); await expect(page.locator('#documentResult')).toBeHidden();
+  const after = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot()); expect(after.taskId).toBe(before.taskId); expect(after.revision).toBe(before.revision); expect(after.current).toEqual(before.current); await expect(page.locator('#applyBtn')).toBeEnabled(); await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#downloadResultBtn')]); const text = await currentText(page, await readFile(await saved.path())); expect(text).toContain('Saved first edit'); expect(text.match(/Pending second edit/g)).toHaveLength(1);
 });
 
 test('Protect to Unlock transitions from encrypted output to editable reviewed output', async ({ page }) => {
@@ -237,10 +235,13 @@ test('Add Text Undo and Redo publish and download the actual current revision', 
   const [redone] = await Promise.all([page.waitForEvent('download'), page.click('#downloadResultBtn')]); expect(await currentText(page, await readFile(await redone.path()))).toContain('UNDO_STAMP');
 });
 
-test('Fill & Sign refreshes a placed signature after its ink changes', async ({ page }) => {
-  await open(page, 'fill-sign'); await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#signatureSection')).toBeVisible(); await page.click('#sigModeType'); await page.fill('#typeSigInput', 'ALPHA'); await page.locator('#sigPageGrid .page-tile').first().click(); await page.locator('#placementCanvas').click({ position: { x: 220, y: 350 } });
-  const before = await page.locator('#sigGhost').getAttribute('src'); await page.fill('#typeSigInput', 'BETA');
-  const preview = await page.locator('#sigGhost').getAttribute('src'); expect(preview).not.toBe(before); expect(preview).toBe(await page.locator('#sigCanvas').evaluate((canvas) => canvas.toDataURL('image/png')));
+test('Fill & Sign refreshes placed ink in the actual preview and saved bitmap', async ({ page }) => {
+  await open(page, 'fill-sign'); await page.setInputFiles('#fileInput', path.join(fixtures, 'report.pdf')); await expect(page.locator('#signatureSection')).toBeVisible(); await page.click('#sigModeType'); await page.fill('#typeSigInput', 'ALPHA'); await expect(page.locator('#signaturePreview')).toBeVisible(); await page.locator('#sigPageGrid .page-tile').first().click(); await page.locator('#placementCanvas').click({ position: { x: 220, y: 350 } });
+  const originalPreview = await page.locator('#signaturePreview').getAttribute('src'); await page.fill('#typeSigInput','東京'); await expect(page.locator('#errorText')).toContainText('Previous signature was retained'); await expect(page.locator('#typeSigInput')).toHaveValue('ALPHA'); await expect(page.locator('#signaturePreview')).toHaveAttribute('src',originalPreview);
+  const before = await page.locator('#signaturePreview').getAttribute('src'); const beforePixels = await page.locator('#placementCanvas').evaluate((canvas) => canvas.toDataURL()); await page.fill('#typeSigInput', 'BETA');
+  await expect.poll(() => page.locator('#signaturePreview').getAttribute('src')).not.toBe(before); await expect.poll(() => page.locator('#placementCanvas').evaluate((canvas) => canvas.toDataURL())).not.toBe(beforePixels);
+  const width = await page.locator('#signaturePreview').evaluate((img) => img.naturalWidth); expect(width).toBeLessThan(420); await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file');
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#downloadResultBtn')]); const lib = await import('pdf-lib'), output = await PDFDocument.load(await readFile(await saved.path())); const images = output.getPage(0).node.Resources().lookup(lib.PDFName.of('XObject'), lib.PDFDict); expect(images.keys()).toHaveLength(1); expect(output.context.lookup(images.get(images.keys()[0])).dict.get(lib.PDFName.of('Width')).asNumber()).toBe(width);
 });
 
 test('a validated PDF named as text stays typed as PDF and offers PDF actions', async ({ page }) => {
