@@ -4,9 +4,10 @@ import { ensurePdfJs, ensurePdfLib, PDFJS_ASSET_URLS } from './lib-loader.js';
 import {
   showError, hideError, setProgress, showProgress, finishProgress, hideProgress,
   downloadBytes, wireDropzone, readPdfFile, formatBytes,
-  renderPdfPageToCanvas, takeChainedFile, offerChain,
+  renderPdfPageToCanvas, takeChainedFile, offerChain, documentSession, clearResult,
 } from './tool-ui.js';
 import { t } from './i18n.js';
+import { visualTransform } from './core/page-geometry.js';
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -36,6 +37,10 @@ let imageKind = null;
 let imageThumbUrl = null;
 let previewDebounce = null;
 let previewToken = 0;
+let generation = 0;
+let cachedExport = null;
+let sourcePdf = null;
+let busy = false;
 
 function detectImageKind(bytes) {
   if (bytes.length >= 4 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) {
@@ -48,15 +53,22 @@ function detectImageKind(bytes) {
 }
 
 async function handleFile(file) {
+  const token = ++generation; busy = true; applyBtn.disabled = true;
   hideError();
+  const parsed = await readPdfFile(file, { validate: true });
+  if (!parsed || token !== generation) { if (token === generation) { busy = false; applyBtn.disabled = false; } return; }
+  busy = false; applyBtn.disabled = false;
+  previewToken++; cachedExport = null;
   optionsSection.hidden = true;
   previewPanel.hidden = true;
-  const parsed = await readPdfFile(file);
-  if (!parsed) return;
   currentBytes = parsed.bytes;
   currentFileName = parsed.baseName;
   fileSummary.textContent = `${file.name} (${formatBytes(file.size)})`;
   await populatePageSelect();
+  const pdfjs = await ensurePdfJs();
+  const loaded = await pdfjs.getDocument({ data: currentBytes.slice(), ...PDFJS_ASSET_URLS }).promise;
+  if (token !== generation) { await loaded.loadingTask.destroy(); return; }
+  await sourcePdf?.loadingTask?.destroy(); sourcePdf = loaded;
   optionsSection.hidden = false;
   schedulePreview();
 }
@@ -110,6 +122,7 @@ async function handleImageFile(file) {
     return;
   }
   imageBytes = bytes;
+  cachedExport = null;
   imageKind = kind;
   imageName.textContent = `${file.name} (${formatBytes(file.size)})`;
   if (imageThumbUrl) URL.revokeObjectURL(imageThumbUrl);
@@ -133,10 +146,12 @@ function positionFor(value, pw, ph, w, h) {
   }
 }
 
-function drawImageOnPage(page, pdfLib, embedded) {
+async function drawImageOnPage(page, pdfLib, embedded, index) {
   const sizePct = Number(sizeSlider.value) / 100;
   const opacity = Number(opacitySlider.value) / 100;
-  const { width: pw, height: ph } = page.getSize();
+  const sourcePage = await sourcePdf.getPage(index + 1);
+  const viewport = sourcePage.getViewport({ scale: 1 });
+  const { width: pw, height: ph } = viewport;
   let baseW = embedded.width;
   let baseH = embedded.height;
   if (baseW > pw || baseH > ph) {
@@ -147,7 +162,9 @@ function drawImageOnPage(page, pdfLib, embedded) {
   const w = baseW * sizePct;
   const h = baseH * sizePct;
   const { x, y } = positionFor(positionSelect.value, pw, ph, w, h);
+  page.pushOperators(pdfLib.pushGraphicsState(), pdfLib.concatTransformationMatrix(...visualTransform(viewport)));
   page.drawImage(embedded, { x, y, width: w, height: h, opacity });
+  page.pushOperators(pdfLib.popGraphicsState());
 }
 
 async function embedImage(doc) {
@@ -161,51 +178,57 @@ async function renderPreview() {
     previewPanel.hidden = true;
     return;
   }
-  const myToken = ++previewToken;
+  const myToken = previewToken;
   try {
     const pdfLib = await ensurePdfLib(() => {});
     const srcDoc = await pdfLib.PDFDocument.load(currentBytes, { ignoreEncryption: true });
     srcPageCount = srcDoc.getPageCount();
-    const previewDoc = await pdfLib.PDFDocument.create();
-    const [firstPage] = await previewDoc.copyPages(srcDoc, [0]);
-    previewDoc.addPage(firstPage);
+    const previewDoc = srcDoc;
+    const index = pageSelect.value === 'all' ? 0 : Math.min(Math.max(Number(pageSelect.value) - 1, 0), srcPageCount - 1);
     const embedded = await embedImage(previewDoc);
-    drawImageOnPage(previewDoc.getPages()[0], pdfLib, embedded);
+    if (!cachedExport) await drawImageOnPage(previewDoc.getPages()[index], pdfLib, embedded, index);
     const bytes = await previewDoc.save();
     if (myToken !== previewToken) return;
     const pdfjs = await ensurePdfJs(() => {});
-    await renderPdfPageToCanvas(pdfjs, bytes, 1, previewCanvas, 340, PDFJS_ASSET_URLS);
-    if (myToken === previewToken) previewPanel.hidden = false;
+    await renderPdfPageToCanvas(pdfjs, bytes, index + 1, previewCanvas, 340, PDFJS_ASSET_URLS);
+    if (myToken === previewToken) { previewPanel.dataset.previewPage = String(index + 1); document.getElementById('previewTitle').textContent = t('workspace.preview_page', 'Live preview — page {n}', { n: index + 1 }); previewPanel.hidden = false; }
   } catch (err) {
     console.warn('Preview failed:', err);
   }
 }
 
 function schedulePreview() {
+  previewToken++;
+  previewPanel.hidden = true;
   clearTimeout(previewDebounce);
   previewDebounce = setTimeout(renderPreview, 350);
 }
 
-positionSelect.addEventListener('change', schedulePreview);
-pageSelect.addEventListener('change', schedulePreview);
+positionSelect.addEventListener('change', () => { cachedExport = null; schedulePreview(); });
+pageSelect.addEventListener('change', () => { cachedExport = null; schedulePreview(); });
 sizeSlider.addEventListener('input', () => {
+  cachedExport = null;
   sizeValue.textContent = t('add-image.js_size_pct', '{n}%', { n: sizeSlider.value });
   schedulePreview();
 });
 opacitySlider.addEventListener('input', () => {
+  cachedExport = null;
   opacityValue.textContent = t('add-image.js_opacity_pct', '{n}%', { n: opacitySlider.value });
   schedulePreview();
 });
 
 applyBtn.addEventListener('click', async () => {
-  if (!currentBytes) return;
+  if (!currentBytes || busy) return;
+  if (cachedExport) { await downloadBytes(cachedExport.bytes, cachedExport.name); return; }
   if (!imageBytes) {
     showError(t('add-image.js_err_no_image', 'Choose an image to stamp first.'));
     return;
   }
   hideError();
   showProgress(t('common.js_loading_pdflib', 'Loading pdf-lib…'));
+  clearResult();
   applyBtn.disabled = true;
+  busy = true; const token = generation;
   try {
     const pdfLib = await ensurePdfLib((msg) => setProgress(0, msg));
     const doc = await pdfLib.PDFDocument.load(currentBytes, { ignoreEncryption: true });
@@ -215,25 +238,29 @@ applyBtn.addEventListener('click', async () => {
     const target = pageSelect.value === 'all'
       ? pages.map((_, i) => i)
       : [Math.min(Math.max(parseInt(pageSelect.value, 10) || 1, 1), pages.length) - 1];
-    target.forEach((idx, n) => {
+    for (const [n, idx] of target.entries()) {
       setProgress(Math.round(((n + 1) / target.length) * 90), t('add-image.js_stamping_page', 'Stamping page {i}/{n}', { i: idx + 1, n: target.length }));
-      drawImageOnPage(pages[idx], pdfLib, embedded);
-    });
+      await drawImageOnPage(pages[idx], pdfLib, embedded, idx);
+    }
     setProgress(95, t('common.js_saving', 'Saving…'));
     const outBytes = await doc.save();
+    if (token !== generation) return;
     const outName = `${currentFileName}-with-image.pdf`;
-    downloadBytes(outBytes, outName);
+    currentBytes = outBytes.slice();
+    cachedExport = { bytes: outBytes.slice(), name: outName };
+    documentSession.adopt(outBytes, outName, { type: 'application/pdf' });
+    await downloadBytes(outBytes, outName, 'application/pdf', { operation: { isCurrent: () => token === generation } });
+    if (token !== generation) return;
+    schedulePreview();
     offerChain(outBytes, outName, [
       { slug: 'compress', label: t('add-image.js_chain_compress', 'Compress') },
       { slug: 'watermark', label: t('add-image.js_chain_watermark', 'Add Watermark') },
     ]);
     finishProgress();
   } catch (err) {
-    console.error(err);
-    showError(err?.message || t('add-image.js_err_generic', 'Something went wrong while adding the image.'));
-    hideProgress();
+    if (token === generation) { showError(err?.message || t('add-image.js_err_generic', 'Something went wrong while adding the image.')); hideProgress(); }
   } finally {
-    applyBtn.disabled = false;
+    if (token === generation) { busy = false; applyBtn.disabled = false; }
   }
 });
 

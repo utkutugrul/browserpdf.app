@@ -100,12 +100,11 @@ async function doProtect() {
     });
     const outBytes = await doc.save();
     const outName = currentFileName + '-protected.pdf';
-    downloadBytes(outBytes, outName);
+    const resultOptions = { capabilities: { encrypted: true } };
+    await downloadBytes(outBytes, outName, 'application/pdf', resultOptions);
     offerChain(outBytes, outName, [
       { slug: 'unlock', label: 'Unlock' },
-      { slug: 'merge', label: 'Merge' },
-      { slug: 'compress', label: 'Compress' },
-    ]);
+    ], resultOptions);
     finishProgress();
   } catch (err) {
     console.error(err);

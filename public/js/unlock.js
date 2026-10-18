@@ -124,13 +124,13 @@ async function doUnlock() {
     const outBytes = await out.save();
     unlockedBytes = outBytes;
     const outName = currentFileName + '-unlocked.pdf';
-    downloadBytes(outBytes, outName);
+    downloadBytes(outBytes, outName, 'application/pdf', { capabilities: { encrypted: false } });
     offerChain(outBytes, outName, [
       { slug: 'merge', label: 'Merge' },
       { slug: 'compress', label: 'Compress' },
       { slug: 'organize', label: 'Organize' },
       { slug: 'protect', label: 'Protect' },
-    ]);
+    ], { capabilities: { encrypted: false } });
     finishProgress();
   } catch (err) {
     console.error(err);

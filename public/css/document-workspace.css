@@ -1,0 +1,14 @@
+.document-result { margin: 1.25rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); min-width: 0; }
+.document-result h2 { font-size: 1.1rem; margin: 0 0 .5rem; }
+.document-result p { overflow-wrap: anywhere; }
+.document-result .btn-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+.document-result canvas { display: block; max-width: 100%; height: auto; margin: .5rem auto; }
+.document-result textarea, .document-result pre { width: 100%; min-height: 10rem; box-sizing: border-box; white-space: pre-wrap; overflow-wrap: anywhere; }
+.document-result img { max-width: 100%; max-height: 32rem; object-fit: contain; }
+.document-result [hidden] { display: none; }
+.document-result-preview { overflow: auto; max-height: 38rem; background: var(--bg); }
+.editor-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; align-items: center; }
+.text-preview-object { position: absolute; white-space: pre; line-height: 1.2; cursor: move; background: transparent; border: 1px dashed currentColor; padding: 0; text-align: left; }
+.placement-wrap { touch-action: none; }
+.field-error { display: block; color: var(--danger, #b42318); }
+@media (max-width: 390px) { .document-result .btn { width: 100%; justify-content: center; } }

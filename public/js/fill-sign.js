@@ -2,6 +2,9 @@
 
 import { ensurePdfJs, ensurePdfLib, PDFJS_ASSET_URLS } from './lib-loader.js';
 import { t } from './i18n.js';
+import { readPdfFile, takeChainedFile, downloadBytes, offerChain, documentSession, clearResult } from './tool-ui.js';
+import { embedUnicodeFont } from './core/pdf-fonts.js';
+import { visualTransform } from './core/page-geometry.js';
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -42,6 +45,15 @@ let placementScale = 1;
 let placementPageHeightPt = 0;
 let placementPoint = null;
 let hasSignature = false;
+let currentBytes = null;
+let placementViewport = null;
+let generation = 0;
+let busy = false;
+let cachedExport = null;
+
+function changed() { cachedExport = null; }
+fieldsList.addEventListener('input', changed);
+flattenInput.addEventListener('change', changed);
 
 function showError(message) {
   errorText.textContent = message;
@@ -62,7 +74,7 @@ function checkPdfMagicBytes(bytes) {
 function updateApplyState() {
   const hasFields = fieldControls.length > 0;
   const hasSigPlacement = hasSignature && placementPoint != null;
-  applyBtn.disabled = !hasFields && !hasSigPlacement;
+  applyBtn.disabled = busy || (!hasFields && !hasSigPlacement);
   if (hasSignature && placementPoint == null) {
     applyHint.textContent = t('fill-sign.js_hint_pick_page', 'Pick a page above and click on it to place your signature.');
   } else if (!hasSignature && placementPoint != null) {
@@ -72,6 +84,19 @@ function updateApplyState() {
   } else {
     applyHint.textContent = t('fill-sign.js_hint_ready', 'Ready.');
   }
+  updateSignatureGhost();
+}
+
+function updateSignatureGhost() {
+  let ghost = document.getElementById('sigGhost');
+  if (!hasSignature || !placementPoint || !placementViewport) { ghost?.remove(); return; }
+  const rect = placementCanvas.getBoundingClientRect(); if (!rect.width) return;
+  if (!ghost) { ghost = document.createElement('img'); ghost.id = 'sigGhost'; ghost.className = 'sig-ghost'; ghost.alt = t('workspace.signature_preview', 'Signature preview'); placementWrap.append(ghost); }
+  const ratio = rect.width / placementCanvas.width, width = 140 * placementScale * ratio, height = width * sigCanvas.height / sigCanvas.width;
+  ghost.src = sigCanvas.toDataURL('image/png');
+  ghost.style.left = `${placementPoint.pdfX * placementScale * ratio - width / 2}px`;
+  ghost.style.top = `${(placementViewport.height / placementScale - placementPoint.pdfY) * placementScale * ratio - height / 2}px`;
+  ghost.style.width = `${width}px`; ghost.style.height = `${height}px`;
 }
 
 /* ---------- Form fields ---------- */
@@ -109,7 +134,7 @@ function buildFieldsUI(form) {
   fieldsSection.hidden = false;
   noFieldsNote.hidden = true;
 
-  for (const field of fields) {
+  for (let field of fields) {
     const name = field.getName();
     const kind = fieldKind(field);
     const row = document.createElement('div');
@@ -214,13 +239,29 @@ function buildFieldsUI(form) {
     }
 
     fieldsList.appendChild(row);
+    const control = fieldControls.find((item) => item.field === field);
+    if (control) {
+      control.row = row;
+      control.applyTo = (form) => {
+        const originalField = field;
+        try { field = form.getField(name); control.apply(); }
+        finally { field = originalField; }
+      };
+      const input = row.querySelector('input,select');
+      if (input) { input.id = `form-field-${fieldControls.length}`; label.htmlFor = input.id; }
+    }
   }
 }
 
 /* ---------- File loading ---------- */
 
 async function handleFile(file) {
+  const token = ++generation; busy = true; applyBtn.disabled = true;
   hideError();
+  const parsed = await readPdfFile(file, { validate: true });
+  if (!parsed || token !== generation) { if (token === generation) { busy = false; updateApplyState(); } return; }
+  busy = false;
+  cachedExport = null;
   fieldsSection.hidden = true;
   noFieldsNote.hidden = true;
   signatureSection.hidden = true;
@@ -234,16 +275,7 @@ async function handleFile(file) {
   sigStatus.textContent = '';
   setSigMode('draw');
 
-  const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  if (!looksLikePdf) {
-    showError(t('common.js_err_not_pdf', 'Please select a PDF file.'));
-    return;
-  }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!checkPdfMagicBytes(bytes)) {
-    showError(t('common.js_err_invalid_pdf', 'This file does not look like a valid PDF.'));
-    return;
-  }
+  const bytes = parsed.bytes; currentBytes = bytes;
   currentFileName = file.name.replace(/\.pdf$/i, '') || 'document';
 
   progressSection.hidden = false;
@@ -260,7 +292,9 @@ async function handleFile(file) {
 
     const pdfjs = await ensurePdfJs((t) => setProgress(0, t));
     const loadingTask = pdfjs.getDocument({ data: bytes.slice(), ...PDFJS_ASSET_URLS });
-    pdfJsDocRef = await loadingTask.promise;
+    const loaded = await loadingTask.promise;
+    if (token !== generation) { await loadingTask.destroy(); return; }
+    pdfJsDocRef = loaded;
     numPages = pdfJsDocRef.numPages;
     await renderSigPageGrid();
 
@@ -268,10 +302,9 @@ async function handleFile(file) {
     applyRow.hidden = false;
     updateApplyState();
   } catch (err) {
-    console.error(err);
-    showError(err?.message || t('common.js_err_read', 'Could not read this PDF.'));
+    if (token === generation) showError(err?.message || t('common.js_err_read', 'Could not read this PDF.'));
   } finally {
-    progressSection.hidden = true;
+    if (token === generation) progressSection.hidden = true;
   }
 }
 
@@ -341,6 +374,7 @@ sigModeDraw.addEventListener('click', () => setSigMode('draw'));
 sigModeType.addEventListener('click', () => setSigMode('type'));
 
 function renderTypedSignature(text) {
+  changed();
   sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
   const trimmed = text.trim();
   if (!trimmed) {
@@ -367,6 +401,7 @@ typeSigInput.addEventListener('input', () => {
 });
 
 sigCanvas.addEventListener('pointerdown', (e) => {
+  changed();
   if (sigMode !== 'draw') return;
   drawing = true;
   const p = getCanvasPoint(e, sigCanvas);
@@ -387,6 +422,7 @@ window.addEventListener('pointerup', () => {
   drawing = false;
 });
 clearSigBtn.addEventListener('click', () => {
+  changed();
   sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
   typeSigInput.value = '';
   hasSignature = false;
@@ -443,6 +479,7 @@ async function selectSigPage(index) {
   const baseViewport = page.getViewport({ scale: 1 });
   placementScale = Math.min(560 / baseViewport.width, 1.8);
   const viewport = page.getViewport({ scale: placementScale });
+  placementViewport = viewport;
   placementCanvas.width = viewport.width;
   placementCanvas.height = viewport.height;
   await page.render({ canvasContext: placementCanvas.getContext('2d'), viewport }).promise;
@@ -453,6 +490,7 @@ async function selectSigPage(index) {
 }
 
 placementCanvas.addEventListener('click', (e) => {
+  changed();
   const rect = placementCanvas.getBoundingClientRect();
   const cssX = e.clientX - rect.left;
   const cssY = e.clientY - rect.top;
@@ -460,20 +498,8 @@ placementCanvas.addEventListener('click', (e) => {
   const canvasY = cssY * (placementCanvas.height / rect.height);
   placementPoint = {
     pdfX: canvasX / placementScale,
-    pdfY: placementPageHeightPt - canvasY / placementScale,
+    pdfY: (placementViewport.height - canvasY) / placementScale,
   };
-
-  document.getElementById('sigGhost')?.remove();
-  const ghost = document.createElement('div');
-  ghost.id = 'sigGhost';
-  ghost.className = 'sig-ghost';
-  const w = 64;
-  const h = 26;
-  ghost.style.left = `${cssX - w / 2}px`;
-  ghost.style.top = `${cssY - h / 2}px`;
-  ghost.style.width = `${w}px`;
-  ghost.style.height = `${h}px`;
-  placementWrap.appendChild(ghost);
 
   updateApplyState();
 });
@@ -481,25 +507,35 @@ placementCanvas.addEventListener('click', (e) => {
 /* ---------- Apply & download ---------- */
 
 applyBtn.addEventListener('click', async () => {
-  if (!currentDoc) return;
+  if (!currentDoc || busy) return;
+  if (cachedExport) { await downloadBytes(cachedExport.bytes, cachedExport.name); return; }
   hideError();
+  clearResult();
   progressSection.hidden = false;
   applyBtn.disabled = true;
+  busy = true; const token = generation;
   try {
+    const outputDoc = await pdfLibRef.PDFDocument.load(currentBytes);
+    const outputForm = outputDoc.getForm();
+    fieldsList.querySelectorAll('.field-error').forEach((node) => node.remove());
     if (fieldControls.length && currentForm) {
       setProgress(20, t('fill-sign.js_filling_fields', 'Filling fields…'));
       for (const control of fieldControls) {
         try {
-          control.apply();
+          control.applyTo(outputForm);
         } catch (err) {
-          console.warn(`Could not set field "${control.field.getName()}":`, err);
+          const error = document.createElement('span'); error.className = 'field-error'; error.setAttribute('role', 'alert'); error.textContent = `${control.field.getName()}: ${err.message}`; control.row.append(error);
+          throw new Error(t('workspace.field_failed', 'A form field could not be applied. Correct the highlighted field and try again.'));
         }
       }
+      const text = [...fieldsList.querySelectorAll('input[type="text"],select')].map((input) => input.value).join('\n');
+      const font = await embedUnicodeFont(outputDoc, { text });
+      outputForm.updateFieldAppearances(font);
       if (flattenInput.checked) {
         try {
-          currentForm.flatten();
+          outputForm.flatten();
         } catch (err) {
-          console.warn('Could not flatten form:', err);
+          throw new Error(t('workspace.flatten_failed', 'The form could not be flattened. No result was created: {message}', { message: err.message }));
         }
       }
     }
@@ -508,40 +544,48 @@ applyBtn.addEventListener('click', async () => {
       setProgress(60, t('fill-sign.js_adding_signature', 'Adding signature…'));
       const sigBlob = await new Promise((resolve) => sigCanvas.toBlob(resolve, 'image/png'));
       const sigBytes = new Uint8Array(await sigBlob.arrayBuffer());
-      const sigImage = await currentDoc.embedPng(sigBytes);
-      const pages = currentDoc.getPages();
+      const sigImage = await outputDoc.embedPng(sigBytes);
+      const pages = outputDoc.getPages();
       const targetPage = pages[selectedPageIndex];
       const sigWidthPt = 140;
       const sigHeightPt = sigWidthPt * (sigCanvas.height / sigCanvas.width);
+      const sourcePage = await pdfJsDocRef.getPage(selectedPageIndex + 1);
+      targetPage.pushOperators(pdfLibRef.pushGraphicsState(), pdfLibRef.concatTransformationMatrix(...visualTransform(sourcePage.getViewport({ scale: 1 }))));
       targetPage.drawImage(sigImage, {
         x: placementPoint.pdfX - sigWidthPt / 2,
         y: placementPoint.pdfY - sigHeightPt / 2,
         width: sigWidthPt,
         height: sigHeightPt,
       });
+      targetPage.pushOperators(pdfLibRef.popGraphicsState());
     }
 
     setProgress(90, t('common.js_saving', 'Saving…'));
-    const outBytes = await currentDoc.save();
-    const blob = new Blob([outBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentFileName}-signed.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    const outBytes = await outputDoc.save();
+    await pdfLibRef.PDFDocument.load(outBytes);
+    if (token !== generation) return;
+    const outName = `${currentFileName}-signed.pdf`;
+    currentBytes = outBytes.slice(); cachedExport = { bytes: outBytes.slice(), name: outName };
+    documentSession.adopt(outBytes, outName, { type: 'application/pdf', capabilities: { ...documentSession.snapshot().current?.capabilities, forms: outputForm.getFields().length > 0 } });
+    currentDoc = await pdfLibRef.PDFDocument.load(outBytes); currentForm = currentDoc.getForm(); buildFieldsUI(currentForm);
+    placementPoint = null; document.getElementById('sigGhost')?.remove();
+    const pdfjs = await ensurePdfJs(); await pdfJsDocRef.loadingTask.destroy(); pdfJsDocRef = await pdfjs.getDocument({ data: outBytes.slice(), ...PDFJS_ASSET_URLS }).promise;
+    await renderSigPageGrid(); if (selectedPageIndex !== null) await selectSigPage(selectedPageIndex);
+    if (token !== generation) return;
+    await downloadBytes(outBytes, outName, 'application/pdf', { operation: { isCurrent: () => token === generation } });
+    if (token !== generation) return;
+    offerChain(outBytes, outName, [{ slug: 'add-text', label: 'Add Text' }, { slug: 'organize', label: 'Organize' }]);
 
     setProgress(100, t('common.js_done', 'Done.'));
     setTimeout(() => {
       progressSection.hidden = true;
     }, 1200);
   } catch (err) {
-    console.error(err);
-    showError(err?.message || t('fill-sign.js_err_save', 'Something went wrong while saving this PDF.'));
-    progressSection.hidden = true;
+    if (token === generation) { showError(err?.message || t('fill-sign.js_err_save', 'Something went wrong while saving this PDF.')); progressSection.hidden = true; }
   } finally {
-    applyBtn.disabled = false;
+    if (token === generation) { busy = false; applyBtn.disabled = false; }
   }
 });
+
+takeChainedFile().then((file) => { if (file) void handleFile(file); });
+new ResizeObserver(updateSignatureGhost).observe(placementCanvas);

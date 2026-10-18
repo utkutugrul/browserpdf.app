@@ -139,6 +139,7 @@ test('fallback registrations are state-scoped, bounded, abortable, and byte-free
   expect(downloads).toBe(0);
   await expect(page.locator('#successSection')).toBeVisible();
   await expect(page.locator('#downloadAgainBtn')).toBeVisible();
+  await expect(page.locator('#documentResultPreview canvas')).toBeVisible();
   expect(JSON.stringify(merged)).not.toMatch(/bytes|base64|blob:|path|text/i);
 });
 
@@ -376,6 +377,8 @@ test('pending file import disables merge and invalidates an older two-file resul
 
   const validResult = await page.evaluate(() => window.__registeredWebMcpTools.get('merge-selected-files').execute({}, { signal: new AbortController().signal }));
   expect(validResult).toEqual({ ready: true, fileName: 'merged.pdf', size: expect.any(Number), pageCount: 7 });
+  await expect(page.locator('#documentResultPreview canvas')).toBeVisible();
+  expect(downloads).toBe(0);
   const download = page.waitForEvent('download');
   await page.locator('#downloadAgainBtn').click();
   const artifact = await download;

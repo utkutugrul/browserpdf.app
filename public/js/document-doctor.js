@@ -272,7 +272,7 @@ rebuildBtn.addEventListener('click', () => runTransform('rebuild').catch((error)
   if (error.name !== 'AbortError') state.showError(t('doctor.transform_failed', 'The new copy could not be verified, so download remains unavailable.'));
 }));
 clearBtn.addEventListener('click', clearSelection);
-downloadBtn.addEventListener('click', () => { if (output) downloadBytes(output.bytes, output.name); });
+downloadBtn.addEventListener('click', () => { if (output) downloadBytes(output.bytes, output.name, 'application/pdf', { download: true }); });
 wireDropzone(dropzone, fileInput, addFile);
 
 const webmcp = setupDocumentDoctorWebMcp({

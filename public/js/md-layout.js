@@ -1,29 +1,33 @@
 'use strict';
 
-// Shared Markdown -> paginated-PDF layout engine, extracted verbatim from
-// markdown-to-pdf.js so the Markdown Viewer can offer PDF export too.
-// Word-wraps and paginates the md-blocks.js block model onto US Letter
-// pages using pdf-lib's standard fonts. Caller supplies the loaded pdfLib.
+// Shared Markdown -> paginated-PDF layout with validated embedded fonts,
+// grapheme wrapping and configurable page dimensions. Caller supplies pdfLib.
 
 import { parseMarkdownBlocks } from './md-blocks.js';
+import { embedDocumentFonts } from './core/pdf-fonts.js';
+import { pageDimensions } from './core/text-layout.js';
 
 // ---------- Layout blocks onto PDF pages ----------
 
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
-const MARGIN = 56;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const BODY_SIZE = 11;
 const LINE_GAP = 1.35;
 const HEADING_SIZES = { 1: 22, 2: 18, 3: 15, 4: 13 };
 
-export async function layoutMarkdownToPdf(markdown, pdfLib) {
+export async function layoutMarkdownToPdf(markdown, pdfLib, options = {}) {
+  const [PAGE_WIDTH, PAGE_HEIGHT] = pageDimensions(options);
+  const MARGIN = options.margin ?? 56;
+  if (!Number.isFinite(MARGIN) || MARGIN < 0 || MARGIN * 2 >= Math.min(PAGE_WIDTH, PAGE_HEIGHT) - 24) throw new RangeError('Margins leave no space for content.');
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
   const doc = await pdfLib.PDFDocument.create();
-  const fontRegular = await doc.embedFont(pdfLib.StandardFonts.Helvetica);
-  const fontBold = await doc.embedFont(pdfLib.StandardFonts.HelveticaBold);
-  const fontItalic = await doc.embedFont(pdfLib.StandardFonts.HelveticaOblique);
-  const fontBoldItalic = await doc.embedFont(pdfLib.StandardFonts.HelveticaBoldOblique);
-  const fontCode = await doc.embedFont(pdfLib.StandardFonts.Courier);
+  const blocks = options.blocks || parseMarkdownBlocks(markdown);
+  const runs = blocks.flatMap((block) => block.runs || []);
+  const styles = ['regular'];
+  if (blocks.some((block) => block.type === 'heading') || runs.some((run) => run.bold)) styles.push('bold');
+  if (runs.some((run) => run.italic)) styles.push('italic');
+  if (runs.some((run) => run.bold && run.italic)) styles.push('boldItalic');
+  if (runs.some((run) => run.code)) styles.push('code');
+  const fonts = await embedDocumentFonts(doc, { text: runs.map((run) => run.text).join('\n'), styles, signal: options.signal, onStatus: options.onStatus });
+  const { regular: fontRegular, bold: fontBold, italic: fontItalic, boldItalic: fontBoldItalic, code: fontCode } = fonts;
   const grey = pdfLib.rgb(0.7, 0.7, 0.7);
 
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -62,8 +66,24 @@ export async function layoutMarkdownToPdf(markdown, pdfLib) {
           currentWidth = 0;
         }
         if (isSpace && currentLine.length === 0) continue;
-        currentLine.push({ text: word, font, size });
-        currentWidth += wordWidth;
+        if (wordWidth <= maxWidth) {
+          currentLine.push({ text: word, font, size });
+          currentWidth += wordWidth;
+        } else {
+          // Break long URLs/tokens at grapheme boundaries without truncating.
+          const segments = globalThis.Intl?.Segmenter ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(word)].map((part) => part.segment) : [...word];
+          let piece = '';
+          for (const char of segments) {
+            const charWidth = font.widthOfTextAtSize(char, size);
+            if (charWidth > maxWidth) throw new RangeError('A character cannot fit inside these margins.');
+            if (currentWidth + charWidth > maxWidth) {
+              if (piece) currentLine.push({ text: piece, font, size });
+              lines.push(currentLine); currentLine = []; currentWidth = 0; piece = '';
+            }
+            piece += char; currentWidth += charWidth;
+          }
+          if (piece) currentLine.push({ text: piece, font, size });
+        }
       }
     }
     if (currentLine.length) lines.push(currentLine);
@@ -71,9 +91,18 @@ export async function layoutMarkdownToPdf(markdown, pdfLib) {
   }
 
   function drawWrappedLines(lines, size, indent) {
-    for (const line of lines) {
+    for (const pieces of lines) {
+      const line = [];
+      for (const piece of pieces) {
+        const previous = line.at(-1);
+        if (previous && previous.font === piece.font && previous.size === piece.size) previous.text += piece.text;
+        else line.push({ ...piece });
+      }
+      options.signal?.throwIfAborted();
       newPageIfNeeded(size * LINE_GAP);
-      let x = MARGIN + indent;
+      const rtl = /^[\s\d\p{P}]*[\u0590-\u08ff]/u.test(line.map((piece) => piece.text).join(''));
+      const totalWidth = line.reduce((sum, piece) => sum + piece.font.widthOfTextAtSize(piece.text, piece.size), 0);
+      let x = rtl ? PAGE_WIDTH - MARGIN - totalWidth : MARGIN + indent;
       for (const piece of line) {
         page.drawText(piece.text, { x, y: y - size, size: piece.size, font: piece.font });
         x += piece.font.widthOfTextAtSize(piece.text, piece.size);
@@ -82,9 +111,8 @@ export async function layoutMarkdownToPdf(markdown, pdfLib) {
     }
   }
 
-  const blocks = parseMarkdownBlocks(markdown);
-
   for (const block of blocks) {
+    options.signal?.throwIfAborted();
     if (block.type === 'heading') {
       const size = HEADING_SIZES[block.level] || 13;
       newPageIfNeeded(size * LINE_GAP + 10);

@@ -1,9 +1,10 @@
 'use strict';
 
-import { convertPdfToMarkdown } from './pdf-convert.js';
+import { extractPdfTextModel, textModelToPlainText } from './pdf-convert.js';
+import { t } from './i18n.js';
 import {
   showError, hideError, setProgress, showProgress, finishProgress, hideProgress,
-  downloadBlob, wireDropzone, looksLikePdfFile, initLangChips, getSelectedOcrLangs, takeChainedFile,
+  downloadBlob, wireDropzone, looksLikePdfFile, initLangChips, getSelectedOcrLangs, takeChainedFile, offerChain,
 } from './tool-ui.js';
 
 const dropzone = document.getElementById('dropzone');
@@ -18,34 +19,18 @@ let currentFileName = 'document';
 
 initLangChips();
 
-// Strips the Markdown tokens the conversion engine emits, leaving plain text.
-function markdownToPlainText(markdown) {
-  return markdown
-    .split('\n')
-    .map((line) =>
-      line
-        .replace(/^#{1,6}\s+/, '')
-        .replace(/^\*\(Page scanned via OCR\)\*$/, '[Page scanned via OCR]')
-        .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
-        .replace(/\*\*([^*]+)\*\*/g, '$1')
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/`([^`]+)`/g, '$1')
-    )
-    .join('\n');
-}
-
 async function handleFile(file) {
   hideError();
   resultSection.hidden = true;
   if (!looksLikePdfFile(file)) {
-    showError('Please select a PDF file.');
+    showError(t('extract-text.js_err_pdf', 'Please select a PDF file.'));
     return;
   }
   currentFileName = file.name.replace(/\.pdf$/i, '') || 'document';
 
-  showProgress('Reading PDF…');
+  showProgress(t('common.js_reading_pdf', 'Reading PDF…'));
   try {
-    const markdown = await convertPdfToMarkdown(
+    const model = await extractPdfTextModel(
       file,
       { ocrLangs: getSelectedOcrLangs(), pageBreaks: pageBreaksInput.checked },
       {
@@ -54,12 +39,17 @@ async function handleFile(file) {
         onStatus: (t) => setProgress(0, t),
       }
     );
-    textOutput.value = markdownToPlainText(markdown);
+    textOutput.value = textModelToPlainText(model, { pageBreaks: pageBreaksInput.checked });
+    resultSection.dataset.textSources = model.pages.map((page) => `${page.pageNumber}:${page.source}`).join(',');
+    let sourceSummary = document.getElementById('textSourceSummary');
+    if (!sourceSummary) { sourceSummary = document.createElement('p'); sourceSummary.id = 'textSourceSummary'; sourceSummary.setAttribute('role', 'status'); resultSection.prepend(sourceSummary); }
+    sourceSummary.textContent = t('extract-text.js_sources', '{pages} pages · {ocr} read with OCR', { pages: model.pageCount, ocr: model.pages.filter((page) => page.source === 'ocr').length });
     resultSection.hidden = false;
+    offerChain(new TextEncoder().encode(textOutput.value), `${currentFileName}.txt`, [], { type: 'text/plain' });
     finishProgress();
   } catch (err) {
     console.error(err);
-    showError(err?.message || 'Could not extract text from this PDF.');
+    showError(err?.message || t('extract-text.js_err_extract', 'Could not extract text from this PDF.'));
     hideProgress();
   }
 }
@@ -80,7 +70,7 @@ copyBtn.addEventListener('click', async () => {
 downloadBtn.addEventListener('click', () => {
   downloadBlob(
     new Blob([textOutput.value], { type: 'text/plain;charset=utf-8' }),
-    `${currentFileName}.txt`
+    `${currentFileName}.txt`, { download: true }
   );
 });
 

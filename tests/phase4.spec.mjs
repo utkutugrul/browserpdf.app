@@ -394,11 +394,13 @@ test('three starter recipes produce real PDF artifacts; protection requires its 
   await page.goto('/workflows'); await rejectConsent(page);
   const traffic = [];
   page.on('request', (request) => traffic.push({ url: request.url(), body: request.postDataBuffer() }));
+  let downloads = 0; page.on('download', () => { downloads++; });
 
   await page.fill('#workflowPassword', 'workflow-secret');
   await page.setInputFiles('#workflowFileInput', path.join(FIXTURES, 'appendix.pdf'));
   await page.click('#runWorkflowBtn');
   await expect(page.locator('.queue-status')).toHaveText('Success', { timeout: 90_000 });
+  expect(downloads).toBe(0);
   const protectedDownload = page.waitForEvent('download'); await page.click('#queueBody button');
   const protectedFile = await protectedDownload; const protectedPath = testInfo.outputPath('protected.pdf'); await protectedFile.saveAs(protectedPath);
   await expect(PDFDocument.load(readFileSync(protectedPath))).rejects.toThrow(/encrypted/i);
@@ -409,6 +411,7 @@ test('three starter recipes produce real PDF artifacts; protection requires its 
   await page.setInputFiles('#workflowFileInput', path.join(FIXTURES, 'report.pdf'));
   await page.click('#runWorkflowBtn');
   await expect(page.locator('.queue-status')).toHaveText('Success', { timeout: 60_000 });
+  expect(downloads).toBe(1);
   const numberedDownload = page.waitForEvent('download'); await page.click('#queueBody button');
   const numberedFile = await numberedDownload; const numberedPath = testInfo.outputPath('numbered.pdf'); await numberedFile.saveAs(numberedPath);
   expect((await PDFDocument.load(readFileSync(numberedPath))).getPageCount()).toBe(3);
@@ -426,6 +429,7 @@ test('three starter recipes produce real PDF artifacts; protection requires its 
   await page.setInputFiles('#workflowFileInput', path.join(FIXTURES, 'report.pdf'));
   await page.click('#runWorkflowBtn');
   await expect(page.locator('.queue-status')).toHaveText('Success', { timeout: 60_000 });
+  expect(downloads).toBe(2);
   await expect(page.locator('.queue-report')).toContainText('Standard metadata fields found:');
   const scanCount = Number((await page.locator('.queue-report').textContent()).match(/found: (\d+)/)?.[1]);
   expect(scanCount).toBeGreaterThan(0);

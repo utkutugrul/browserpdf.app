@@ -2,6 +2,7 @@
 
 import { ensurePdfLib, ensureXlsx } from './lib-loader.js';
 import { t } from './i18n.js';
+import { buildSpreadsheetPdf } from './core/spreadsheet-pdf.js';
 import {
   showError, hideError, setProgress, showProgress, finishProgress, hideProgress,
   downloadBytes, offerChain,
@@ -45,6 +46,10 @@ async function handleFile(file) {
       if (i === 0) opt.selected = true;
       sheetSelect.appendChild(opt);
     });
+    if (workbook.SheetNames.length > 1) {
+      const all = document.createElement('option'); all.value = '*';
+      all.textContent = t('excel-to-pdf.js_all_sheets', 'All sheets'); sheetSelect.appendChild(all);
+    }
     fileSummary.textContent = file.name;
     panel.hidden = false;
     hideProgress();
@@ -66,63 +71,24 @@ convertBtn.addEventListener('click', async () => {
       ensurePdfLib((m) => setProgress(20, m)),
     ]);
     const sheetName = sheetSelect.value || workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    const names = sheetName === '*' ? workbook.SheetNames : [sheetName];
+    const sheets = names.map((name) => ({ name, rows: XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: '', raw: false }) }));
     setProgress(50, t('excel-to-pdf.js_layout', 'Laying out pages…'));
-    const doc = await pdfLib.PDFDocument.create();
-    const font = await doc.embedFont(pdfLib.StandardFonts.Helvetica);
-    const fontSize = 9;
-    const margin = 36;
-    const pageWidth = 842; // landscape A4
-    const pageHeight = 595;
-    const lineH = fontSize + 4;
-    let page = doc.addPage([pageWidth, pageHeight]);
-    let y = pageHeight - margin;
-    const maxW = pageWidth - margin * 2;
-    let colCount = 1;
-    for (const r of rows) {
-      const len = Array.isArray(r) ? r.length : 1;
-      if (len > colCount) colCount = len;
-    }
-    const colW = maxW / colCount;
-
-    function newPage() {
-      page = doc.addPage([pageWidth, pageHeight]);
-      y = pageHeight - margin;
-    }
-
-    for (let r = 0; r < rows.length; r++) {
-      if (y < margin + lineH) newPage();
-      const row = Array.isArray(rows[r]) ? rows[r] : [rows[r]];
-      for (let c = 0; c < colCount; c++) {
-        const raw = row[c] == null ? '' : String(row[c]);
-        let text = raw.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '');
-        // Helvetica Windows-1252 limited; strip unsupported
-        text = text.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-        while (font.widthOfTextAtSize(text, fontSize) > colW - 4 && text.length > 1) {
-          text = text.slice(0, -1);
-        }
-        page.drawText(text || ' ', {
-          x: margin + c * colW + 2,
-          y: y - fontSize,
-          size: fontSize,
-          font,
-          color: pdfLib.rgb(0.1, 0.1, 0.1),
-        });
-      }
-      y -= lineH;
-      setProgress(50 + Math.round((r / Math.max(1, rows.length)) * 40), t('excel-to-pdf.js_rows', 'Drawing row {i}/{n}', { i: r + 1, n: rows.length }));
-    }
+    const doc = await buildSpreadsheetPdf(sheets, pdfLib, {
+      onStatus: (m) => setProgress(40, m),
+      onProgress: ({ row, rows }) => setProgress(50 + Math.round((row / rows) * 40), t('excel-to-pdf.js_rows', 'Drawing row {i}/{n}', { i: row, n: rows })),
+    });
 
     setProgress(95, t('common.js_saving', 'Saving…'));
     const bytes = await doc.save();
     const name = baseName + '.pdf';
-    downloadBytes(bytes, name);
+    const resultOptions = { capabilities: { searchable: true } };
+    await downloadBytes(bytes, name, 'application/pdf', resultOptions);
     offerChain(bytes, name, [
       { slug: 'compress', label: 'Compress' },
       { slug: 'protect', label: 'Protect' },
       { slug: 'merge', label: 'Merge' },
-    ]);
+    ], resultOptions);
     finishProgress();
   } catch (err) {
     console.error(err);

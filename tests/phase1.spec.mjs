@@ -337,14 +337,21 @@ test('merge exposes numeric progress and keeps completion status visible', async
   ]);
   await expect(page.locator('#mergeBtn')).toBeEnabled();
 
-  const downloadPromise = page.waitForEvent('download');
+  let downloads = 0;
+  page.on('download', () => { downloads++; });
   await page.locator('#mergeBtn').focus();
   await page.keyboard.press('Enter');
-  await downloadPromise;
+  await expect(page.locator('#documentResultPreview canvas')).toBeVisible();
+  await expect(page.locator('#documentResultStatus')).toContainText('The actual file is shown below.');
   await expect(page.locator('#successSection')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('#progressTrack')).toHaveAttribute('aria-valuenow', '100');
+  expect(downloads, 'merging presents a reviewed result without starting a download').toBe(0);
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#downloadResultBtn').click();
+  expect((await downloadPromise).suggestedFilename()).toBe('merged.pdf');
   await page.waitForTimeout(1600);
   await expect(page.locator('#successSection')).toBeVisible();
+  expect(downloads).toBe(1);
 });
 
 for (const change of ['select another file', 'clear the list']) {
@@ -356,9 +363,13 @@ for (const change of ['select another file', 'clear the list']) {
       path.join(FIXTURES, 'appendix.pdf'),
     ]);
 
-    const downloadPromise = page.waitForEvent('download');
+    let downloads = 0;
+    page.on('download', () => { downloads++; });
     await page.locator('#mergeBtn').click();
-    await downloadPromise;
+    await expect(page.locator('#documentResultPreview canvas')).toBeVisible();
+    await expect(page.locator('#documentResultStatus')).toContainText('The actual file is shown below.');
+    await expect(page.locator('#successSection')).toBeVisible();
+    expect(downloads).toBe(0);
     if (change === 'select another file') {
       await page.setInputFiles('#fileInput', path.join(FIXTURES, 'appendix.pdf'));
     } else {
@@ -367,6 +378,10 @@ for (const change of ['select another file', 'clear the list']) {
 
     await page.waitForTimeout(1500);
     await expect(page.locator('#successSection')).toBeHidden();
+    await expect(page.locator('#documentResult')).toBeHidden();
+    await expect(page.locator('#downloadAgainBtn')).toBeHidden();
+    await expect(page.locator('#downloadResultBtn')).toBeHidden();
+    expect(downloads, 'invalidated results must not produce a delayed download').toBe(0);
   });
 }
 

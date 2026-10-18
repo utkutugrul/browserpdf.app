@@ -1,5 +1,7 @@
 // Per-tool smoke tests: load a fixture, run the tool's primary action, assert a
-// real output file comes back. These exist because form filling in Fill & Sign
+// actual shared result is reviewed before a manual output download. Exact
+// private legacy exporters remain explicit cases until their later migration.
+// These exist because form filling in Fill & Sign
 // was broken in production for weeks (minified pdf-lib class names) without any
 // static review catching it: the failure only shows up at runtime.
 //
@@ -24,11 +26,31 @@ async function open(page, route) {
   await expect(page.locator('h1').first()).toBeVisible();
 }
 
-async function grabDownload(page, action, pattern) {
+async function grabDownload(page, action, pattern, { direct = false, encrypted = false } = {}) {
   // Scale with the configured test timeout so a slow remote target gets the
   // whole budget instead of a hardcoded slice of it.
   const timeout = Math.max(30_000, test.info().timeout - 20_000);
-  const [download] = await Promise.all([page.waitForEvent('download', { timeout }), action()]);
+  let download;
+  if (direct) {
+    [download] = await Promise.all([page.waitForEvent('download', { timeout }), action()]);
+  } else {
+    let automaticDownloads = 0;
+    const onDownload = () => automaticDownloads++;
+    page.on('download', onDownload);
+    try {
+      await action();
+      await expect(page.locator('#documentResult')).toBeVisible({ timeout });
+      if (encrypted) await expect(page.locator('#documentResultStatus')).toContainText('Password-protected result', { timeout });
+      else {
+        await expect(page.locator('#documentResultPreview').locator('canvas, textarea, img, pre').first()).toBeVisible({ timeout });
+        if (await page.locator('#documentResultPreview canvas').count()) {
+          await expect(page.locator('#documentResultStatus')).toContainText('The actual file is shown below.', { timeout });
+        }
+      }
+      expect(automaticDownloads, 'building a result must wait for an explicit final download').toBe(0);
+      [download] = await Promise.all([page.waitForEvent('download', { timeout }), page.locator('#downloadResultBtn').click()]);
+    } finally { page.off('download', onDownload); }
+  }
   expect(download.suggestedFilename()).toMatch(pattern);
   const file = await download.path();
   expect(statSync(file).size, 'output should not be empty').toBeGreaterThan(400);
@@ -48,6 +70,7 @@ const CASES = [
     prepare: (page) => page.locator('#modeEach').click(), // a tab, not a radio
     click: '#splitActionBtn',
     out: /\.zip$/,
+    direct: true, // legacy private exporter; shared multi-result review is Phase 2
   },
   { route: 'organize', input: '#fileInput', files: ['report.pdf'], click: '#applyBtn', out: /\.pdf$/ },
   { route: 'rotate', input: '#fileInput', files: ['report.pdf'], click: '#applyBtn', out: /\.pdf$/ },
@@ -69,12 +92,12 @@ const CASES = [
     click: '#applyBtn',
     out: /\.pdf$/,
   },
-  { route: 'compress', input: '#fileInput', files: ['report.pdf'], click: '#compressBtn', out: /\.pdf$/ },
+  { route: 'compress', input: '#fileInput', files: ['report.pdf'], click: '#compressBtn', out: /\.pdf$/, direct: true }, // Phase 3 raster exporter migration
   { route: 'pdf-to-word', input: '#fileInput', files: ['report.pdf'], click: null, out: /\.docx$/ },
-  { route: 'pdf-to-markdown', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.md$/ },
-  { route: 'extract-text', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.txt$/ },
+  { route: 'pdf-to-markdown', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.md$/, direct: true }, // visible text is already reviewed
+  { route: 'extract-text', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.txt$/, direct: true },
   { route: 'pdf-to-excel', input: '#fileInput', files: ['report.pdf'], click: '#convertBtn', out: /\.xlsx$/ },
-  { route: 'images', input: '#pdfFileInput', files: ['report.pdf'], click: '#exportImagesBtn', out: /\.(zip|png)$/ },
+  { route: 'images', input: '#pdfFileInput', files: ['report.pdf'], click: '#exportImagesBtn', out: /\.(zip|png)$/, direct: true }, // Phase 3 output-list migration
   { route: 'jpg-to-pdf', input: '#fileInput', files: ['photo.png', 'photo.png'], click: '#createBtn', out: /\.pdf$/ },
   {
     route: 'edit-metadata',
@@ -92,12 +115,15 @@ const CASES = [
 for (const c of CASES) {
   test(`${c.route}: produces a downloadable result`, async ({ page }) => {
     await open(page, c.route);
-    await page.setInputFiles(c.input, fx(...c.files));
-    await (c.prepare ? c.prepare(page) : noop());
     await grabDownload(
       page,
-      c.click ? () => page.click(c.click) : noop,
+      async () => {
+        await page.setInputFiles(c.input, fx(...c.files));
+        await (c.prepare ? c.prepare(page) : noop());
+        if (c.click) await page.click(c.click);
+      },
       c.out,
+      { direct: c.direct },
     );
     await expect(page.locator('#errorSection')).toBeHidden();
   });
@@ -112,6 +138,7 @@ test('ocr-pdf: a scanned English image becomes a searchable PDF artifact', async
   await page.setInputFiles('#fileInput', originalPath);
   await expect(page.locator('#optionsSection')).toBeVisible({ timeout: 45_000 });
   const download = await grabDownload(page, () => page.click('#applyBtn'), /-searchable\.pdf$/);
+  await expect(page.locator('#chainRow').getByRole('button', { name: 'Compress', exact: true })).toHaveCount(0);
   const output = readFileSync(await download.path());
   expect(readFileSync(originalPath).equals(originalSnapshot), 'OCR must not mutate the selected input file').toBe(true);
   const artifact = await page.evaluate(async ({ originalValues, outputValues }) => {
@@ -172,7 +199,7 @@ test('markdown-to-pdf: renders typed Markdown and exports a PDF', async ({ page 
   await open(page, 'markdown-to-pdf');
   await page.fill('#mdSource', '# Smoke test\n\nA paragraph with **bold** text.\n\n- one\n- two\n');
   await expect(page.locator('#previewContent')).toContainText('Smoke test');
-  await grabDownload(page, () => page.click('#downloadBtn'), /\.pdf$/);
+  await grabDownload(page, () => page.click('#downloadBtn'), /\.pdf$/, { direct: true }); // Phase 3 actual-PDF preview migration
 });
 
 test('view-pdf: renders the first page and pages through the document', async ({ page }) => {
@@ -270,7 +297,7 @@ test('compress: shown estimate and result summary match the real output size', a
   const estimateLabel = page.locator('#estimateLabel');
   await expect(estimateLabel).toContainText(/Estimated: ~/);
   const estimate = parseSize(await estimateLabel.textContent());
-  const download = await grabDownload(page, () => page.click('#compressBtn'), /\.pdf$/);
+  const download = await grabDownload(page, () => page.click('#compressBtn'), /\.pdf$/, { direct: true });
   const actual = statSync(await download.path()).size;
   expect(Math.abs(estimate - actual) / actual, `estimate ${estimate} vs actual ${actual}`).toBeLessThan(0.15);
   const result = await page.locator('#resultSummary').textContent();
@@ -378,7 +405,7 @@ test('markdown-viewer: exports the rendered Markdown as a PDF', async ({ page })
   await open(page, 'markdown-viewer');
   await page.fill('#mdSource', '# Viewer Heading\n\nBody text for the export test.\n');
   await expect(page.locator('#previewContent')).toContainText('Viewer Heading');
-  await grabDownload(page, () => page.click('#downloadPdfBtn'), /\.pdf$/);
+  await grabDownload(page, () => page.click('#downloadPdfBtn'), /\.pdf$/, { direct: true }); // Phase 3 actual-PDF preview migration
 });
 
 // The regression this whole suite was written for.
@@ -408,7 +435,9 @@ test('protect then unlock: round-trips a password through both tools', async ({ 
   await page.setInputFiles('#fileInput', fx('report.pdf'));
   await page.fill('#passwordInput', 'correct horse battery');
   await page.fill('#confirmInput', 'correct horse battery');
-  const protectedPdf = await grabDownload(page, () => page.click('#protectBtn'), /\.pdf$/);
+  const protectedPdf = await grabDownload(page, () => page.click('#protectBtn'), /\.pdf$/, { encrypted: true });
+  await expect(page.locator('#chainRow').getByRole('button')).toHaveCount(1);
+  await expect(page.locator('#chainRow').getByRole('button', { name: 'Unlock', exact: true })).toBeVisible();
   // Save under a .pdf name: the tools reject files that don't look like PDFs,
   // and Playwright's raw download path has no extension.
   const encrypted = path.join(FIXTURES, 'protected-roundtrip.pdf');
@@ -421,8 +450,7 @@ test('protect then unlock: round-trips a password through both tools', async ({ 
   await page.setInputFiles('#fileInput', encrypted);
   await expect(page.locator('#passwordSection')).toBeVisible();
   await page.fill('#passwordInput', 'correct horse battery');
-  // Unlock downloads straight from its own button; #downloadUnlockedBtn only
-  // re-offers the same bytes afterwards.
+  // Unlock first presents the rebuilt file for actual PDF review.
   const unlocked = await grabDownload(page, () => page.click('#unlockBtn'), /unlocked\.pdf$/);
   const decrypted = path.join(FIXTURES, 'unlocked-roundtrip.pdf');
   await unlocked.saveAs(decrypted);

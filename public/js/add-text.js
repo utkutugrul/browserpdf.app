@@ -3,9 +3,11 @@
 import { ensurePdfJs, ensurePdfLib, PDFJS_ASSET_URLS } from './lib-loader.js';
 import {
   showError, hideError, showProgress, setProgress, finishProgress, hideProgress,
-  downloadBytes, wireDropzone, readPdfFile, takeChainedFile, offerChain,
+  downloadBytes, wireDropzone, readPdfFile, takeChainedFile, offerChain, documentSession, clearResult, showDocumentIdentity,
 } from './tool-ui.js';
 import { t } from './i18n.js';
+import { embedUnicodeFont, ensureUnicodePreviewFont } from './core/pdf-fonts.js';
+import { visualTransform } from './core/page-geometry.js';
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -47,49 +49,46 @@ let selectedPageIndex = null;
 let placementScale = 1;
 let placementPageHeightPt = 0;
 let placementPoint = null;
+let placementViewport = null;
+let generation = 0;
+let cachedExport = null;
+let busy = false;
+let renderReady = false;
+let pageGeneration = 0;
+let ghostGeneration = 0;
+const historyRow = document.createElement('div'); historyRow.className = 'editor-toolbar';
+for (const [id, label, action] of [['undoEditBtn', 'Undo', 'undo'], ['redoEditBtn', 'Redo', 'redo']]) {
+  const btn = document.createElement('button'); btn.id = id; btn.type = 'button'; btn.className = 'btn btn-ghost btn-small'; btn.textContent = t(`workspace.${action}`, label);
+  btn.addEventListener('click', async () => {
+    if (busy) return;
+    const artifact = documentSession[action](); if (!artifact) return;
+    const token = generation; busy = true; clearResult(); showDocumentIdentity(); updateApplyState();
+    currentBytes = artifact.bytes; cachedExport = artifact; placementPoint = null;
+    try {
+      await reloadCurrent(); if (token !== generation) return;
+      await downloadBytes(artifact.bytes, artifact.name, artifact.type, { capabilities: artifact.capabilities, operation: { isCurrent: () => token === generation } });
+      if (token === generation) await offerChain(artifact.bytes, artifact.name, [], artifact);
+    } catch (error) { if (token === generation) showError(error.message); }
+    finally { if (token === generation) { busy = false; updateApplyState(); } }
+  }); historyRow.append(btn);
+}
+placementSection.append(historyRow);
+
+async function reloadCurrent() {
+  renderReady = false; placementSection.hidden = true; updateApplyState();
+  const lib = pdfLibRef || await ensurePdfLib();
+  currentDoc = await lib.PDFDocument.load(currentBytes);
+  await pdfJsDocRef?.loadingTask?.destroy();
+  const pdfjs = await ensurePdfJs(); pdfJsDocRef = await pdfjs.getDocument({ data: currentBytes.slice(), ...PDFJS_ASSET_URLS }).promise;
+  await renderPageGrid(); if (selectedPageIndex !== null) await selectPage(selectedPageIndex);
+}
 
 const measureCanvas = document.createElement('canvas');
 const measureCtx = measureCanvas.getContext('2d');
 
-function getStandardFont(pdfLib, value) {
-  switch (value) {
-    case 'helvetica':
-      return pdfLib.StandardFonts.Helvetica;
-    case 'helvetica-bold':
-      return pdfLib.StandardFonts.HelveticaBold;
-    case 'times-roman':
-      return pdfLib.StandardFonts.TimesRoman;
-    case 'courier':
-      return pdfLib.StandardFonts.Courier;
-    default:
-      return pdfLib.StandardFonts.Helvetica;
-  }
-}
-
-function encodableText(font, rawText) {
-  const supported = new Set(font.getCharacterSet());
-  const lines = rawText.split('\n');
-  const encodedLines = lines.map((line) =>
-    [...line].filter((ch) => supported.has(ch.codePointAt(0))).join('')
-  );
-  const text = encodedLines.join('\n');
-  if (!text.trim()) return null;
-  if (text !== rawText) {
-    charWarning.textContent = t(
-      'add-text.js_char_warning',
-      'Some characters aren\'t supported by the built-in PDF fonts and were skipped.'
-    );
-    charWarning.hidden = false;
-  } else {
-    charWarning.hidden = true;
-  }
-  return text;
-}
-
-function estimateTextSize(text, fontValue, sizePt) {
-  const webFont = WEB_FONT_MAP[fontValue] || 'sans-serif';
+function estimateTextSize(text, fontValue, sizePt, family) {
   const fontSizePx = sizePt * placementScale;
-  measureCtx.font = `${fontSizePx}px ${webFont}`;
+  measureCtx.font = `${fontValue === 'helvetica-bold' ? '700' : '400'} ${fontSizePx}px "${family}"`;
   const lines = text.split('\n');
   let maxWidth = 0;
   for (const line of lines) {
@@ -105,7 +104,12 @@ function estimateTextSize(text, fontValue, sizePt) {
 function updateApplyState() {
   const hasText = textInput.value.trim().length > 0;
   const hasPlacement = placementPoint != null && selectedPageIndex != null;
-  applyBtn.disabled = !(hasText && hasPlacement);
+  applyBtn.disabled = busy || !renderReady || !(hasText && (hasPlacement || cachedExport));
+  for (const input of [textInput, fontSelect, sizeSlider, colorSelect]) input.disabled = busy;
+  placementCanvas.style.pointerEvents = busy || !renderReady ? 'none' : '';
+  const snapshot = documentSession.snapshot();
+  document.getElementById('undoEditBtn').disabled = busy || !snapshot.canUndo;
+  document.getElementById('redoEditBtn').disabled = busy || !snapshot.canRedo;
   if (!hasText) {
     placementHint.textContent = t('add-text.js_hint_type', 'Type some text above to place.');
   } else if (selectedPageIndex == null) {
@@ -113,11 +117,12 @@ function updateApplyState() {
   } else if (placementPoint == null) {
     placementHint.textContent = t('add-text.js_hint_click', 'Click on the page to place your text.');
   } else {
-    placementHint.textContent = t('add-text.js_hint_ready', 'Ready. Click "Add text & download".');
+    placementHint.textContent = t('workspace.text_ready', 'Ready. Apply text, then review the result.');
   }
 }
 
-function updateGhost() {
+async function updateGhost() {
+  const token = ++ghostGeneration;
   document.getElementById('textGhost')?.remove();
   if (!placementPoint) return;
   const text = textInput.value;
@@ -125,34 +130,51 @@ function updateGhost() {
   const rect = placementCanvas.getBoundingClientRect();
   if (!rect.width) return;
   const ratio = rect.width / placementCanvas.width;
+  let family;
+  try { family = await ensureUnicodePreviewFont(fontSelect.value === 'helvetica-bold' ? 'bold' : 'regular', { text }); }
+  catch (error) { if (token === ghostGeneration) showError(error.message); return; }
+  if (token !== ghostGeneration || !placementPoint) return;
   const { widthCanvasPx, heightCanvasPx } = estimateTextSize(
     text,
     fontSelect.value,
-    Number(sizeSlider.value)
+    Number(sizeSlider.value), family
   );
   const ghost = document.createElement('div');
   ghost.id = 'textGhost';
-  ghost.className = 'sig-ghost';
-  ghost.style.left = `${placementPoint.cssX}px`;
+  ghost.className = 'text-preview-object';
+  ghost.style.left = `${placementPoint.pdfX * placementScale * ratio}px`;
   ghost.style.top = `${placementPoint.cssY - heightCanvasPx * ratio}px`;
   ghost.style.width = `${Math.max(widthCanvasPx * ratio, 8)}px`;
   ghost.style.height = `${heightCanvasPx * ratio}px`;
+  ghost.textContent = text;
+  ghost.style.fontFamily = family;
+  if (token !== ghostGeneration || !placementPoint) return;
+  ghost.style.fontSize = `${Number(sizeSlider.value) * placementScale * ratio}px`;
+  ghost.style.fontWeight = fontSelect.value === 'helvetica-bold' ? '700' : '400';
+  ghost.style.color = `rgb(${(COLOR_MAP[colorSelect.value] || COLOR_MAP.black).map((n) => n * 255).join(',')})`;
+  const visualY = (placementViewport.height / placementScale - placementPoint.pdfY) * placementScale * ratio;
+  ghost.style.top = `${visualY - Number(sizeSlider.value) * placementScale * ratio}px`;
+  ghost.setAttribute('aria-label', t('workspace.text_preview', 'Text preview'));
   placementWrap.appendChild(ghost);
 }
 
 async function handleFile(file) {
+  const token = ++generation; busy = true; updateApplyState();
   hideError();
+  const parsed = await readPdfFile(file, { validate: true });
+  if (!parsed || token !== generation) { if (token === generation) { busy = false; updateApplyState(); } return; }
+  busy = false;
+  cachedExport = null;
   textOptionsSection.hidden = true;
   placementSection.hidden = true;
   charWarning.hidden = true;
   pageGrid.textContent = '';
   selectedPageIndex = null;
+  renderReady = false;
   placementPoint = null;
   document.getElementById('textGhost')?.remove();
   textInput.value = '';
 
-  const parsed = await readPdfFile(file);
-  if (!parsed) return;
   currentBytes = parsed.bytes;
   currentFileName = parsed.baseName;
 
@@ -168,17 +190,18 @@ async function handleFile(file) {
       data: currentBytes.slice(),
       ...PDFJS_ASSET_URLS,
     });
-    pdfJsDocRef = await loadingTask.promise;
+    const loaded = await loadingTask.promise;
+    if (token !== generation) { await loadingTask.destroy(); return; }
+    pdfJsDocRef = loaded;
     numPages = pdfJsDocRef.numPages;
     await renderPageGrid();
 
     textOptionsSection.hidden = false;
     updateApplyState();
   } catch (err) {
-    console.error(err);
-    showError(err?.message || t('common.js_err_read', 'Could not read this PDF.'));
+    if (token === generation) showError(err?.message || t('common.js_err_read', 'Could not read this PDF.'));
   } finally {
-    hideProgress();
+    if (token === generation) hideProgress();
   }
 }
 
@@ -220,6 +243,8 @@ async function renderPageGrid() {
 }
 
 async function selectPage(index) {
+  const token = ++pageGeneration;
+  renderReady = false; placementSection.hidden = true; updateApplyState();
   selectedPageIndex = index;
   placementPoint = null;
   document.getElementById('textGhost')?.remove();
@@ -231,15 +256,18 @@ async function selectPage(index) {
   const baseViewport = page.getViewport({ scale: 1 });
   placementScale = Math.min(560 / baseViewport.width, 1.8);
   const viewport = page.getViewport({ scale: placementScale });
+  placementViewport = viewport;
   placementCanvas.width = viewport.width;
   placementCanvas.height = viewport.height;
   await page.render({
     canvasContext: placementCanvas.getContext('2d'),
     viewport,
   }).promise;
+  if (token !== pageGeneration) return;
   placementPageHeightPt = baseViewport.height;
 
   placementSection.hidden = false;
+  renderReady = true;
   updateApplyState();
   updateGhost();
 }
@@ -253,30 +281,36 @@ placementCanvas.addEventListener('click', (e) => {
   const canvasY = cssY * (placementCanvas.height / rect.height);
   placementPoint = {
     pdfX: canvasX / placementScale,
-    pdfY: placementPageHeightPt - canvasY / placementScale,
+    pdfY: (placementViewport.height - canvasY) / placementScale,
     cssX,
     cssY,
   };
   updateGhost();
+  cachedExport = null;
   updateApplyState();
 });
 
 textInput.addEventListener('input', () => {
+  cachedExport = null;
   updateGhost();
   updateApplyState();
 });
 fontSelect.addEventListener('change', () => {
+  cachedExport = null;
   updateGhost();
 });
 sizeSlider.addEventListener('input', () => {
+  cachedExport = null;
   sizeValue.textContent = t('add-text.js_size_pt', '{n} pt', { n: sizeSlider.value });
   updateGhost();
 });
+colorSelect.addEventListener('change', () => { cachedExport = null; updateGhost(); });
 
 sizeValue.textContent = t('add-text.js_size_pt', '{n} pt', { n: sizeSlider.value });
 
 applyBtn.addEventListener('click', async () => {
-  if (!currentDoc || !currentBytes) return;
+  if (!currentDoc || !currentBytes || busy) return;
+  if (cachedExport) { await downloadBytes(cachedExport.bytes, cachedExport.name); return; }
   const rawText = textInput.value;
   if (!rawText.trim()) {
     showError(t('add-text.js_err_no_text', 'Enter the text to add first.'));
@@ -289,12 +323,17 @@ applyBtn.addEventListener('click', async () => {
     return;
   }
   hideError();
+  const token = generation;
+  clearResult();
+  busy = true;
+  updateApplyState();
   showProgress(t('common.js_loading_pdflib', 'Loading pdf-lib…'));
   applyBtn.disabled = true;
   try {
     const pdfLib = pdfLibRef || (await ensurePdfLib((msg) => setProgress(0, msg)));
-    const font = await currentDoc.embedFont(getStandardFont(pdfLib, fontSelect.value));
-    const text = encodableText(font, rawText);
+    const outputDoc = await pdfLib.PDFDocument.load(currentBytes);
+    const font = await embedUnicodeFont(outputDoc, { text: rawText, weight: fontSelect.value === 'helvetica-bold' ? 'bold' : 'regular' });
+    const text = rawText;
     if (!text) {
       showError(
         t(
@@ -309,8 +348,10 @@ applyBtn.addEventListener('click', async () => {
     const size = Number(sizeSlider.value);
     const [r, g, b] = COLOR_MAP[colorSelect.value] || COLOR_MAP.black;
     const color = pdfLib.rgb(r, g, b);
-    const pages = currentDoc.getPages();
+    const pages = outputDoc.getPages();
     const targetPage = pages[selectedPageIndex];
+    const originalPage = await pdfJsDocRef.getPage(selectedPageIndex + 1);
+    targetPage.pushOperators(pdfLib.pushGraphicsState(), pdfLib.concatTransformationMatrix(...visualTransform(originalPage.getViewport({ scale: 1 }))));
     const lines = text.split('\n');
     const lineHeight = size * 1.2;
     lines.forEach((line, i) => {
@@ -323,31 +364,36 @@ applyBtn.addEventListener('click', async () => {
         color,
       });
     });
+    targetPage.pushOperators(pdfLib.popGraphicsState());
 
     setProgress(90, t('common.js_saving', 'Saving…'));
-    const outBytes = await currentDoc.save();
+    const outBytes = await outputDoc.save();
+    if (token !== generation) return;
     const outName = `${currentFileName}-text.pdf`;
-    downloadBytes(outBytes, outName);
+    cachedExport = { bytes: outBytes.slice(), name: outName };
+    currentBytes = outBytes.slice();
+    documentSession.adopt(outBytes, outName, { type: 'application/pdf', capabilities: { ...documentSession.snapshot().current?.capabilities, searchable: true } });
+    placementPoint = null;
+    await reloadCurrent();
+    if (token !== generation) return;
+    await downloadBytes(outBytes, outName, 'application/pdf', { operation: { isCurrent: () => token === generation } });
+    if (token !== generation) return;
     offerChain(outBytes, outName, [
       { slug: 'compress', label: t('add-text.js_chain_compress', 'Compress') },
       { slug: 'page-numbers', label: t('add-text.js_chain_page_numbers', 'Add Page Numbers') },
     ]);
     finishProgress();
-    currentDoc = await pdfLib.PDFDocument.load(currentBytes, {
-      ignoreEncryption: true,
-    });
   } catch (err) {
-    console.error(err);
-    showError(
+    if (token === generation) showError(
       err?.message || t('add-text.js_err_generic', 'Something went wrong while adding text.')
     );
-    hideProgress();
+    if (token === generation) hideProgress();
   } finally {
-    applyBtn.disabled = false;
-    updateApplyState();
+    if (token === generation) { busy = false; applyBtn.disabled = false; updateApplyState(); }
   }
 });
 
 takeChainedFile().then((file) => {
   if (file) handleFile(file);
 });
+new ResizeObserver(() => { if (placementPoint) void updateGhost(); }).observe(placementCanvas);

@@ -161,8 +161,12 @@ applyBtn.addEventListener('click', async () => {
     setProgress(97, 'Saving…');
     const outBytes = await doc.save();
     const outName = `${currentFileName}-searchable.pdf`;
-    downloadBytes(outBytes, outName);
-    offerChain(outBytes, outName, [{ slug: 'compress', label: 'Compress' }]);
+    const resultOptions = { capabilities: { searchable: true } };
+    await downloadBytes(outBytes, outName, 'application/pdf', resultOptions);
+    offerChain(outBytes, outName, [
+      { slug: 'extract-text', label: 'Extract Text' },
+      { slug: 'pdf-to-markdown', label: 'PDF to Markdown' },
+    ], resultOptions);
 
     const parts = [`Added an invisible text layer to ${targets.length} page${targets.length === 1 ? '' : 's'} (${wordsAdded} words recognized).`];
     if (skippedRotated.length) parts.push(`Skipped rotated page${skippedRotated.length === 1 ? '' : 's'} ${skippedRotated.join(', ')}.`);

@@ -2,6 +2,7 @@
 
 import { ensurePdfJs, ensureXlsx, PDFJS_ASSET_URLS } from './lib-loader.js';
 import { t } from './i18n.js';
+import { withPdfDocument } from './core/privacy-scan.js';
 import {
   showError, hideError, setProgress, showProgress, finishProgress, hideProgress,
   downloadBytes, wireDropzone, readPdfFile, offerChain, takeChainedFile,
@@ -93,9 +94,8 @@ convertBtn.addEventListener('click', async () => {
   try {
     const pdfjs = await ensurePdfJs((m) => setProgress(5, m));
     const XLSX = await ensureXlsx((m) => setProgress(15, m));
-    const loadingTask = pdfjs.getDocument({ data: currentBytes.slice(), ...PDFJS_ASSET_URLS });
-    const pdf = await loadingTask.promise;
     const aoa = [];
+    await withPdfDocument(pdfjs, currentBytes, { pdfjsAssets: PDFJS_ASSET_URLS }, async (pdf) => {
     for (let p = 1; p <= pdf.numPages; p++) {
       setProgress(20 + Math.round((p / pdf.numPages) * 60), t('pdf-to-excel.js_page', 'Reading page {i}/{n}', { i: p, n: pdf.numPages }));
       const page = await pdf.getPage(p);
@@ -109,6 +109,13 @@ convertBtn.addEventListener('click', async () => {
       const table = rowsToTable(clusterRows(items));
       if (p > 1) aoa.push([]);
       table.forEach((row) => aoa.push(row));
+    }
+    });
+    if (!aoa.some((row) => row.some((cell) => String(cell).trim()))) {
+      showError(t('pdf-to-excel.js_err_empty', 'No selectable table text was found. Run OCR PDF first, then return here to review the extracted table.'));
+      offerChain(currentBytes, `${currentFileName}.pdf`, [{ slug: 'ocr-pdf', label: 'OCR PDF' }]);
+      hideProgress();
+      return;
     }
     setProgress(90, t('pdf-to-excel.js_writing', 'Writing spreadsheet…'));
     const sheet = XLSX.utils.aoa_to_sheet(aoa.length ? aoa : [['']]);

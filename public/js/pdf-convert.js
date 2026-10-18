@@ -2,16 +2,14 @@
 
 import { t } from './i18n.js';
 
-// Shared PDF -> Markdown conversion engine, extracted verbatim from
-// pdf-to-markdown.js so other tools (PDF to Text, PDF to Word) can reuse
-// it without pulling in that page's UI wiring.
+// Shared per-page extraction model and Markdown serializer. Plain text callers
+// retain the original punctuation without decoding generated Markdown.
 
 import { ensurePdfJs, ensureTesseract, getTesseractWorkerScriptUrl, PDFJS_ASSET_URLS } from './lib-loader.js';
+import { withPdfDocument } from './core/privacy-scan.js';
 
 // ---------- PDF -> Markdown conversion ----------
 
-const MIN_TEXT_ITEMS_FOR_TEXT_LAYER = 6;
-const MIN_TEXT_CHARS_FOR_TEXT_LAYER = 25;
 const BULLET_RE = /^[•‣◦⁃∙●▪■•‣◦∙●▪■\-*]\s+/;
 const ORDERED_RE = /^(\d{1,3})[.)]\s+/;
 
@@ -38,7 +36,7 @@ function median(numbers) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-function groupItemsIntoLines(textContent) {
+export function groupItemsIntoLines(textContent) {
   const withMeta = textContent.items
     .filter((it) => typeof it.str === 'string')
     .map((it) => {
@@ -205,32 +203,79 @@ function ocrTextToMarkdown(rawText) {
   return `*(Page scanned via OCR)*\n\n${paragraphs.join('\n\n')}`;
 }
 
-async function renderPageToCanvas(page, getCanvas) {
+export async function renderOcrPageToCanvas(page, getCanvas, signal) {
+  throwIfAborted(signal);
   const targetWidth = 1800;
   const baseViewport = page.getViewport({ scale: 1 });
+  if (!(Number.isFinite(baseViewport.width) && Number.isFinite(baseViewport.height) && baseViewport.width > 0 && baseViewport.height > 0)) throw new RangeError('This page has invalid dimensions.');
   const scale = Math.min(3, targetWidth / baseViewport.width);
-  const viewport = page.getViewport({ scale });
+  let viewport = page.getViewport({ scale });
+  const limit = Math.min(1, 4096 / viewport.width, 4096 / viewport.height, Math.sqrt(16_000_000 / (viewport.width * viewport.height)));
+  if (limit < 1) viewport = page.getViewport({ scale: scale * limit });
 
   const canvas = getCanvas ? getCanvas() : document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const ctx = canvas.getContext('2d');
-  await page.render({ canvasContext: ctx, viewport }).promise;
-  return canvas;
+  let task = null;
+  const cancel = () => task?.cancel();
+  try {
+    canvas.width = Math.max(1, Math.floor(viewport.width));
+    canvas.height = Math.max(1, Math.floor(viewport.height));
+    throwIfAborted(signal);
+    const ctx = canvas.getContext('2d');
+    task = page.render({ canvasContext: ctx, viewport });
+    signal?.addEventListener('abort', cancel, { once: true });
+    await task.promise;
+    throwIfAborted(signal);
+    return canvas;
+  } catch (error) {
+    canvas.width = 0; canvas.height = 0;
+    throwIfAborted(signal);
+    throw error;
+  } finally { signal?.removeEventListener('abort', cancel); }
 }
 
-export async function convertPdfToMarkdown(file, opts, callbacks) {
-  const { onProgress, onPageImage, onStatus, signal } = callbacks;
+// Owns the entire rendered surface through recognition, including failures
+// before a canvas could be returned to its caller.
+export async function recognizeOcrPage(page, worker, { signal, createCanvas, terminateWorker } = {}) {
+  let canvas = null, stopped = null, rejectRecognition = null;
+  const stop = terminateWorker || (() => {
+    if (!stopped) stopped = Promise.resolve().then(() => worker.terminate()).catch(() => {});
+    return stopped;
+  });
+  const cancel = () => {
+    void stop();
+    if (rejectRecognition) {
+      const error = new Error('Operation canceled.'); error.name = 'AbortError';
+      rejectRecognition(error);
+    }
+  };
+  signal?.addEventListener('abort', cancel, { once: true });
+  try {
+    throwIfAborted(signal);
+    canvas = await renderOcrPageToCanvas(page, createCanvas, signal);
+    throwIfAborted(signal);
+    const aborted = signal ? new Promise((_, reject) => { rejectRecognition = reject; }) : null;
+    const recognition = worker.recognize(canvas);
+    const { data } = await (aborted ? Promise.race([recognition, aborted]) : recognition);
+    throwIfAborted(signal);
+    return data;
+  } catch (error) {
+    throwIfAborted(signal);
+    throw error;
+  } finally {
+    signal?.removeEventListener('abort', cancel);
+    if (signal?.aborted) await stop();
+    if (canvas) { canvas.width = 0; canvas.height = 0; }
+  }
+}
+
+export async function extractPdfTextModel(file, opts = {}, callbacks = {}) {
+  const { onProgress = () => {}, onPageImage, onStatus, signal } = callbacks;
   const arrayBuffer = await file.arrayBuffer();
   checkPdfMagicBytes(arrayBuffer);
 
   const pdfjs = await ensurePdfJs(onStatus);
   onStatus?.('Parsing PDF…');
-  const loadingTask = pdfjs.getDocument({
-    data: arrayBuffer,
-    ...PDFJS_ASSET_URLS,
-  });
-  const pdfDocument = await loadingTask.promise;
+  return withPdfDocument(pdfjs, new Uint8Array(arrayBuffer), { signal, pdfjsAssets: PDFJS_ASSET_URLS }, async (pdfDocument) => {
   const numPages = pdfDocument.numPages;
 
   const pageTextContents = [];
@@ -249,7 +294,15 @@ export async function convertPdfToMarkdown(file, opts, callbacks) {
   const bodyFontSize = median(allFontSizes) || 10;
 
   let tesseractWorker = null;
-  const sections = [];
+  let terminationPromise = null;
+  const pages = [];
+  const terminateWorker = () => {
+    if (!tesseractWorker) return Promise.resolve();
+    if (!terminationPromise) terminationPromise = Promise.resolve().then(() => tesseractWorker.terminate()).catch(() => {});
+    return terminationPromise;
+  };
+  const cancelOcr = () => { void terminateWorker(); };
+  signal?.addEventListener('abort', cancelOcr, { once: true });
 
   try {
     for (let i = 0; i < numPages; i++) {
@@ -259,27 +312,45 @@ export async function convertPdfToMarkdown(file, opts, callbacks) {
       const meaningfulItems = textContent.items.filter((it) => it.str && it.str.trim().length > 0);
       const totalChars = meaningfulItems.reduce((sum, it) => sum + it.str.trim().length, 0);
 
-      if (meaningfulItems.length >= MIN_TEXT_ITEMS_FOR_TEXT_LAYER && totalChars >= MIN_TEXT_CHARS_FOR_TEXT_LAYER) {
+      const forceOcr = opts.forceOcr === true || opts.ocrPages?.includes(pageNum);
+      if (totalChars > 0 && !forceOcr) {
         onProgress(pageNum, numPages, t('common.js_phase_extract', 'extracting text'));
+        throwIfAborted(signal);
         const lines = groupItemsIntoLines(textContent);
-        sections.push(renderLinesToMarkdown(lines, bodyFontSize));
+        pages.push({ pageNumber: pageNum, source: 'text', lines, text: lines.map((line) => line.text).join('\n'),
+          markdown: renderLinesToMarkdown(lines, bodyFontSize), items: meaningfulItems.map((item) => ({ text: item.str,
+            x: item.transform[4], y: item.transform[5], width: item.width, height: item.height, direction: item.dir, hasEOL: item.hasEOL })) });
       } else {
         onProgress(pageNum, numPages, t('common.js_phase_ocr', 'running OCR'));
+        throwIfAborted(signal);
         if (!tesseractWorker) {
           const createWorker = await ensureTesseract(onStatus);
           onStatus?.(t('common.js_starting_ocr', 'Starting OCR engine…'));
-          tesseractWorker = await createWorker(opts.ocrLangs, 1, { workerPath: getTesseractWorkerScriptUrl() });
+          tesseractWorker = await createWorker(opts.ocrLangs || 'eng', 1, { workerPath: getTesseractWorkerScriptUrl() });
         }
         throwIfAborted(signal);
-        const canvas = await renderPageToCanvas(page, onPageImage);
-        const { data } = await tesseractWorker.recognize(canvas);
-        sections.push(ocrTextToMarkdown(data.text));
+        const data = await recognizeOcrPage(page, tesseractWorker, { signal, createCanvas: onPageImage, terminateWorker });
+        const text = data.text.replace(/\r\n/g, '\n').trim();
+        pages.push({ pageNumber: pageNum, source: 'ocr', confidence: data.confidence, text, lines: [], items: [], markdown: ocrTextToMarkdown(text) });
       }
     }
   } finally {
-    if (tesseractWorker) await tesseractWorker.terminate();
+    signal?.removeEventListener('abort', cancelOcr);
+    await terminateWorker();
   }
 
+  throwIfAborted(signal);
+  return { pageCount: numPages, bodyFontSize, pages };
+  });
+}
+
+export async function convertPdfToMarkdown(file, opts = {}, callbacks = {}) {
+  const model = await extractPdfTextModel(file, opts, callbacks);
   const separator = opts.pageBreaks ? '\n\n---\n\n' : '\n\n';
-  return sections.filter(Boolean).join(separator).trim() + '\n';
+  return model.pages.map((page) => page.markdown).filter(Boolean).join(separator).trim() + '\n';
+}
+
+export function textModelToPlainText(model, { pageBreaks = false, pageLabels = false } = {}) {
+  return model.pages.map((page) => `${pageLabels ? `[Page ${page.pageNumber}${page.source === 'ocr' ? ' · OCR' : ''}]\n` : ''}${page.text}`)
+    .join(pageBreaks ? '\n\n\f\n\n' : '\n\n');
 }

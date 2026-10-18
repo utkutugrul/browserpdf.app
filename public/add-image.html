@@ -31,6 +31,7 @@
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Image - BrowserPDF","description":"Stamp an image, logo, or photo onto a PDF page, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/add-image","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Image","item":"https://browserpdf.app/add-image"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What image formats can I stamp onto a PDF?","acceptedAnswer":{"@type":"Answer","text":"PNG and JPEG are embedded directly without re-encoding, so quality is preserved. Other image types are not accepted; convert them to PNG or JPG first."}},{"@type":"Question","name":"Can I place the image on just one page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Choose 'All pages' to stamp every page, or pick a specific page number from the list. You can also set the position, size, and opacity before applying."}},{"@type":"Question","name":"Will stamping an image reduce its quality?","acceptedAnswer":{"@type":"Answer","text":"No. PNG and JPEG files are embedded into the PDF as-is, with no recompression. Only the opacity and scaling you choose affect how the image appears."}}]}]}</script>
+  <link rel="stylesheet" href="/css/document-workspace.css">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -157,13 +158,13 @@
               <path d="M7 10l5 5 5-5"/>
               <path d="M12 15V3"/>
             </svg>
-            <span data-i18n="add-image.btn_apply">Add image &amp; download</span>
+            <span >Apply image &amp; review</span>
           </button>
         </div>
       </div>
 
       <div id="previewPanel" class="preview-panel" hidden>
-        <span id="previewTitle" class="preview-panel-title" data-i18n="add-image.preview_title">Live preview (first page)</span>
+        <span id="previewTitle" class="preview-panel-title" >Live preview (selected page)</span>
         <div class="preview-canvas-wrap"><canvas id="previewCanvas"></canvas></div>
       </div>
 

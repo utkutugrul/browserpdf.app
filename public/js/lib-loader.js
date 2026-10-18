@@ -8,6 +8,10 @@ import { t } from './i18n.js';
 // response. A hash mismatch throws instead of silently loading.
 
 export const LIBS = {
+  fontkit: {
+    url: '/vendor/fontkit-1.1.1.umd.min.js',
+    hash: 'sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn',
+  },
   pdfjs: {
     url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.min.mjs',
     hash: 'sha384-iFreJLYJz3yZXDcGivJRXeHAo/NHOLP/QIK1neoV/fI0muPBJGNUhorvDzwNiIF/',
@@ -125,6 +129,18 @@ let pdfLibModule = null;
 let cantooPdfLibModule = null;
 let mammothModule = null;
 let xlsxModule = null;
+let fontkitPromise = null;
+
+export async function ensureFontkit(onStatus) {
+  if (!fontkitPromise) {
+    onStatus?.('Loading document fonts…');
+    fontkitPromise = loadVerifiedGlobal(LIBS.fontkit, 'fontkit').catch((error) => {
+      fontkitPromise = null;
+      throw error;
+    });
+  }
+  return fontkitPromise;
+}
 
 export async function ensurePdfJs(onStatus) {
   if (pdfjsModule) return pdfjsModule;

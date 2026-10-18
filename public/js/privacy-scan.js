@@ -207,7 +207,7 @@ cleanupBtn.addEventListener('click', async () => {
     }
   }
 });
-downloadBtn.addEventListener('click', () => { if (cleaned) downloadBytes(cleaned.bytes, cleaned.name); });
+downloadBtn.addEventListener('click', () => { if (cleaned) downloadBytes(cleaned.bytes, cleaned.name, 'application/pdf', { download: true }); });
 wireDropzone(dropzone, fileInput, addFile);
 
 const webmcp = setupPrivacyScanWebMcp({

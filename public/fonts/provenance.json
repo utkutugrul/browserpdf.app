@@ -1,0 +1,42 @@
+{
+  "sourceCommit": "c971829a87e7920f960e7277c3dafd9bedd3c601",
+  "license": "SIL Open Font License 1.1",
+  "files": {
+    "NotoSans-Regular.ttf": {
+      "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSans/NotoSans-Regular.ttf"
+    },
+    "NotoSans-Bold.ttf": {
+      "sha256": "c976e4b1b99edc88775377fcc21692ca4bfa46b6d6ca6522bfda505b28ff9d6a",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSans/NotoSans-Bold.ttf"
+    },
+    "NotoSans-Italic.ttf": {
+      "sha256": "36cff144df01309dab648bea71baff9bb074026914afe63aeacc8bc90b67a28b",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSans/NotoSans-Italic.ttf"
+    },
+    "NotoSans-BoldItalic.ttf": {
+      "sha256": "6edf4227ef0fa846aca70e86a307804ca4401741830f5b3af0f2554abe2b8466",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSans/NotoSans-BoldItalic.ttf"
+    },
+    "NotoSansHebrew-Regular.ttf": {
+      "sha256": "a7fa16fffb27bedb060a0866267c29e9859aeb9c21cc33f5b3aaf6eb062eca85",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSansHebrew/NotoSansHebrew-Regular.ttf"
+    },
+    "NotoNaskhArabic-Regular.ttf": {
+      "sha256": "2f4b88e6ee50fa82c617e2d1d4ba18281cb1c6cd71c3af3ec64970c23995db4b",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Regular.ttf"
+    },
+    "NotoSansMono-Regular.ttf": {
+      "sha256": "d9e2b23d19f8230be7146f409a52b1d23117e635e28f2e2892cf91b7382f325b",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSansMono/NotoSansMono-Regular.ttf"
+    },
+    "NotoSansHebrew-Bold.ttf": {
+      "sha256": "a30243d1c625eaf63bb889f036fe9de97e81d9248976f89e6e4252f9668c832e",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoSansHebrew/NotoSansHebrew-Bold.ttf"
+    },
+    "NotoNaskhArabic-Bold.ttf": {
+      "sha256": "7432f2350487d9f784b47a24526d9fc48f2712bb6c2ff602898b104b0c26ee80",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/c971829a87e7920f960e7277c3dafd9bedd3c601/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Bold.ttf"
+    }
+  }
+}

@@ -30,7 +30,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Text to PDF - BrowserPDF","description":"Type text onto a PDF page wherever you want, for free, in your browser tab. Pick the font, size, and color. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/add-text","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Text to PDF","item":"https://browserpdf.app/add-text"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I place text anywhere on the page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Pick a page from the thumbnail grid, then click the spot where the text should start. The click point becomes the baseline-left of the first line of text."}},{"@type":"Question","name":"Which fonts can I use?","acceptedAnswer":{"@type":"Answer","text":"The four standard PDF fonts: Helvetica, Helvetica Bold, Times Roman, and Courier, in sizes from 8 to 72 points and four colors (black, red, blue, gray). They cover Latin (Western European) characters; unsupported characters are skipped with a warning."}},{"@type":"Question","name":"Is my PDF uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"Text is drawn into the PDF in this browser tab; BrowserPDF has no file-upload endpoint."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Text to PDF - BrowserPDF","description":"Type text onto a PDF page wherever you want, for free, in your browser tab. Pick the font, size, and color. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/add-text","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Text to PDF","item":"https://browserpdf.app/add-text"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I place text anywhere on the page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Pick a page from the thumbnail grid, then click the spot where the text should start. The click point becomes the baseline-left of the first line of text."}},{"@type":"Question","name":"Which fonts can I use?","acceptedAnswer":{"@type":"Answer","text":"Noto Sans regular and bold cover Turkish, Greek, Cyrillic and Latin text. Supported Hebrew and Arabic text uses script fonts. Unsupported characters stop the export with an explanation."}},{"@type":"Question","name":"Is my PDF uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"Text is drawn into the PDF in this browser tab; BrowserPDF has no file-upload endpoint."}}]}]}</script>
+  <link rel="stylesheet" href="/css/document-workspace.css">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -114,10 +115,8 @@
             <span data-i18n="add-text.font_label">Font</span>
           </div>
           <select id="fontSelect" class="select-input" data-i18n-aria="add-text.font_aria" aria-label="Font">
-            <option value="helvetica" selected data-i18n-opt="add-text.font_helvetica">Helvetica</option>
-            <option value="helvetica-bold" data-i18n-opt="add-text.font_helvetica_bold">Helvetica Bold</option>
-            <option value="times-roman" data-i18n-opt="add-text.font_times">Times Roman</option>
-            <option value="courier" data-i18n-opt="add-text.font_courier">Courier</option>
+            <option value="helvetica" selected>Noto Sans</option>
+            <option value="helvetica-bold">Noto Sans Bold</option>
           </select>
         </div>
         <div class="option-divider"></div>
@@ -168,7 +167,7 @@
               <path d="M7 10l5 5 5-5"/>
               <path d="M12 15V3"/>
             </svg>
-            <span data-i18n="add-text.btn_apply">Add text &amp; download</span>
+            <span >Apply text &amp; review</span>
           </button>
         </div>
       </div>
@@ -200,7 +199,7 @@
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
         <li><strong data-i18n="add-text.about_1_title">Pick a page, click where you want the text, type it.</strong> <span data-i18n="add-text.about_1_body">The text is drawn at the click point with your chosen font, size, and color, using pdf-lib.</span></li>
-        <li><strong data-i18n="add-text.about_2_title">Standard PDF fonts.</strong> <span data-i18n="add-text.about_2_body">Helvetica, Helvetica Bold, Times Roman, and Courier, with sizes from 8 to 72 points and four colors (black, red, blue, gray). Unsupported characters are skipped with a warning.</span></li>
+        <li><strong data-i18n="add-text.about_2_title">Unicode document fonts.</strong> <span data-i18n="add-text.about_2_body">Noto Sans regular and bold, with sizes from 8 to 72 points and four colors. Unsupported characters stop the export; no characters are skipped.</span></li>
         <li><strong data-i18n="add-text.about_3_title">No file-upload endpoint.</strong> <span data-i18n="add-text.about_3_body">Document processing happens in this browser tab.</span></li>
       </ul>
     </section>
@@ -214,7 +213,7 @@
         </div>
         <div class="faq-item">
           <h3 data-i18n="add-text.faq_2_q">Which fonts can I use?</h3>
-          <p data-i18n="add-text.faq_2_a">The four standard PDF fonts: Helvetica, Helvetica Bold, Times Roman, and Courier, in sizes from 8 to 72 points and four colors (black, red, blue, gray). They cover Latin (Western European) characters; unsupported characters are skipped with a warning.</p>
+          <p data-i18n="add-text.faq_2_a">Noto Sans regular and bold cover Turkish, Greek, Cyrillic and Latin text. Supported Hebrew and Arabic text uses script fonts. Unsupported characters stop the export with an explanation.</p>
         </div>
         <div class="faq-item">
           <h3 data-i18n="add-text.faq_3_q">Is my PDF uploaded anywhere?</h3>

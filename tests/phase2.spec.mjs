@@ -99,7 +99,12 @@ test('Merge keeps reordered page content and a persistent result', async ({ page
   await page.setInputFiles('#fileInput', [path.join(FIXTURES, 'report.pdf'), path.join(FIXTURES, 'appendix.pdf')]);
   await expect(page.locator('#mergeBtn')).toBeEnabled();
   await page.locator('.file-item').nth(1).getByRole('button', { name: /up/i }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#mergeBtn').click()]);
+  let downloads = 0; page.on('download', () => { downloads++; });
+  await page.locator('#mergeBtn').click();
+  await expect(page.locator('#documentResultPreview canvas')).toBeVisible();
+  await expect(page.locator('#documentResultStatus')).toContainText('The actual file is shown below.');
+  expect(downloads).toBe(0);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#downloadResultBtn').click()]);
   const file = await download.path();
   expect(statSync(file).size).toBeGreaterThan(400);
   const output = await PDFDocument.load(readFileSync(file));
@@ -112,6 +117,7 @@ test('Merge keeps reordered page content and a persistent result', async ({ page
   const secondDownload = page.waitForEvent('download');
   await page.locator('#downloadAgainBtn').click();
   await secondDownload;
+  expect(downloads).toBe(2);
   page.off('request', listener);
 
   const sourceFiles = ['report.pdf', 'appendix.pdf'].map((name) => readFileSync(path.join(FIXTURES, name)));

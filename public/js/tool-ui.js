@@ -1,7 +1,125 @@
 'use strict';
 
 import { t, getLang } from './i18n.js';
-import { createWorkflowStore } from './core/workflow-store.js';
+import { createOperationScope } from './core/operation-scope.js';
+
+let sessionCore, sessionDelegate, sessionPromise;
+function retryableModule(path) {
+  let pending = null, attempt = 0;
+  return () => {
+    pending ||= import(attempt ? `${path}?retry=${attempt}` : path).catch((error) => { pending = null; attempt++; throw error; });
+    return pending;
+  };
+}
+const loadSessionModule = retryableModule('./core/document-session.js');
+export function ensureDocumentSession() {
+  sessionPromise ||= loadSessionModule().then((module) => { sessionCore = module; sessionDelegate = module.createDocumentSession(); return sessionDelegate; }).catch((error) => { sessionPromise = null; throw error; });
+  return sessionPromise;
+}
+const emptySession = () => ({ taskId: null, original: null, current: null, revision: 0, generation: 0, selection: [], canUndo: false, canRedo: false, historyBytes: 0, retainedBytes: 0 });
+// Empty pages need no document bytes or history implementation. File intake and
+// result publication await initialization before using the synchronous delegate.
+export const documentSession = {
+  snapshot: (options) => sessionDelegate?.snapshot(options) || emptySession(),
+  original: () => sessionDelegate?.original() || null,
+  transfer: () => sessionDelegate?.transfer() || { ...emptySession(), history: [], future: [] },
+  begin: (...args) => sessionDelegate ? sessionDelegate.begin(...args) : ensureDocumentSession().then((delegate) => delegate.begin(...args)),
+  adopt: (...args) => sessionDelegate ? sessionDelegate.adopt(...args) : ensureDocumentSession().then((delegate) => delegate.adopt(...args)),
+  undo: () => sessionDelegate?.undo() || null,
+  redo: () => sessionDelegate?.redo() || null,
+  setSelection: (pages) => sessionDelegate?.setSelection(pages),
+  invalidate: () => sessionDelegate?.invalidate(),
+  clear: () => { sessionDelegate?.clear(); documentOperations.cancel(); clearResult(); document.getElementById('documentIdentity')?.remove(); },
+};
+const operationScope = createOperationScope();
+export const documentOperations = {
+  cancel: () => operationScope.cancel(),
+  begin() { clearResult(); return operationScope.begin(); },
+};
+export { createOperationScope };
+const loadStoreModule = retryableModule('./core/workflow-store.js');
+const loadWorkflowStore = async () => (await loadStoreModule()).createWorkflowStore();
+let resultModule;
+let pendingResult = null;
+let resultGeneration = 0;
+let resultGroupGeneration = 0;
+let intakeGeneration = 0;
+const loadResultModule = retryableModule('./document-result.js');
+const loadResultUi = () => (resultModule ||= loadResultModule().catch((error) => { resultModule = null; throw error; }));
+
+export function showDocumentIdentity() {
+  const snapshot = documentSession.snapshot();
+  if (!snapshot.current) return;
+  let identity = document.getElementById('documentIdentity');
+  if (!identity) {
+    identity = document.createElement('p'); identity.id = 'documentIdentity'; identity.className = 'option-hint'; identity.setAttribute('role', 'status');
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) dropzone.after(identity); else document.querySelector('main')?.prepend(identity);
+  }
+  identity.textContent = `${t('workspace.original', 'Original')}: ${snapshot.original.name} · ${t('workspace.current', 'Current')}: ${snapshot.current.name} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
+}
+
+export async function reviewResult(bytes, name, options = {}) {
+  if (options.operation && !options.operation.isCurrent()) return Promise.resolve(null);
+  if (options.groupOwner !== undefined && options.groupOwner !== resultGroupGeneration) return null;
+  if (options.groupOwner === undefined) { resultGroupGeneration++; document.getElementById('documentResultGroup')?.remove(); }
+  const generation = ++resultGeneration;
+  await ensureDocumentSession();
+  if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return null;
+  const artifact = sessionCore.createArtifact(bytes, name, { ...options, capabilities: options.capabilities || documentSession.snapshot().current?.capabilities });
+  pendingResult = artifact;
+  if (options.adopt) documentSession.adopt(artifact.bytes, artifact.name, artifact);
+  showDocumentIdentity();
+  return loadResultUi().then((ui) => generation !== resultGeneration || (options.operation && !options.operation.isCurrent()) ? null : ui.showDocumentResult(artifact, {
+    session: { ...documentSession.snapshot(), original: documentSession.original() },
+    download: (value) => downloadBlob(new Blob([value.bytes], { type: value.type }), value.name, { download: true }),
+    adopt: (value) => { const snapshot = documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity(); return snapshot; },
+  }));
+}
+
+export function clearResult() {
+  pendingResult = null;
+  resultGeneration++;
+  resultGroupGeneration++;
+  if (resultModule) void resultModule.then((ui) => ui.clearDocumentResult()).catch(() => {});
+  const row = document.getElementById('chainRow'); if (row) row.hidden = true;
+  document.getElementById('documentResultGroup')?.remove();
+}
+
+export async function reviewResults(results) {
+  if (!Array.isArray(results) || !results.length || results.length > 20) throw new RangeError('Review between 1 and 20 result files.');
+  const total = results.reduce((sum, value) => sum + value.bytes.byteLength, 0);
+  if (total > 250 * 1024 * 1024) throw new RangeError('This result group is limited to 250 MB.');
+  clearResult();
+  const owner = resultGroupGeneration, generation = resultGeneration;
+  const ownsGroup = () => owner === resultGroupGeneration;
+  let selection = 0;
+  async function selectArtifact(artifact) {
+    const selected = ++selection;
+    const ownsSelection = () => ownsGroup() && selected === selection;
+    if (!ownsSelection()) return;
+    const operation = { isCurrent: ownsSelection };
+    await reviewResult(artifact.bytes, artifact.name, { ...artifact, groupOwner: owner, operation });
+    if (ownsSelection()) await offerChain(artifact.bytes, artifact.name, [], { ...artifact, operation });
+  }
+  await ensureDocumentSession();
+  if (!ownsGroup() || generation !== resultGeneration) return null;
+  const artifacts = results.map((value) => sessionCore.createArtifact(value.bytes, value.name, value));
+  await loadResultUi();
+  if (!ownsGroup() || generation !== resultGeneration) return null;
+  let group = document.getElementById('documentResultGroup');
+  if (!group) { group = document.createElement('section'); group.id = 'documentResultGroup'; group.className = 'document-result'; (document.querySelector('main') || document.body).append(group); }
+  group.replaceChildren();
+  const heading = document.createElement('h2'); heading.textContent = t('workspace.choose_result', 'Choose a result to review'); group.append(heading);
+  const list = document.createElement('ul'); group.append(list);
+  for (const artifact of artifacts) {
+    const item = document.createElement('li'), button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-ghost btn-small'; button.textContent = artifact.name;
+    button.addEventListener('click', () => selectArtifact(artifact)); item.append(button); list.append(item);
+  }
+  await selectArtifact(artifacts[0]);
+  if (!ownsGroup()) return null;
+  return artifacts;
+}
 
 // Shared page-scaffolding helpers for tool pages. Every tool page uses the
 // same ids for its dropzone, progress, and error elements, so these helpers
@@ -100,7 +218,8 @@ export function formatBytes(bytes) {
   return t('common.js_size_mb', '{n} MB', { n: (bytes / (1000 * 1000)).toFixed(1) });
 }
 
-export function downloadBlob(blob, filename) {
+export function downloadBlob(blob, filename, options = {}) {
+  if (!options.download) return blob.arrayBuffer().then((bytes) => reviewResult(bytes, filename, { ...options, type: blob.type }));
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -111,8 +230,9 @@ export function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-export function downloadBytes(bytes, filename, type = 'application/pdf') {
-  downloadBlob(new Blob([bytes], { type }), filename);
+export function downloadBytes(bytes, filename, type = 'application/pdf', options = {}) {
+  if (options.download) return downloadBlob(new Blob([bytes], { type }), filename, options);
+  return reviewResult(bytes, filename, { ...options, type });
 }
 
 // Wires the full dropzone interaction pattern (click, keyboard, drag
@@ -150,16 +270,41 @@ export function wireDropzone(dropzone, fileInput, onFiles) {
 
 // Reads a dropped/selected file as PDF bytes with validation; returns
 // { bytes, baseName } or null after showing an error.
-export async function readPdfFile(file) {
+export async function readPdfFile(file, options = {}) {
+  const intake = ++intakeGeneration;
+  documentOperations.cancel();
+  if (file.size > 250 * 1024 * 1024) { showError(t('workspace.file_too_large', 'Choose a PDF smaller than 250 MB.')); return null; }
   if (!looksLikePdfFile(file)) {
     showError(t('common.js_err_not_pdf', 'Please select a PDF file.'));
     return null;
   }
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  let bytes;
+  try { bytes = new Uint8Array(await file.arrayBuffer()); }
+  catch (error) { if (intake === intakeGeneration) showError(t('workspace.read_failed', 'Could not read this PDF: {message}', { message: error.message })); return null; }
+  if (intake !== intakeGeneration) return null;
   if (!checkPdfMagicBytes(bytes)) {
     showError(t('common.js_err_invalid_pdf', 'This file does not look like a valid PDF.'));
     return null;
   }
+  if (intake !== intakeGeneration) return null;
+  if (options.validate) {
+    try {
+      const runtime = await import('./lib-loader.js');
+      const [lib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
+      await lib.PDFDocument.load(bytes.slice());
+      const task = pdfjs.getDocument({ data: bytes.slice(), ...runtime.PDFJS_ASSET_URLS });
+      try { const doc = await task.promise; if (!doc.numPages) throw new Error('This PDF has no readable pages.'); }
+      finally { await task.destroy(); }
+    } catch (error) {
+      if (intake === intakeGeneration) showError(t('workspace.parse_failed', 'Could not open this PDF: {message}', { message: error.message }));
+      return null;
+    }
+  }
+  if (intake !== intakeGeneration) return null;
+  try { await ensureDocumentSession(); if (intake !== intakeGeneration) return null; documentSession.begin(bytes, file.name, { ...file.browserpdfSession, type: 'application/pdf' }); }
+  catch (error) { showError(error.message); return null; }
+  clearResult();
+  showDocumentIdentity();
   return { bytes, baseName: file.name.replace(/\.pdf$/i, '') || 'document' };
 }
 
@@ -202,6 +347,8 @@ export async function renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, ta
     const baseViewport = page.getViewport({ scale: 1 });
     const scale = (targetWidth / baseViewport.width) * (window.devicePixelRatio > 1 ? 1.6 : 1);
     const viewport = page.getViewport({ scale });
+    canvas.dataset.pdfScale = String(scale);
+    canvas.dataset.pdfPage = String(pageNumber);
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
@@ -215,21 +362,32 @@ Outputs are stored in BrowserPDF's versioned workflow database. References in
 the URL make each handoff page-local and resumable; expiry cleanup touches only
 records owned by that workflow, never another database or origin store. */
 
-async function stashForChain(bytes, name, targetSlug) {
-  const store = createWorkflowStore();
+export async function stashForChain(bytes, name, targetSlug, options = {}) {
+  await ensureDocumentSession();
+  const store = await loadWorkflowStore();
   await store.cleanupExpired();
-  const workflowId = crypto.randomUUID();
-  const file = {
-    id: `${workflowId}:input`, name, type: 'application/pdf', bytes: new Uint8Array(bytes),
-  };
+  const artifact = sessionCore.createArtifact(bytes, name, options);
+  if (!sessionCore.acceptsArtifact(targetSlug, artifact)) throw new Error('This tool does not accept this result format.');
+  if (documentSession.snapshot().current) documentSession.adopt(artifact.bytes, artifact.name, artifact);
+  let snapshot = documentSession.transfer();
+  if (!snapshot.taskId) { documentSession.begin(artifact.bytes, artifact.name, artifact); snapshot = documentSession.transfer(); }
+  const workflowId = snapshot.taskId;
+  const file = { ...artifact, id: `${workflowId}:input` };
+  const original = snapshot.original ? { ...snapshot.original, id: `${workflowId}:original` } : null;
+  const past = snapshot.history.map((value, index) => ({ ...value, id: `${workflowId}:past:${index}` }));
+  const future = snapshot.future.map((value, index) => ({ ...value, id: `${workflowId}:future:${index}` }));
   await store.putWorkflowBundle({
     id: workflowId,
     kind: 'handoff',
     orderedSteps: [{ id: `tool:${targetSlug}`, parameters: {} }],
     currentStep: 0,
-    fileRefs: [file.id],
+    fileRefs: [file.id, ...(original ? [original.id] : []), ...past.map((a) => a.id), ...future.map((a) => a.id)],
+    originalRef: original?.id || null,
+    revision: snapshot.revision,
+    selection: snapshot.selection,
+    historyRefs: past.map((a) => a.id), futureRefs: future.map((a) => a.id),
     cleanup: { policy: 'expire', scope: workflowId },
-  }, [file]);
+  }, [file, ...(original ? [original] : []), ...past, ...future]);
   return { workflowId, fileId: file.id };
 }
 
@@ -241,13 +399,22 @@ export async function takeChainedFile() {
     const workflowId = params.get('workflow');
     const fileId = params.get('file');
     if (!workflowId || !fileId || !fileId.startsWith(`${workflowId}:`)) return null;
-    const store = createWorkflowStore();
+    await ensureDocumentSession();
+    const store = await loadWorkflowStore();
     await store.cleanupExpired();
     const workflow = await store.getWorkflow(workflowId);
     if (!workflow || !workflow.fileRefs.includes(fileId)) return null;
     const entry = await store.getFile(fileId);
     if (!entry || entry.workflowId !== workflowId) return null;
-    return new File([entry.bytes], entry.name, { type: entry.type || 'application/pdf' });
+    const file = new File([entry.bytes], entry.name, { type: entry.type || 'application/pdf' });
+    const original = workflow.originalRef && workflow.fileRefs.includes(workflow.originalRef) ? await store.getFile(workflow.originalRef) : null;
+    const owned = await store.listFiles(workflowId);
+    const refs = new Map(owned.filter((value) => workflow.fileRefs.includes(value.id)).map((value) => [value.id, value]));
+    const inherited = { taskId: workflow.kind === 'handoff' ? workflowId : undefined, revision: workflow.revision, type: entry.type, capabilities: entry.capabilities, selection: workflow.selection,
+      history: (workflow.historyRefs || []).slice(-5).map((id) => refs.get(id)).filter(Boolean), future: (workflow.futureRefs || []).slice(-5).map((id) => refs.get(id)).filter(Boolean) };
+    if (original?.workflowId === workflowId) inherited.original = sessionCore.createArtifact(original.bytes, original.name, original);
+    Object.defineProperty(file, 'browserpdfSession', { value: inherited });
+    return file;
   } catch {
     return null;
   }
@@ -255,15 +422,27 @@ export async function takeChainedFile() {
 
 // Fills #chainRow with "Continue in ..." buttons for the given result.
 // targets: [{ slug: 'compress', label: 'Compress' }, ...]
-export function offerChain(bytes, name, targets) {
-  const row = document.getElementById('chainRow');
-  if (!row) return;
+export async function offerChain(bytes, name, targets, options = {}) {
+  const generation = resultGeneration;
+  if (options.operation && !options.operation.isCurrent()) return;
+  await ensureDocumentSession();
+  if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return;
+  const artifact = sessionCore.createArtifact(bytes, name, { ...(pendingResult?.name === name ? pendingResult : {}), ...options });
+  let row = document.getElementById('chainRow');
+  if (!row) { row = document.createElement('div'); row.id = 'chainRow'; row.className = 'chain-row'; (document.getElementById('documentResult') || document.querySelector('main') || document.body).appendChild(row); }
   row.textContent = '';
   const intro = document.createElement('span');
   intro.className = 'chain-intro';
   intro.textContent = t('common.js_chain_intro', 'Continue with this result:');
   row.appendChild(intro);
-  for (const target of targets) {
+  const defaults = artifact.type === 'application/pdf' ? [
+    { slug: 'add-text', label: 'Add Text' }, { slug: 'add-image', label: 'Add Image' },
+    { slug: 'fill-sign', label: 'Fill & Sign' }, { slug: 'organize', label: 'Organize' },
+    { slug: 'privacy-scan', label: 'Privacy Scan' }, { slug: 'document-doctor', label: 'Document Doctor' }, { slug: 'workflows', label: 'Workflows' },
+  ] : artifact.type === 'text/markdown' || artifact.type === 'text/plain' ? [{ slug: 'markdown-viewer', label: 'Markdown Viewer' }, { slug: 'markdown-to-pdf', label: 'Markdown to PDF' }] : [];
+  const unique = new Map([...targets, ...defaults].map((target) => [target.slug, target]));
+  if (artifact.capabilities.encrypted) unique.set('unlock', { slug: 'unlock', label: 'Unlock' });
+  for (const target of [...unique.values()].filter((target) => sessionCore.acceptsArtifact(target.slug, artifact))) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn btn-ghost btn-small';
@@ -271,12 +450,14 @@ export function offerChain(bytes, name, targets) {
     btn.textContent = t(hubKey, target.label);
     btn.addEventListener('click', async () => {
       try {
-        const handoff = await stashForChain(bytes, name, target.slug);
+        btn.disabled = true;
+        const handoff = await stashForChain(artifact.bytes, artifact.name, target.slug, artifact);
         const lang = getLang();
         const path = lang === 'en' ? '/' + target.slug : `/${lang}/${target.slug}`;
         window.location.href = `${path}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (err) {
-        console.warn('Could not hand the file to the next tool:', err);
+        showError(t('workspace.handoff_failed', 'Could not continue with this result: {message}', { message: err?.message || 'local storage is unavailable' }));
+        btn.disabled = false;
       }
     });
     row.appendChild(btn);

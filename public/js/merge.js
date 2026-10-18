@@ -5,6 +5,7 @@ import { configureMergePdf, mergePdfFiles } from './core/merge-pdf.js';
 import { setupMergeWebMcp } from './webmcp.js';
 import {
   createTaskState,
+  clearResult,
   downloadBytes,
   formatBytes,
   looksLikePdfFile,
@@ -64,6 +65,7 @@ const setProgress = (percent, text) => taskState.setProgress(percent, text);
 function hideSuccess() {
   lastMergedBytes = null;
   taskState.hideSuccess();
+  clearResult();
 }
 
 function selectionWillChange() {
@@ -309,7 +311,7 @@ clearBtn.addEventListener('click', () => {
   renderList();
 });
 
-async function mergeSelectedFiles({ signal, autoDownload = true } = {}) {
+async function mergeSelectedFiles({ signal } = {}) {
   if (items.length < 2) return;
   if (pendingImports > 0) throw new Error('Wait for selected files to finish loading before merging.');
   if (mergeInProgress) throw new Error('A merge is already in progress.');
@@ -358,7 +360,13 @@ async function mergeSelectedFiles({ signal, autoDownload = true } = {}) {
       throw staleError;
     }
     lastMergedBytes = mergedBytes;
-    if (autoDownload) downloadBytes(mergedBytes, 'merged.pdf');
+    // The former autoDownload option remains harmless when supplied by older
+    // callers: building a result always opens review; final downloads are UI actions.
+    await downloadBytes(mergedBytes, 'merged.pdf', 'application/pdf', {
+      operation: { isCurrent: () => !operationController.signal.aborted && selectionGeneration === generation && activeMerge?.controller === operationController },
+    });
+    operationController.signal.throwIfAborted();
+    if (selectionGeneration !== generation || activeMerge?.controller !== operationController) throw new DOMException('Selected files changed during review.', 'AbortError');
     offerChain(mergedBytes, 'merged.pdf', [
       { slug: 'organize', label: 'Organize' },
       { slug: 'compress', label: 'Compress' },
@@ -368,9 +376,7 @@ async function mergeSelectedFiles({ signal, autoDownload = true } = {}) {
 
     setProgress(100, t('common.js_done', 'Done.'));
     taskState.hideProgress();
-    successText.textContent = autoDownload
-      ? t('merge.success', 'Merge complete. Your PDF has been downloaded.')
-      : t('merge.result_title', 'Your merged PDF is ready');
+    successText.textContent = t('merge.result_title', 'Your merged PDF is ready');
     taskState.showSuccess();
     return {
       ready: true,
@@ -393,13 +399,13 @@ async function mergeSelectedFiles({ signal, autoDownload = true } = {}) {
 }
 
 mergeBtn.addEventListener('click', () => {
-  mergeSelectedFiles({ autoDownload: true }).catch((err) => {
+  mergeSelectedFiles().catch((err) => {
     if (err?.name !== 'AbortError') console.error(err);
   });
 });
 
 downloadAgainBtn.addEventListener('click', () => {
-  if (lastMergedBytes) downloadBytes(lastMergedBytes, 'merged.pdf');
+  if (lastMergedBytes) downloadBytes(lastMergedBytes, 'merged.pdf', 'application/pdf', { download: true });
 });
 
 mergeWebMcp = setupMergeWebMcp({
