@@ -1140,3 +1140,95 @@ Evidence:
 This proves the bounded private engine/lifecycle case. Fresh focused timer
 review, production distribution/route integration, correction UI, actual
 saved OCR PDF, other languages and general accuracy acceptance remain open.
+
+
+### Shared document foundation checkpoint and OCR review closure
+
+Root independently verifies `f0fa2aaa99f275b14c81a7220a767db65b20cafb`
+on HEAD, upstream and the actual feature remote. Its title is
+`Add shared document draft and intake`, its body is empty, and its parent
+is `e6732af120072a1a80c36be164b1822c8aaa552d`. Exactly eleven accepted
+paths are committed; 419 protected paths and all forty audit files remain
+exact, with seven concurrent Metadata paths explicitly excluded. Evidence:
+`/tmp/browserpdf-document-workspace-checkpoint-commit-proof-20261019.json`
+and
+`/tmp/browserpdf-root-document-workspace-checkpoint-remote-verification-20261019.json`.
+These hashes describe the checkpoint before the next authorized document
+image/UI changes, rather than asserting those active paths are pristine.
+
+The independent focused OCR timer/native review passes:
+`/tmp/browserpdf-ocr-native-timers-corrected-fresh-review-20261019.md`.
+It reconciles the twenty-eight private files, retained assets and evidence,
+six exact native pins, strict twelve-policy controls and the actual native
+4/4 report. No actionable finding remains in that private prototype.
+Production distribution, guarded child output, correction UI, saved OCR
+PDF, further languages and final service acceptance remain open.
+
+### Metadata workspace: actual correction acceptance
+
+The seven-path workspace implements literal dirty-only standard Info
+editing, deliberate replacement of oversized values, controlled eight-key
+standard cleanup, original/current field comparison, effective inherited
+scene input, actual saved-result review, explicit Download/Use and a
+chosen-copy Privacy/Doctor/Reader rail. Creation date and untouched Info
+fields remain preserved; standard cleanup does not claim to remove XMP,
+attachments, forms or arbitrary hidden content. Its original core/artifact
+checks pass 19/19. The first Node adapter failure is retained separately.
+The exact initial manifest and artifacts are under
+`/tmp/browserpdf-metadata-owner-final-20261019/`.
+
+Root's first actual native run is **12 PASS / 4 FAIL**, not a clean suite:
+`/tmp/browserpdf-metadata-native-first-20261019/final.json`.
+Two failures come from a test helper that treats tagged scene/composition
+history as byte-only records. Two mobile failures place the canvas at
+908.84375 and 855.59375 pixels, below the 820-pixel viewport. An unchanged
+320-pixel diagnostic confirms a duplicate visible identity precedes the
+already collapsed name details; Root retains and views its original PNG.
+
+Independent source review also finds P2: the shared result helper catches
+load/render errors and fulfills, while the route treats fulfillment as
+readiness. Root extends that finding to the initial review interval, when
+shared Use/Download buttons already exist before loading completes.
+The correction keeps the actual precreated shared panel inert throughout
+initial and post-Use loading, then requires the fresh selected-page marker,
+positive bounded canvas, retained label and exact owner. Failure drains,
+hides and locks the panel and blocks the rail. Retry reuses the verified
+cached bytes and ModDate without saving again. The actual shared identity
+moves into the native collapsed details with full accessible labels,
+keyboard access and accepted Clear reset. History assertions retain every
+typed record, complete scene/composition JSON and source resource hashes.
+
+The first six authored protocol regressions fail before correction and
+remain retained. Affected portable checks then pass **12/12**,
+435.209291 ms, plus four syntax and focused HTML/CSS checks. The metadata
+PDF core and prior field/pixel artifacts are unchanged; that matrix is not
+rerun. Independent focused review passes and closes both initial and
+post-Use P2 paths using the actual entry, actual shared result body and real
+metadata core with non-native injected rendering. Its private sentinel
+assertion failure is retained separately. Evidence:
+`/tmp/browserpdf-metadata-corrected-fresh-review-20261019.md`.
+
+Root's corrected first affected native run passes **13/13**, consisting of
+twelve affected cases and one idle check, 11,487.202 ms. It proves held
+initial buttons remain inert; initial and chosen load/render failures block
+actions; cached Retry keeps exact saved hashes with one save; dirty edits,
+Cancel, Undo/Redo, inherited scenes, chosen clean current, keyboard names
+and Clear retain ownership. Natural 320/390 English/light and Arabic/dark
+surfaces pass. Skips, flaky results, top-level errors, page errors and
+non-GET requests are zero. Exactly 426 included source hashes, included
+path inventory, config, private wrapper and seven-file manifest remain
+exact. Twenty-two explicitly concurrent Doc/OCR paths are excluded and
+never imported; this is a scoped freeze. Evidence:
+`/tmp/browserpdf-root-metadata-corrected-native-first-20261019/final.json`.
+Actual idle delivery is 76,814 JavaScript bytes in eight requests, with
+optional inspection/PDF/result engines absent.
+
+A separate corrected 320-pixel visual capture puts the canvas at
+734.84375 pixels with document scroll width exactly 320. Root views the
+retained PNG; all seven hashes remain exact, no page errors or non-GET
+requests occur and the browser closes. Evidence:
+`/tmp/browserpdf-root-metadata-corrected-mobile-visual-first-20261019/report.json`.
+The original first sixteen and corrected affected thirteen are distinct
+runs; no clean all-twenty-two claim is made. This accepts the scoped
+Metadata workspace for checkpointing. Full locale migration, richer
+Privacy/Doctor destinations and final service-07/all-32 gates remain open.

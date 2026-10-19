@@ -30,7 +30,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Edit PDF Metadata - BrowserPDF","description":"View and edit PDF metadata (title, author, subject, keywords) for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/edit-metadata","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Edit PDF Metadata","item":"https://browserpdf.app/edit-metadata"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What metadata fields can I edit?","acceptedAnswer":{"@type":"Answer","text":"You can edit the title, author, subject, keywords, and creator fields. The producer and the creation and modification dates are shown for reference but kept read-only."}},{"@type":"Question","name":"Will the new metadata show in every PDF reader?","acceptedAnswer":{"@type":"Answer","text":"Yes. Title, author, subject, keywords, creator, and producer are part of the PDF specification's document information dictionary, so every compliant reader displays them in the document properties."}},{"@type":"Question","name":"Can I clear a metadata field instead of changing it?","acceptedAnswer":{"@type":"Answer","text":"Yes. Empty the field before saving and it will be written blank, removing the previous value from the file."}}]}]}</script>
+<link rel="stylesheet" href="css/metadata-workspace.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Edit PDF Metadata - BrowserPDF","applicationCategory":"UtilitiesApplication","operatingSystem":"Any web browser","url":"https://browserpdf.app/edit-metadata","description":"Review and edit six standard PDF Info text fields, or remove eight standard Info entries. XMP and other hidden content are outside cleanup scope. Processing stays in the browser; finite workspace limits apply.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -81,7 +82,7 @@
 
     <section class="intro">
       <h1 data-i18n="edit-metadata.h1">Edit PDF Metadata</h1>
-      <p data-i18n="edit-metadata.intro">View and edit the title, author, subject, keywords, and creator stored inside a PDF. Producer and dates are shown for reference. Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint.</p>
+      <p data-i18n="metadata_workspace.intro">Compare the original, current and prepared standard Info fields. Edit six text fields or remove eight standard Info entries, review the actual copy, then choose Download or Use.</p>
     </section>
 
     <section class="dropzone-section">
@@ -96,76 +97,38 @@
         <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
       </div>
 
-      <div id="optionsSection" class="options-panel" hidden>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.title_label">Title</span>
-          </div>
-          <input type="text" id="titleInput" class="text-input" data-i18n-placeholder="edit-metadata.title_placeholder" placeholder="Document title">
+      <div id="metadataWorkspace" class="metadata-workspace" aria-busy="false">
+        <div class="metadata-toolbar">
+          <button id="cancelBtn" class="btn btn-secondary" type="button" disabled data-i18n="metadata_workspace.cancel">Cancel</button>
+          <button id="clearBtn" class="btn btn-secondary" type="button" disabled data-i18n="metadata_workspace.clear">Clear task</button>
+          <button id="retryBtn" class="btn btn-secondary" type="button" hidden data-i18n="metadata_workspace.retry">Retry</button>
+          <button id="undoBtn" class="btn btn-ghost" type="button" disabled data-i18n="metadata_workspace.undo">Undo used result</button>
+          <button id="redoBtn" class="btn btn-ghost" type="button" disabled data-i18n="metadata_workspace.redo">Redo used result</button>
         </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.author_label">Author</span>
+        <p id="metadataStatus" role="status" aria-live="polite" data-i18n="metadata_workspace.empty">Choose a PDF of at most 32 MiB and 1000 pages.</p>
+        <div id="optionsSection" hidden>
+          <details id="metadataDocumentNames" class="metadata-names"><summary id="metadataDocumentNamesSummary" data-i18n="metadata_workspace.names">Document names</summary><p id="fileSummary"></p></details>
+          <div class="metadata-grid">
+            <section id="currentPreview" class="metadata-preview" aria-labelledby="currentPreviewHeading">
+              <h2 id="currentPreviewHeading" data-i18n="metadata_workspace.current_preview">Current PDF</h2>
+              <div class="metadata-page-controls"><button id="previousPageBtn" type="button" class="btn btn-ghost btn-small" data-i18n="workspace.previous_page">Previous page</button><span id="metadataPage" aria-live="polite"></span><button id="nextPageBtn" type="button" class="btn btn-ghost btn-small" data-i18n="workspace.next_page">Next page</button></div>
+              <canvas id="metadataCanvas" aria-label="Current PDF preview"></canvas>
+            </section>
+            <div class="metadata-fields">
+              <fieldset class="metadata-mode"><legend data-i18n="metadata_workspace.operation">Operation</legend><label><input type="radio" name="metadataMode" id="editMode" value="edit" checked><span data-i18n="metadata_workspace.edit">Edit changed fields</span></label><label><input type="radio" name="metadataMode" id="clearMode" value="clear-standard"><span data-i18n="metadata_workspace.clear_standard">Remove eight standard Info entries</span></label></fieldset>
+            <div class="metadata-field"><label for="titleInput" data-i18n="metadata_workspace.field_title">Title</label><textarea id="titleInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="titleNotice"></textarea><span id="titleNotice" class="metadata-notice"></span><button id="titleReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+            <div class="metadata-field"><label for="authorInput" data-i18n="metadata_workspace.field_author">Author</label><textarea id="authorInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="authorNotice"></textarea><span id="authorNotice" class="metadata-notice"></span><button id="authorReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+            <div class="metadata-field"><label for="subjectInput" data-i18n="metadata_workspace.field_subject">Subject</label><textarea id="subjectInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="subjectNotice"></textarea><span id="subjectNotice" class="metadata-notice"></span><button id="subjectReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+            <div class="metadata-field"><label for="keywordsInput" data-i18n="metadata_workspace.field_keywords">Keywords</label><textarea id="keywordsInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="keywordsNotice"></textarea><span id="keywordsNotice" class="metadata-notice"></span><button id="keywordsReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+            <div class="metadata-field"><label for="creatorInput" data-i18n="metadata_workspace.field_creator">Creator</label><textarea id="creatorInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="creatorNotice"></textarea><span id="creatorNotice" class="metadata-notice"></span><button id="creatorReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+            <div class="metadata-field"><label for="producerInput" data-i18n="metadata_workspace.field_producer">Producer</label><textarea id="producerInput" class="text-input" rows="2" maxlength="4096" wrap="off" aria-describedby="producerNotice"></textarea><span id="producerNotice" class="metadata-notice"></span><button id="producerReplace" type="button" class="btn btn-ghost btn-small" hidden data-i18n="metadata_workspace.replace">Replace the preserved value</button></div>
+              <p class="metadata-notice" data-i18n="metadata_workspace.field_limits">Each edited field supports 4096 UTF-16 units. Commas and whitespace are text, not keyword separators. Creation date is preserved; editing updates modification date.</p>
+              <button id="applyBtn" class="btn btn-primary" type="button" disabled data-i18n="metadata_workspace.prepare">Prepare and review copy</button>
+            </div>
           </div>
-          <input type="text" id="authorInput" class="text-input" data-i18n-placeholder="edit-metadata.author_placeholder" placeholder="Author name">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.subject_label">Subject</span>
-          </div>
-          <input type="text" id="subjectInput" class="text-input" data-i18n-placeholder="edit-metadata.subject_placeholder" placeholder="Subject of the document">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.keywords_label">Keywords</span>
-          </div>
-          <input type="text" id="keywordsInput" class="text-input" data-i18n-placeholder="edit-metadata.keywords_placeholder" placeholder="comma, separated, keywords">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.creator_label">Creator</span>
-          </div>
-          <input type="text" id="creatorInput" class="text-input" data-i18n-placeholder="edit-metadata.creator_placeholder" placeholder="Application that created this PDF">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.producer_label">Producer</span>
-            <span class="option-hint" data-i18n="edit-metadata.producer_hint">read-only, detected from the file</span>
-          </div>
-          <input type="text" id="producerInput" class="text-input" readonly data-i18n-placeholder="edit-metadata.readonly_placeholder" placeholder="Not set">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.creation_date_label">Creation date</span>
-            <span class="option-hint" data-i18n="edit-metadata.creation_date_hint">read-only, detected from the file</span>
-          </div>
-          <input type="text" id="creationDateInput" class="text-input" readonly data-i18n-placeholder="edit-metadata.readonly_placeholder" placeholder="Not set">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="edit-metadata.modification_date_label">Modification date</span>
-            <span class="option-hint" data-i18n="edit-metadata.modification_date_hint">read-only, updates to now on save</span>
-          </div>
-          <input type="text" id="modificationDateInput" class="text-input" readonly data-i18n-placeholder="edit-metadata.readonly_placeholder" placeholder="Not set">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block option-block-row">
-          <span id="fileSummary" class="file-list-count"></span>
-          <button id="applyBtn" class="btn btn-primary" type="button">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <path d="M7 10l5 5 5-5"/>
-              <path d="M12 15V3"/>
-            </svg>
-            <span data-i18n="edit-metadata.btn_apply">Save metadata &amp; download</span>
-          </button>
+          <p class="metadata-scope" data-i18n="metadata_workspace.scope">Standard cleanup removes Title, Author, Subject, Keywords, Creator, Producer, CreationDate and ModDate from Info only. XMP, attachments, forms, links and other hidden content are outside cleanup scope. A rewrite can invalidate a digital signature.</p>
+          <p id="metadataDisclosures" class="metadata-notice"></p>
+          <details class="metadata-comparison"><summary data-i18n="metadata_workspace.comparison">Compare eight standard Info fields</summary><table><thead><tr><th scope="col" data-i18n="metadata_workspace.property">Property</th><th scope="col" data-i18n="workspace.original">Original</th><th scope="col" data-i18n="workspace.current">Current</th><th scope="col" data-i18n="workspace.result">Result</th></tr></thead><tbody id="metadataComparison"></tbody></table></details>
         </div>
       </div>
 
@@ -190,32 +153,8 @@
       <span id="errorText"></span>
     </section>
 
-    <section class="about">
-      <h2 data-i18n="common.how_it_works">How it works</h2>
-      <ul class="about-list">
-        <li><strong data-i18n="edit-metadata.about_1_title">Metadata is read and rewritten with pdf-lib.</strong> <span data-i18n="edit-metadata.about_1_body">The title, author, subject, keywords, and creator you type are written straight into the PDF's document information dictionary.</span></li>
-        <li><strong data-i18n="edit-metadata.about_2_title">Producer and dates are shown for reference.</strong> <span data-i18n="edit-metadata.about_2_body">The producer field and the creation and modification dates are displayed read-only; saving updates the modification date to now.</span></li>
-        <li><strong data-i18n="edit-metadata.about_3_title">No file-upload endpoint.</strong> <span data-i18n="edit-metadata.about_3_body">Document processing happens in this browser tab.</span></li>
-      </ul>
-    </section>
-
-    <section class="about faq">
-      <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
-      <div class="faq-list">
-        <div class="faq-item">
-          <h3 data-i18n="edit-metadata.faq_1_q">What metadata fields can I edit?</h3>
-          <p data-i18n="edit-metadata.faq_1_a">You can edit the title, author, subject, keywords, and creator fields. The producer and the creation and modification dates are shown for reference but kept read-only.</p>
-        </div>
-        <div class="faq-item">
-          <h3 data-i18n="edit-metadata.faq_2_q">Will the new metadata show in every PDF reader?</h3>
-          <p data-i18n="edit-metadata.faq_2_a">Yes. Title, author, subject, keywords, creator, and producer are part of the PDF specification's document information dictionary, so every compliant reader displays them in the document properties.</p>
-        </div>
-        <div class="faq-item">
-          <h3 data-i18n="edit-metadata.faq_3_q">Can I clear a metadata field instead of changing it?</h3>
-          <p data-i18n="edit-metadata.faq_3_a">Yes. Empty the field before saving and it will be written blank, removing the previous value from the file.</p>
-        </div>
-      </div>
-    </section>
+    <section class="about"><h2 data-i18n="common.how_it_works">How it works</h2><ul class="about-list"><li data-i18n="metadata_workspace.help_edit">Only fields you change are rewritten. A blank edited value is stored as blank; the cleanup operation removes the eight standard entries.</li><li data-i18n="metadata_workspace.help_review">The saved copy is reopened and its standard fields are checked. Download is explicit. Use chooses this copy for Privacy Scan, Document Doctor or Reader.</li><li data-i18n="metadata_workspace.help_scope">This is standard Info editing, not comprehensive privacy cleanup. XMP and other content can still identify a document.</li></ul></section>
+    <section class="about faq"><h2 data-i18n="common.faq_title">Frequently asked questions</h2><div class="faq-list"><div class="faq-item"><h3 data-i18n="metadata_workspace.faq_fields_q">Which fields can I edit?</h3><p data-i18n="metadata_workspace.faq_fields_a">Title, author, subject, keywords, creator and producer. Dates are shown in the comparison. Oversized or unrepresentable stored text remains unchanged until you explicitly replace it.</p></div><div class="faq-item"><h3 data-i18n="metadata_workspace.faq_readers_q">Will every reader show the same properties?</h3><p data-i18n="metadata_workspace.faq_readers_a">Reader displays vary. This tool checks the saved standard Info values; separate XMP metadata can contain different values.</p></div><div class="faq-item"><h3 data-i18n="metadata_workspace.faq_cleanup_q">Does cleanup remove all private information?</h3><p data-i18n="metadata_workspace.faq_cleanup_a">No. It removes only eight standard Info entries. Review the chosen copy in Privacy Scan for other detectable categories and the scan's coverage limits.</p></div></div></section>
     <section class="about related-tools">
       <h2 data-i18n="common.related_tools">Related tools</h2>
       <nav class="related-links" data-i18n-aria="common.related_tools" aria-label="Related tools">
