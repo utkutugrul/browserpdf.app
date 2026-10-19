@@ -457,3 +457,168 @@ private proposals. UI12 is incomplete and has no browser acceptance. Actual
 browser normalization, EXIF orientation, native cancellation/cleanup, saved-byte
 selected-page review, manual Download, explicit Use, all three service journeys,
 locales and final service gates remain open. No service row is complete.
+
+
+## Source initialization, revision and cleanup checkpoint
+
+Root approved the private source contract after independently verifying the
+image checkpoint at 9fd688f6aa8ce8794ea80132a16a129158693615. This new pure
+checkpoint changes only the same five draft/intake/unit/document paths. The
+source seam described as a private proposal in earlier historical sections is
+now implemented in these pure paths, pending fresh review. UI12 has not wired
+these new APIs and remains incomplete.
+
+The draft adds initializeMarkdownSource(localAssets, options) and
+applyMarkdownRevision(candidate, options). Both require the actual current
+model reference, local revision and canonical owner captured before the
+associated reader/writer work, plus an optional genuine signal. The same
+one-active guard rejects before examining a competing producer. A stale
+capture cannot publish even if its text happens to match. A caller retains
+ownership of a candidate rejected before its fields/disposer are inspected;
+trusted async cleanup wrappers must return their captured first cleanup
+promise idempotently.
+
+Initialization is restricted to an unchanged Markdown/plain baseline at local
+revision zero, once. Exact preparse named records bind to actual baseline pool
+bytes through SHA-256 indexing and byte comparison, never reader array order.
+The name map supplies bytes and dimensions only. Every original alternate-text
+identity remains in the literal model. Initial source uses the existing owned
+UTF-8 bytes and a fatal decode with ignoreBOM:true, preserving U+FEFF, CR, CRLF
+and LF. Attachment creates source revision zero without changing model bytes,
+asset IDs, paper, local revision, dirty state or Undo. The trusted workspace
+must complete this step before publishing its provisional Markdown draft or
+committing the new canonical task. Word never passes through this method.
+
+Reader revisions copy and validate their actual literal model, remap structural
+IDs against the one task-lifetime image pool, and preserve semantic text/styles,
+directions, provenance and list/table structure. Repeated reader image IDs
+cannot establish ownership. Reuse requires MIME, dimensions, actual encoded
+bytes and immutable alternate-text identity; changed bytes or alternate text
+need their own owned ID. Current assets project only current declared IDs,
+while historical bytes and IDs remain charged for Undo and history clear.
+Exact local names survive source reparsing. Serialized revisions require the
+actual writer's output for the captured model and preserve that model reference
+and logical data while attaching its explicit generated source. sourceRelation
+is parsed, serialized, outdated or none. Ordinary edits share their source
+record and mark it outdated; paper changes preserve the relation. One Undo/Redo
+order restores the matching model, source and image selection.
+
+markdownSource() returns the current primitive source string; markdownAssets()
+borrows at most48 frozen named records backed by lifetime-owned bytes. Snapshot
+adds actual retainedModelCount/Bytes, lifetimeAssetCount/Bytes, sourceRevision
+and sourceRelation. These are private draft scalars. No session/SDK schema,
+source-frame stack or second resource pool was added.
+
+Six retained versions, 48MiB aggregate model bytes, six referenced source
+records and 48MiB aggregate UTF-8 source bytes stay finite. Each source remains
+at most8MiB UTF-8 and UTF-16 units. Actual decoded UTF-16 content and one128KiB
+metadata allowance per source record are charged, plus one128KiB/one-resource
+allowance while a finite per-pool digest cache exists. Initial source bytes
+share their baseline owner and are counted once. Unreferenced private source
+copies are erased by explicit history cleanup; baseline and lifetime images
+remain. No silent eviction restores capacity.
+
+Known copy/hash stages use the same joint96MiB/128 and512MiB limits. Initial
+binding reserves 2*B+2*max(A,P)+256KiB and six slots. Revisions reserve
+3*S+3*B+3*max(A,P)+256KiB and56slots, including known source/model/image
+copies and one serial temporary/digest input. Before reader model copies,
+a bounded own-data preflight measures actual JSON byte size, with an initial
+4MiB/four-slot work reservation, finite depth/nodes/keys and cooperative checks.
+It rejects changed size records, accessors and nonstandard/sparse arrays.
+The measured size plus bounded remapping allowance determines S, capped16MiB.
+This is admission for the existing finite document model, not another Markdown
+parser. Native codec or total heap/RSS bounds are not claimed.
+
+Every first digest and candidate cleanup promise drains before release or
+publication. All control, comparison and copying loops yield/check at finite
+boundaries. Captured signal intrinsics preserve exact abort reasons, including
+falsy values. Cleanup rejection has priority, retains pending ownership/charge,
+and fences further mutations until page reset. A failed candidate keeps the
+old literal model, original, source association, history and asset counters.
+
+The draft's dispose() now returns one owned promise. It captures and awaits the
+first original bundle-disposer result before erasing its own retained buffers
+or reporting release. Concurrent calls return that same promise. Held disposal
+keeps bytes and usage live; rejection retains a typed cleanup fence and charged
+ownership, with no retry API. New callers must await it. Accepted synchronous
+reader disposers still work; affected unit callers now await completion.
+
+Intake discard similarly captures/awaits its first disposer before erasing raw
+bytes, clearing actual reservations, settling the job or starting its latest
+unread successor. Cleanup failure beats cancellation and fences select/drain/
+dispose with DOCUMENT_INTAKE_CLEANUP while bytes and reservation Map remain
+owned. A newer intent arriving during cleanup is classified after cleanup
+settles. Accepted candidates deliberately transfer to their publisher.
+
+Portable controls generate actual reader/writer bundles and PNG fixtures.
+They cover original named-image baseline/reparse/Undo, alternate-text aliases,
+changed bytes with repeated reader IDs, malformed/missing/case-fold/mutated
+providers, source/block/serialization history, six-version and joint limits,
+strict measured admission, first hash cancellation, falsy cleanup cancellation,
+failed cleanup priority, held/rejected draft disposal and unread queued B.
+Real selected Markdown/local PNG, DOCX media/XML and image-only one-page PDF
+artifacts are retained. Existing image/ledger/abort proofs remain separate.
+
+The first new scoped invocation passed13/14 and the second passed15/16; both
+retain the same authored test error calling a nonexistent DOCX writer disposer.
+The verified writer returns owned bytes/type/report/usage. The test now erases
+its owned output bytes after inspecting them. Its separate artifact control
+passed1/1. The first complete affected draft/intake invocation passed41/41 in
+1081.380916ms. After final candidate-union/ASCII-ID tightening and a new
+late-intent control, the final affected source/disposal/intake invocation passed
+17/17 in556.057042ms. No first failure was overwritten and no broad unchanged
+font/SDK/shared-unit matrix or browser gate was run. The complete affected
+invocation includes the existing small five-font positive and old image/abort
+controls because this checkpoint changes their draft lifecycle.
+
+All before-files, source-hash history, first reports, final scoped reports,
+source diff, artifacts and final five-path manifest are under
+/tmp/browserpdf-document-workspace-source-first-20261019/. The prior accepted
+image checkpoint manifests, artifacts and protected source hashes stay exact.
+These five paths are frozen for fresh review. Actual first-intake UI ownership
+transfer, source editor wiring, browser normalization/EXIF/cancellation,
+saved-byte selected-page preview, manual Download, explicit Use, three separate
+service journeys, locales and final service gates remain open.
+
+
+## Captured applied-command source relation correction
+
+Fresh source review identified one P2 after the new pure source checkpoint:
+ordinary apply published sourceRelation by rereading raw command.type after
+its final yield. An actual style edit followed by a producer getter returning
+set-paper committed bold but incorrectly reported parsed source and invoked
+the late getter. The original private probe and review remain untouched at
+/tmp/browserpdf-document-source-core-late-command-probe-20261019.{mjs,json}
+and /tmp/browserpdf-document-source-core-fresh-review-20261019.md.
+
+The correction makes mutate return the validated local tag actually applied,
+including every early-return branch. apply captures that return before its
+next await and uses it at publication, with no later producer-field read.
+Logical edits therefore mark source outdated even when the producer changes
+its own data or installs a getter. Paper-only edits preserve the current
+parsed or serialized source relation.
+
+Three focused controls passed3/3 on their first invocation in196.502417ms:
+late getter after an actual bold edit, ordinary changed type data with Undo,
+and paper-only changes preserving both parsed and serialized associations.
+A separate replay of the original actual-module probe, changing only its
+output path, now records bold/source literal/sourceRelation outdated,
+lateGetterCalls0/revision1. The original failure is retained byte-exact.
+
+The reviewer's two already-passing real named-image history and rejected
+FIRST-digest/falsy-zero controls are retained as unchanged evidence at
+/tmp/browserpdf-document-source-core-review-probes-20261019.{mjs,json}.
+No full41-test, accepted-image, codec/artifact or browser matrix was rerun.
+All earlier source/artifact reports and the five-path before-files remain.
+
+The shared assertDocumentWorkspaceBudget function is byte-exact. Actual
+OCR pure modules core/ocr-model.js and core/ocr-writer.js import that function
+from document-draft.js; neither dependency was edited or executed here.
+Intake runtime/unit remain exact. Only draft runtime/unit and this document
+changed within the approved five. The corrected diff, focused TAP, replay,
+unchanged-evidence and budget-function hashes, and final five-path freeze
+manifest are under /tmp/browserpdf-document-workspace-source-corrected-20261019/.
+
+This remains a pure source correction awaiting focused review. UI source
+wiring, browser/native behavior, selected-page readiness, manual Download/Use,
+three separate service journeys, locales and final acceptance remain open.

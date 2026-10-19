@@ -25,12 +25,13 @@ function descriptor(file,role){let name,bytes,type;try{name=fileName.call(file);
 // invalidates immediately but never releases leases before FIRST jobs settle.
 export function createDocumentIntake(settings){
   const cfg=record(settings,['getOwner','getUsage','readCandidate','publishCandidate','onState']);for(const key of ['getOwner','getUsage','readCandidate','publishCandidate'])if(typeof cfg[key]!=='function')fail('INPUT','Trusted intake callbacks are required.');if(cfg.onState!==undefined&&typeof cfg.onState!=='function')fail('INPUT','Invalid state callback.');
-  let active=null,pending=null,generation=0,closed=false;
+  let active=null,pending=null,generation=0,closed=false,cleanupFence=null,disposalPromise=null;
   const notify=value=>cfg.onState?.(value);
+  const cleanupError=()=>Object.assign(new Error('Discard cleanup failed. Ownership stays charged until page reset.'),{code:'DOCUMENT_INTAKE_CLEANUP'});
   function cancel(reason=new DOMException('Document intake was cancelled.','AbortError')){generation++;if(pending){pending.resolve({status:'cancelled',reason});pending=null;}active?.controller.abort(reason);}
   async function run(job){
-    const controller=job.controller,signal=controller.signal,captured={...cfg.getOwner()},reservations=new Map();let bytes,candidate,cleanup,accepted=false;
-    const current=()=>!closed&&job.generation===generation&&!signal.aborted&&(!job.options.isCurrent||job.options.isCurrent());
+    const controller=job.controller,signal=controller.signal,captured={...cfg.getOwner()},reservations=new Map();let bytes,candidate,cleanup,accepted=false,outcome,firstCleanup;
+    const current=()=>!closed&&job.generation===generation&&!aborted.call(signal)&&(!job.options.isCurrent||job.options.isCurrent());
     const assert=()=>{abort.call(signal);if(!current()||!same(captured,cfg.getOwner()))fail('STALE','The input owner or intent changed.');};
     function reservationUsage(){const total={resourceBytes:0,resourceCount:0,artifactBytes:0,expandedBytes:0,expandedCount:0};for(const value of reservations.values())for(const key of Object.keys(total)){total[key]+=value[key]??0;if(!Number.isSafeInteger(total[key]))fail('LIMIT','Reservation arithmetic overflow.');}return total;}
     function reserve(extra){assert();extra=record(extra,['resourceBytes','resourceCount','artifactBytes','expandedBytes','expandedCount']);for(const value of Object.values(extra))if(!Number.isSafeInteger(value)||value<0)fail('INPUT','Reservations require finite nonnegative integers.');const u=cfg.getUsage(),total=reservationUsage();for(const key of Object.keys(total)){total[key]+=extra[key]??0;if(!Number.isSafeInteger(total[key]))fail('LIMIT','Reservation arithmetic overflow.');}const result=assertDocumentWorkspaceBudget(u.snapshot,u.live,total);const key={};reservations.set(key,{...extra});let released=false;return {usage:result,release(){if(!released){released=true;reservations.delete(key);}}};}
@@ -41,25 +42,37 @@ export function createDocumentIntake(settings){
       // Capture/await this exact first promise; no race and no duplicate read.
       const first=read.call(job.file);const buffer=await first;bytes=new Uint8Array(buffer);assert();if(bytes.byteLength!==job.fileInfo.bytes)fail('INPUT','Native file size changed.');
       notify({phase:'parsing',name:job.fileInfo.name,intent:job.options.intent});assert();
-      const parsing=cfg.readCandidate(bytes,job.fileInfo,{signal,owner:captured,file:job.file,reserve,reservationUsage});candidate=await parsing;cleanup=candidate?.dispose;assert();if(typeof cleanup!=='function')fail('INPUT','The parser must return an owned candidate disposer.');
+      const parsing=cfg.readCandidate(bytes,job.fileInfo,{signal,owner:captured,file:job.file,reserve,reservationUsage});candidate=await parsing;const disposer=candidate&&Object.getOwnPropertyDescriptor(candidate,'dispose');cleanup=disposer&&Object.hasOwn(disposer,'value')?disposer.value:undefined;assert();if(typeof cleanup!=='function')fail('INPUT','The parser must return an owned candidate disposer.');
       notify({phase:'committing',name:job.fileInfo.name,intent:job.options.intent});assert();
       const publishing=cfg.publishCandidate(candidate,{signal,owner:captured,file:job.file,descriptor:job.fileInfo,reserve,reservationUsage,isCurrent:current,assertCurrent:assert});const next=await publishing;
       if(!current()||!next?.owner||!same(next.owner,cfg.getOwner()))fail('STALE','The published candidate did not return its exact current owner.');accepted=true;
-      job.resolve({status:'accepted',owner:{...next.owner}});notify({phase:'accepted',name:job.fileInfo.name,intent:job.options.intent});
-    }catch(error){job.resolve(signal.aborted||!current()?{status:'cancelled',reason:signal.reason??error}:{status:'rejected',error});notify({phase:signal.aborted||!current()?'cancelled':'rejected',intent:job.options.intent});}
-    finally{if(external)unlisten.call(external,'abort',onAbort);if(!accepted&&typeof cleanup==='function')apply(cleanup,candidate,[]);if(bytes)fill.call(bytes,0);reservations.clear();}
+      outcome={status:'accepted',owner:{...next.owner}};
+    }catch(error){outcome=aborted.call(signal)||!current()?{status:'cancelled',reason:aborted.call(signal)?signalReason.call(signal):error}:{status:'rejected',error};}
+    finally{
+      if(external)unlisten.call(external,'abort',onAbort);
+      if(!accepted&&typeof cleanup==='function'){
+        try{firstCleanup=Promise.resolve(apply(cleanup,candidate,[]));await firstCleanup;}
+        catch(cause){cleanupFence={cause,candidate,bytes,reservations,firstCleanup};outcome={status:'rejected',error:cleanupError()};}
+      }
+      if(!cleanupFence){if(bytes)fill.call(bytes,0);reservations.clear();}
+    }
+    // Settlement and successors follow FIRST cleanup, including an actual async disposer.
+    if(!accepted&&!cleanupFence&&(aborted.call(signal)||!current()))outcome={status:'cancelled',reason:aborted.call(signal)?signalReason.call(signal):outcome?.error};
+    job.resolve(outcome);notify({phase:outcome.status,intent:job.options.intent,name:job.fileInfo.name});
   }
-  function kick(){if(active||!pending||closed)return;const job=pending;pending=null;active=job;job.promise=run(job).finally(()=>{if(active===job)active=null;kick();});job.promise.catch(()=>{});}
+
+  function kick(){if(cleanupFence&&pending){pending.resolve({status:'rejected',error:cleanupError()});pending=null;}if(active||!pending||closed||cleanupFence)return;const job=pending;pending=null;active=job;job.promise=run(job).finally(()=>{if(active===job)active=null;kick();});job.promise.catch(()=>{});}
   return {
     select(file,raw={}){
+      if(cleanupFence)return Promise.resolve({status:'rejected',error:cleanupError()});
       if(closed)return Promise.resolve({status:'rejected',error:Object.assign(new Error('Intake is closed.'),{code:'DOCUMENT_INTAKE_CLOSED'})});
       cancel(new DOMException('A newer file choice replaced this input.','AbortError'));
       let opts,info;try{opts=record(raw,['role','intent','isCurrent','signal']);opts.role??='document';if(!['document','image'].includes(opts.role)||!Number.isSafeInteger(opts.intent)||opts.intent<0||opts.isCurrent!==undefined&&typeof opts.isCurrent!=='function')fail('INPUT','Invalid intake role/intent guard.');checkSignal(opts.signal);info=descriptor(file,opts.role);}catch(error){return Promise.resolve({status:'rejected',error});}
       return new Promise(resolve=>{pending={file,fileInfo:info,options:opts,generation,controller:new AbortController(),resolve,promise:null};kick();});
     },
     cancel,
-    drain(){const first=active?.promise;return first?first.then(()=>undefined):Promise.resolve();},
-    async dispose(){if(closed)return;closed=true;cancel();const first=active?.promise;if(first)await first;},
-    snapshot(){return {phase:closed?'disposed':active?'busy':'idle',active:!!active,pending:!!pending,generation};}
+    drain(){const first=active?.promise;return (first??Promise.resolve()).then(()=>{if(cleanupFence)throw cleanupError();});},
+    dispose(){if(disposalPromise)return disposalPromise;closed=true;cancel();const first=active?.promise;disposalPromise=(first??Promise.resolve()).then(()=>{if(cleanupFence)throw cleanupError();});disposalPromise.catch(()=>{});return disposalPromise;},
+    snapshot(){return {phase:cleanupFence?'cleanup-blocked':closed?'disposed':active?'busy':'idle',active:!!active,pending:!!pending,generation,cleanupBlocked:!!cleanupFence};}
   };
 }

@@ -1318,3 +1318,185 @@ bounded property-path/type diagnostic; no generic optional-value relaxation
 or production adoption is authorized. Earlier unguarded native 4/4 remains
 separate historical evidence. Production OCR, corrected saved output and
 other-language native gates remain open.
+
+
+### Shared document image checkpoint sync
+
+Root verifies `9fd688f6aa8ce8794ea80132a16a129158693615` on HEAD,
+upstream and the actual feature remote. Its title is `Add atomic document
+image replacement`, its body is empty and its parent is the accepted
+Metadata checkpoint `9d497161ab3f7d34d5a7405cd79f93cf42bac6c6`.
+Exactly the five accepted image/accounting paths plus this ledger are
+committed, +488/-25. Six committed blobs, 425 protected paths, the included
+431-path inventory, forty untracked audit files and empty index verify.
+Seventeen concurrent Doc UI/OCR paths remain excluded and unstaged.
+Evidence: `/tmp/browserpdf-document-image-checkpoint-commit-proof-20261019.json`
+and `/tmp/browserpdf-root-document-image-checkpoint-remote-verification-20261019.json`.
+The later approved source/init/revision extension is new work and does not
+change the scope of this accepted checkpoint.
+
+### Guarded OCR: exact backing and scoped enum correction
+
+The exact-startup-backing correction requires offset zero and an ArrayBuffer
+whose full length equals the pinned decoded model length, both before dispatch
+and before native publication. Eight author controls, two bounded-diagnostic
+controls and twelve independent controls pass. The focused review closes the
+backing-extent P2:
+`/tmp/browserpdf-ocr-output-guard-backing-corrected-review-20261019.md`.
+The diagnostic run retains its expected normal-case failure and identifies
+`$.psm typeof=undefined` without exposing a raw value:
+`/tmp/browserpdf-root-ocr-native-gate-backing-diagnostic-first-20261019/report.json`.
+This does not establish why the underlying module lacks a mapped enum value.
+
+The exact primary dump source can produce undefined root psm/oem fields.
+Only those own root recognition data fields may carry undefined; each remains
+present and charged nine bytes. Required text, blocks and confidence,
+nested values, arrays, startup and progress retain their strict policies.
+Eleven author controls and twenty independent controls pass. Fresh focused
+review accepts the correction and reconciles all 135 frozen private files:
+`/tmp/browserpdf-ocr-output-guard-enum-compatible-review-20261019.md`.
+
+Root's new actual English guarded-worker four-case gate passes normal,
+pending startup cancellation, public-progress recognition cancellation and
+normal successor. Each native child is captured and terminated once; owned
+promises settle once, release is known and the final lane is idle/unfenced.
+The normal and successor page and line strings both preserve literal
+`ROOT ENGLISH OCR 9472` followed by U+000A. Page confidence is 95 and line
+confidence 96. Six private GET pins, no unexpected HTTP/non-GET/page errors,
+all 426 included source hashes/path inventory and browser closure verify.
+Evidence: `/tmp/browserpdf-root-ocr-native-gate-enum-compatible-first-20261019/report.json`,
+SHA-256 `eeee2cf4b81caf32a8ad67022cc1f11438ee9e2d9f1f8850a25aaec82d40cd04`.
+Physical worker exit and native heap release are not acknowledged by the
+browser API. The publication guard runs after dump and does not cap
+WASM/GetJSONText/JSON parse/dump heap.
+
+A separate approved pure-model contract preserves raw text, one literal
+terminal LF separator and editable content as reversible provenance. It
+never trims, collapses or normalizes source text. Internal/repeated newlines,
+CR and user-entered controls remain visible unsupported content until explicit
+correction or exclusion. Implementation and actual saved-PDF acceptance
+remain separate from the private raw recognition gate.
+
+### Private Turkish selected-model gate
+
+The already acquired Turkish model is 4,680,866 decoded bytes, SHA-256
+`f0127d0f3745f9c65e2ae7ec6b23198fbe5aa186a61b35661426f5e1ef9dedd7`.
+Adding only its registry entry and then removing it recovers the accepted
+English helper byte-for-byte. The host validates genuine exact backing,
+selected fixed length and actual SHA before importing the SDK. It submits
+one selected model. Eight author controls and seventeen independent controls
+pass; all 39 new and 135 previous frozen files remain exact. Fresh review:
+`/tmp/browserpdf-ocr-turkish-registry-native-review-20261019.md`, SHA-256
+`695bf74b69b20e9a472dbcce4fe2c8436bbb3fc3a7040766d02f36dea971a0fc`.
+
+Root's actual Turkish four-case gate passes the same normal/startup-cancel/
+recognition-cancel/successor lifecycle. The predetermined fixture is
+`MERHABA İıÇçĞğÖöŞşÜü`; the fixed acceptance fragment is `MERHABA`.
+Both normal results actually read `MERHABA İlÇçÖğÖöŞşÜüüÜ` followed by
+one U+000A. The accented mismatch is retained. Page and line confidence are
+71; the two word confidences are 93 and 49. Two words, 21 symbols, two choices,
+bbox [38,106,635,160], sloped baseline [38,150,635,151] and row metrics 54/9/10
+are captured literally without projection. This proves bounded loading,
+structured transport and lifecycle for the selected model; broader Turkish
+recognition accuracy remains unproved.
+
+The six exact private GETs run once, with no additional HTTP/non-GET/page
+errors or imports from the 27 explicitly excluded concurrent Doc/OCR/Privacy
+paths. All 424 included repository hashes/path inventory and forty audit
+files remain exact. Known application-buffer reservation is 48,863,261 bytes,
+not a heap measurement. Child release, idle/unfenced lane, host termination
+and browser closure verify; physical exit acknowledgement remains false.
+Actual report:
+`/tmp/browserpdf-root-ocr-native-gate-turkish-first-20261019/report.json`, SHA-256
+`93e0977a7b50dea465e64a89b67a9b91678417cc430482baa763a2244f2b2de3`.
+Root independent reconciliation:
+`/tmp/browserpdf-root-ocr-turkish-native-reconciliation-20261019.json`, SHA-256
+`16ec31cb287bd3963364ae7c4b896a8b38e713f9be3e9941215b9a3b8c842248`.
+
+This accepts the private Turkish registry/host delta and native gate.
+Production distribution, OCR route/editor, corrected saved output and final
+service-17 acceptance remain open. The Word/Markdown source/init/revision
+pure extension, three-service UI and Privacy Scan pure/report implementation
+also remain active, with final all-32 gates open.
+
+
+### Shared document source and asynchronous disposal checkpoint
+
+The new five-path pure extension initializes exact named Markdown/image source
+bindings at provisional revision zero, applies reader or serialized source
+revisions atomically, retains source/model history in one lifetime image pool,
+and reports the actual source relation and retained usage. BOM, CRLF and literal
+source bytes remain explicit. Digest plus byte equality and alternate-text
+identity govern image reuse; source changes and history clear do not reset
+lifetime image limits. The original source remains retained.
+
+Draft disposal now returns and drains its first captured disposer promise before
+erasing owned bytes. Intake likewise drains the first asynchronous discard before
+releasing admission or starting the latest successor. Failed cleanup retains its
+reservation and fence. Actual genuine falsy abort reasons preserve identity after
+failed first work, with cleanup failure taking priority. These are pure ownership
+changes; the three UI routes still need source wiring and native journeys.
+
+The first source selections retain 13/14 then 15/16 results caused by an authored
+call to a DOCX result disposer that the actual writer does not expose. The test
+uses the actual returned byte ownership after correction. Its focused artifact
+case passes. The full affected foundation invocation passes 41/41 in 1081.380916 ms;
+a later affected selection passes 17/17 in 556.057042 ms. Actual Markdown, local
+PNG, DOCX and PDF artifacts and independent ZIP/XML/media evidence are retained.
+
+Fresh review finds one P2: the source-relation publication rereads producer
+command.type after a yield. A genuine bold-style edit can then be mislabeled
+parsed when the producer changes its tag to set-paper. The correction captures
+the validated tag actually applied on every successful mutation branch.
+Three focused getter/data/paper-association controls pass, 196.502417 ms.
+Independent original-probe replay now reports bold/literal/outdated/getter-zero,
+while the original failed observation remains exact. Fresh focused review closes
+the sole finding:
+`/tmp/browserpdf-document-source-core-corrected-review-20261019.md`, SHA-256
+`d28a143eb84fe6bec219a37e4c29a7bfae6e5281379b220e98bfc285d06e7b1b`.
+All 94 recorded paths and 54 post-probe source checks match. Earlier independent
+real source/history and rejected-first-digest/falsy-abort controls remain valid.
+
+The corrected five-path manifest is
+`/tmp/browserpdf-document-workspace-source-corrected-20261019/final-five-manifest.json`,
+SHA-256 `a86b2919671ce09255a8a262e55e5433b9ad9d2da19902fc062c9b47710ef3a9`.
+Root verifies those five hashes and all seven retained artifact hashes. Root also
+independently checks ZIP CRC, all six XML parts, the actual export-alt attribute,
+byte-exact embedded PNG and its Markdown filename:
+`/tmp/browserpdf-root-document-source-artifact-reconciliation-20261019.json`.
+The shared budget function remains exactly 849 bytes, SHA-256
+`29b5868d6a8a11a4cf59449c9cce3d05f8b952bca1165960d79d5ee2581da736`.
+This accepts the scoped pure source/init/revision/disposal checkpoint. Actual
+source UI wiring, browser image normalization/EXIF, selected-page readiness,
+manual Download/Use, three route journeys, locales and final acceptance remain open.
+
+### Parallel Privacy and OCR pure-core review status
+
+Root's actual Privacy normal artifact gate removes all eight raw Info keys from
+a new 3439-byte PDF to a 3336-byte result. Four rotated/CropBox/UserUnit pages have
+zero source/result RGBA differences. XMP, attachment payload/MIME, form value and
+appearance stream, URI, custom Unicode Info and geometry remain exact. Actual
+own-signal overrides, successors and locked native input pass. All 429 included
+source hashes/path inventory and audit files match outside 22 unrelated Doc/OCR
+paths; 21 GETs, no unexpected requests/non-GET/page errors and browser closure verify.
+Report: `/tmp/browserpdf-root-privacy-core-native-raw-keys-first-20261019/report.json`,
+SHA-256 `2734d37043dae0b1bbf2382574b183effda0a80be1e9bfb6ff5c51e7b09d0260`.
+Two earlier Root harness failures remain retained: omitted explicit category and
+using PDFDict.has for PDFNull raw-key presence. Only the private checker changed.
+
+Privacy pure-core acceptance remains held for two fresh P2 corrections: native
+rejection loses exact cancellation reasons in lifetime/preview/queue, and a logical
+field can traverse unlimited widget entries despite finite field limits. The report
+is `/tmp/browserpdf-privacy-core-fresh-review-20261019.md`. The author is correcting
+those within the five pure paths plus one explicit additive legacy DTO expectation.
+UI6 and actual final route/idle acceptance remain open.
+
+OCR pure model/writer has twenty passing author cases and retained twelve-page,
+thirty-six-line corrected Unicode/source-preservation evidence. Fresh review finds
+three P2s: falsy native failures can fulfill undefined, pending candidate usage is
+absent from public joint accounting, and short lines bypass the promised 128-action
+preflight yield. Report: `/tmp/browserpdf-ocr-pure-core-fresh-review-20261019.md`.
+Those narrow five-path corrections are active. The Root real-raw-recognition to
+editable-model to saved-PDF browser harness is authored, not executed. It must
+include the actual accepted document-budget dependency hash. OCR distribution,
+UI/route and final service-17/all-32 acceptance remain open.
