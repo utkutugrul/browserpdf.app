@@ -2,23 +2,113 @@
 
 import { ensurePdfJs, ensureMammoth, ensureXlsx, PDFJS_ASSET_URLS } from './lib-loader.js';
 import { t } from './i18n.js';
+import { boundedViewport } from './core/bounded-renderer.js';
 
 let currentGeneration = 0;
 let activeTask = null;
 let objectUrl = null;
 let imageWork = Promise.resolve();
+const previews = new Set();
+const taskDestruction = new WeakMap();
+function prune(record) {
+  if (record.generation !== currentGeneration && !record.work.size && !record.cleanup.size && !record.tasks.size && !record.errors.length) previews.delete(record);
+}
+function track(record, value) {
+  const promise = Promise.resolve(value); record.work.add(promise);
+  const settled = () => { record.work.delete(promise); prune(record); };
+  promise.then(settled, settled);
+  return promise;
+}
+function retire(record, task) {
+  if (!task) return Promise.resolve();
+  let promise = taskDestruction.get(task);
+  if (!promise) {
+    promise = Promise.resolve().then(() => task.destroy()); taskDestruction.set(task, promise);
+    record.cleanup.add(promise);
+    promise.then(() => { record.tasks.delete(task); record.failedTasks.delete(task); record.cleanup.delete(promise); prune(record); }, (error) => { record.cleanup.delete(promise); record.failedTasks.add(task); record.errors.push(error); });
+  }
+  return promise;
+}
+function retryNativeCleanup(record) {
+  if (record.retrying) return record.retrying;
+  if (record.errors.length) {
+    if (record.reporting) return Promise.reject(record.errors[0]);
+    record.errors = [];
+    for (const task of record.failedTasks) taskDestruction.delete(task);
+    record.failedTasks.clear();
+  }
+  // This barrier waits for native destruction only. Waiting for record.work
+  // here would include the event-driven load that is calling this function.
+  const pending = Promise.all([...record.tasks].map((task) => retire(record, task)));
+  record.retrying = pending;
+  const settled = () => { if (record.retrying === pending) record.retrying = null; };
+  pending.then(settled, settled);
+  return pending;
+}
+function cleanupBeforeLoad(generation) {
+  const captured = [...previews].filter((record) => record.generation <= generation && record.tasks.size);
+  return Promise.all(captured.map(retryNativeCleanup));
+}
+function drainRecord(record, reportFailure) {
+  if (reportFailure && record.reporting) return record.reporting;
+  const pending = (async () => {
+    while (record.work.size || record.cleanup.size) await Promise.allSettled([...record.work, ...record.cleanup]);
+    if (!record.errors.length && !record.tasks.size) previews.delete(record);
+    if (reportFailure && record.errors.length) {
+      record.errors = [];
+      for (const task of record.tasks) taskDestruction.delete(task);
+      record.failedTasks.clear();
+      const error = new Error('Native preview cleanup failed. Retry cleanup before starting another PDF.'); error.code = 'DOCUMENT_PREVIEW_CLEANUP'; throw error;
+    }
+  })();
+  if (reportFailure) {
+    // Concurrent explicit drains share this exact cleanup attempt and failure.
+    // A subsequent retry starts only after this attempt has settled.
+    record.reporting = pending;
+    const settled = () => { if (record.reporting === pending) record.reporting = null; };
+    pending.then(settled, settled);
+  }
+  return pending;
+}
+function invalidatePreviews(reportFailure) {
+  currentGeneration++;
+  const captured = [...previews];
+  activeTask = null;
+  for (const record of captured) {
+    record.cancelRender?.();
+    if (!record.reporting) for (const task of record.tasks) void retire(record, task).catch(() => {});
+  }
+  if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null;
+  const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
+  for (const canvas of panel?.querySelectorAll('canvas') || []) canvas.width = canvas.height = 0;
+  // Capture only these generations. Never await an external lane tail or work
+  // from a subsequent result; all already-started event work settles here.
+  const drains = captured.map((record) => drainRecord(record, reportFailure));
+  return Promise.allSettled(drains).then((settled) => { const failed = settled.find((value) => value.status === 'rejected'); if (failed) throw failed.reason; });
+}
 
 export function ensureWorkspaceStyles() {
   if (document.getElementById('documentWorkspaceStyles')) return;
   const link = document.createElement('link'); link.id = 'documentWorkspaceStyles'; link.rel = 'stylesheet'; link.href = '/css/document-workspace.css'; document.head.appendChild(link);
 }
 
-export async function showDocumentResult(artifact, { session, download, adopt, imageWorkLane } = {}) {
+export function showDocumentResult(artifact, options = {}) {
+  const record = { generation: null, work: new Set(), tasks: new Set(), cleanup: new Set(), failedTasks: new Set(), errors: [], reporting: null, retrying: null };
+  previews.add(record);
+  return track(record, showResult(artifact, options, record));
+}
+
+async function showResult(artifact, { session, download, adopt, imageWorkLane } = {}, record) {
   ensureWorkspaceStyles();
   const generation = ++currentGeneration;
+  record.generation = generation;
+  for (const previous of previews) prune(previous);
   const previousTask = activeTask;
   activeTask = null;
-  try { await previousTask?.destroy(); } catch { /* previous preview cleanup */ }
+  const previousRecord = [...previews].find((value) => value.tasks.has(previousTask));
+  if (previousTask) await retire(previousRecord || record, previousTask);
+  if (generation !== currentGeneration) return null;
+  await cleanupBeforeLoad(generation);
   if (generation !== currentGeneration) return null;
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
   let panel = document.getElementById('documentResult');
@@ -64,11 +154,13 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
   let previewGeneration = 0;
   let pageGeneration = 0;
   let renderTask = null;
+  record.cancelRender = () => renderTask?.cancel();
   let rendering = Promise.resolve();
   const runImageWork = (work) => { if (imageWorkLane) return imageWorkLane.run(work); const next = imageWork.catch(() => {}).then(work); imageWork = next.catch(() => {}); return next; };
   const canvas = document.createElement('canvas');
   const pageStatus = document.createElement('span'); pageStatus.id = 'documentResultPage'; pageStatus.setAttribute('aria-live', 'polite');
   async function renderPage() {
+    if (generation !== currentGeneration) return;
     const loadGeneration = previewGeneration, renderGeneration = ++pageGeneration, requestedPage = pageNumber, requestedDoc = doc;
     renderTask?.cancel(); preview.setAttribute('aria-busy', 'true');
     pageStatus.textContent = `${requestedPage} / ${requestedDoc?.numPages || '…'} · ${t('workspace.loading_page', 'Loading page…')}`;
@@ -76,37 +168,44 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
       if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration || !requestedDoc) return;
       const page = await requestedDoc.getPage(requestedPage);
       if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration) return;
-      const base = page.getViewport({ scale: 1 });
-      const scale = Math.min(1.5, 900 / Math.max(base.width, base.height), Math.sqrt(4000000 / (base.width * base.height)));
-      const viewport = page.getViewport({ scale }); canvas.width = Math.max(1, Math.floor(viewport.width)); canvas.height = Math.max(1, Math.floor(viewport.height));
+      const viewport = boundedViewport(page, { scale: 1.5, maxDimension: 900, maxPixels: 4000000 });
+      canvas.width = Math.max(1, Math.floor(viewport.width)); canvas.height = Math.max(1, Math.floor(viewport.height));
       renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport });
       try { await renderTask.promise; } catch (error) { if (error.name !== 'RenderingCancelledException') throw error; }
       if (generation === currentGeneration && loadGeneration === previewGeneration && renderGeneration === pageGeneration) { pageStatus.textContent = `${requestedPage} / ${requestedDoc.numPages}`; preview.setAttribute('aria-busy', 'false'); canvas.dataset.pdfPage = String(requestedPage); }
     }));
-    return rendering.catch((error) => { if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration) return; throw error; });
+    return track(record, rendering.catch((error) => { if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration) return; throw error; }));
   }
-  async function loadPdf(value) {
+  function loadPdf(value) { return track(record, loadPdfWork(value)); }
+  async function loadPdfWork(value) {
+    if (generation !== currentGeneration) return;
     if (loadedValue === value && doc) return;
     const loadGeneration = ++previewGeneration, previous = activeTask;
     activeTask = null; doc = null; loadedValue = null;
     preview.setAttribute('aria-busy', 'true'); status.textContent = t('workspace.loading_preview', 'Loading actual file preview…');
     renderTask?.cancel();
-    try { await previous?.destroy(); } catch { /* old preview */ }
+    await retire(record, previous);
+    if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
+    await cleanupBeforeLoad(generation);
     if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
     const pdfjs = await ensurePdfJs();
     if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
-    const task = pdfjs.getDocument({ data: value.bytes.slice(), ...PDFJS_ASSET_URLS }); activeTask = task;
+    const task = pdfjs.getDocument({ data: value.bytes.slice(), ...PDFJS_ASSET_URLS }); activeTask = task; record.tasks.add(task);
     let loaded;
     try { loaded = await task.promise; } catch (error) { if (generation !== currentGeneration || loadGeneration !== previewGeneration) return; throw error; }
-    if (generation !== currentGeneration || loadGeneration !== previewGeneration) { await task.destroy(); return; }
+    if (generation !== currentGeneration || loadGeneration !== previewGeneration) { await retire(record, task); return; }
     doc = loaded; loadedValue = value;
     pageNumber = Math.max(1, Math.min(doc.numPages, pageNumber)); canvas.setAttribute('aria-label',displayName(value)); preview.replaceChildren(canvas); await renderPage();
     if (generation === currentGeneration && loadGeneration === previewGeneration) status.textContent = `${value === artifact ? t('workspace.result', 'Result') : t('workspace.original', 'Original')}: ${displayName(value)}. ${t('workspace.preview_ready', 'The actual file is shown below. Download when ready.')}`;
   }
-  async function loadImage(getValue, original) {
+  function loadImage(getValue, original) { return track(record, loadImageWork(getValue, original)); }
+  async function loadImageWork(getValue, original) {
+    if (generation !== currentGeneration) return;
     const loadGeneration = ++previewGeneration, previous = activeTask; activeTask = null; doc = null; loadedValue = null;
     renderTask?.cancel(); preview.setAttribute('aria-busy', 'true');
-    try { await previous?.destroy(); } catch { /* previous PDF preview */ }
+    await retire(record, previous);
+    if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
+    await cleanupBeforeLoad(generation);
     if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
     await runImageWork(async () => {
       const current = () => generation === currentGeneration && loadGeneration === previewGeneration;
@@ -166,9 +265,7 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
 }
 
 export function clearDocumentResult() {
-  currentGeneration++;
-  void activeTask?.destroy().catch(() => {}); activeTask = null;
-  if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null;
-  const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
-  for (const canvas of panel?.querySelectorAll('canvas') || []) canvas.width = canvas.height = 0;
+  void invalidatePreviews(false).catch(() => {});
 }
+
+export function clearDocumentResultAndDrain() { return invalidatePreviews(true); }

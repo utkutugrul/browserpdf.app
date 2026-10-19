@@ -568,3 +568,144 @@ All six corrected paths and six accepted foundation/ZIP-writer hashes remain
 exact through review. No browser, Office display, PDF typography, converter
 route, shared resource integration or completed document service is inferred.
 This accepts pure adapter A for separately reviewed caller integration.
+
+### First Compress route gate and exact canvas classifier
+
+The first isolated Compress/shared-preview gate records 24 passed and two failed
+in 28,066.671 ms, without skipped/flaky cases or top-level errors. All 278
+runtime/test hashes, 22 generated fixtures, configuration and private idle test
+remain exact; all 26 traces exclude the concurrent six DOCX adapter paths.
+Evidence: `/tmp/browserpdf-compress-route-native-first-20261019-results.json`
+and the matching wrapper `final.json`. No global setup or server lifecycle runs.
+Both actual idle tests pass their unchanged byte/request limits. The two failed
+cases remain failed evidence; no clean 26-case result is claimed.
+
+The first artifact test stops at unequal source/result canvas PNGs before its
+download/Use/Reader tail. Root independently decodes both retained PNGs: equal
+695x900 dimensions, 2,659 differing RGB pixels/7,977 channels, maximum channel
+difference83 and equal alpha. The owner then uses the same real retained PDF and
+pinned Chromium151 to reproduce both original PNG SHA-256 values exactly.
+Viewport transforms, loaded fonts and canvas context attributes agree.
+An attached canvas inherits the body's font smoothing, while the detached source
+canvas does not. A scoped attached smoothing override reproduces the source PNG
+exactly, with zero differing channels. The source/result pixel assertion remains
+strict. Diagnostic evidence:
+`/tmp/browserpdf-root-compress-png-diagnostic-20261019/report.json` and
+`/tmp/browserpdf-compress-owner-canvas-diagnostic-20261019/report.json`.
+
+The second failed test observes the old choice-one canvas after clicking
+choice-two, before that actual selection handler settles. Trace evidence supports
+a completion-observer correction, retaining the chosen identity, record count,
+active-native bound and zero-after-drain assertions. Fresh source review also
+finds two absent cases: a failed event-driven native destroy can be bypassed by
+the next preview event, and an inherited encrypted PDF with an empty opening
+password can be rejected instead of retained read-only. Narrow corrections and
+actual regression controls are approved; corrected native acceptance is pending.
+The diagnostic browser is closed before source edits.
+
+The corrected affected native invocation then passes 20/20 in 16,774.643 ms,
+zero skipped/flaky cases or top-level errors. All 283 runtime/test hashes,
+configuration, path inventory, private idle test and 22 generated fixtures stay
+exact; all twenty traces are retained. Source/anti-pattern review separately
+passes at `/tmp/browserpdf-compress-route-corrected-review-20261019.md`, with
+15/15 intake Node cases in 350.723333 ms. Evidence:
+`/tmp/browserpdf-compress-route-native-corrected20-20261019-results.json` and
+its wrapper `final.json`. This is a clean affected twenty-case invocation,
+alongside the retained initial 24/2 result.
+
+Root's additional independent Letter corpus finds a distinct preview mismatch
+on its first native invocation. The strict comparison stops before download;
+no errors/non-GET requests occur and all 283 source hashes remain exact. A new
+classifier retains that mismatch as a failed issue while completing manual
+download, explicit Use and native Reader continuation. The actual 3,753-byte
+output is exactly SHA-256
+`1c08689128a8a3ee1d718c4eb9e9055e3e7cc9d283b6d6b5a089a8f01f02171f`,
+the independently graph/stream/text/pixel/form/URI-inspected core artifact.
+Chosen/current/original/task remain exact throughout Use and Reader. One
+download is deliberate, all source/corpus hashes stay unchanged, and the
+browser closes. The preview issue still makes the classifier fail.
+
+The actual source page is Letter 612x792. Source and result use algebraically
+equal but differently associated scale formulas: the source backing canvas is
+695x899 while the result is 695x900. The approved correction reuses the existing
+boundedViewport helper in the lazy shared result module, keeping the source
+1M/result4M pixel budgets, 900-edge limit, integer floors and cancellation.
+Strict Letter/fractional regressions and a new affected gate remain required.
+Evidence stays under `/tmp/browserpdf-root-compress-native-independent-first-20261019/`
+and `/tmp/browserpdf-root-compress-native-independent-classifier-first-20261019/`.
+
+### Isolated protection interoperability candidate
+
+The exact pdfstudio0.4.0/QPDF12.3.2 candidate has a separate 16/16 compatibility
+proof and 35/35 controls, retaining all earlier Cantoo and QPDF failure prefixes.
+Fixed public generated-factory/FS/callMain decryption, same-length PDF-name
+escape-case normalization and actual ordinary pdf-lib1.17.1 resave preserve the
+inspected graph, metadata, forms, geometry, text and pixels in that bounded
+eight-source corpus. Diagnostic exits2/3, byte-cap and worker-drain controls are
+separate evidence. Report:
+`/tmp/browserpdf-protection-compatibility-20261019/report.md`.
+
+Root independently opens the corrected AES128/256 rich artifacts, adds ordinary
+PDF text and saves/reopens them. Title, form values, page geometry and attachment
+MIME/payload/date remain exact. Each normalized input differs from its low-level
+output at only the single lowercase `f` in `/text#2fplain`, now `/text#2Fplain`.
+The two actual saved edited PDFs and input hashes are retained at
+`/tmp/browserpdf-root-qpdf-compatibility-edit-20261019/report.json`.
+
+Fresh review nevertheless proves two strict-parser gaps: lossy ASCII decoding
+admits high-bit syntax, including an invalid full xref keyword, and a lexical
+real `/Length 2.0` satisfies the claimed integer-only boundary. Those malformed
+acceptances require focused proof corrections before porting. The actual 244
+retained PDF hashes remain exact and the positive corpus is not reclassified.
+Review: `/tmp/browserpdf-protection-compatibility-fresh-review-20261019.md`.
+No production engine, vendor assets, browser/CSP delivery, notice provenance,
+bounded Protect adapter or service UI is accepted by these isolated results.
+
+
+### Compress viewport and independent artifact acceptance
+
+The narrow shared result change now uses the existing boundedViewport helper
+with scale 1.5, a 900-pixel edge and the existing 4M result budget. Source
+rendering, integer floors, native ownership and the accepted compression core
+stay exact. Fresh focused source and anti-pattern review passes at
+`/tmp/browserpdf-compress-route-viewport-fresh-review-20261019.md`.
+
+Root's affected native invocation passes **14/14**, 15,527.44 ms, zero
+skipped/flaky/unexpected cases or top-level errors. The original strict Compress
+case, new Letter and fractional rotated A4 cases, four shared lifecycle cases,
+four result foundation consumers, one image consumer and two idle cases pass.
+All 301 included runtime/test hashes, source inventory, configuration, private
+idle test and 22 generated fixtures stay exact. The five concurrently owned
+new Markdown paths are explicitly excluded and absent from all fourteen actual
+request traces. No globalSetup, server lifecycle or shared fixture writer runs.
+Evidence: `/tmp/browserpdf-compress-route-native-viewport14-20261019/final.json`.
+
+The separate strict original-corpus postfix then passes actual source/result
+PNG equality, manual saved artifact, explicit Use and native Reader. The
+69,950-byte input becomes the independently inspected 3,753-byte output with
+SHA-256 `1c08689128a8a3ee1d718c4eb9e9055e3e7cc9d283b6d6b5a089a8f01f02171f`.
+Original/current/task/history remain correct. There are zero page errors,
+zero non-GET requests and one deliberate download. All 301 included source
+hashes, inventory and independent corpus stay exact; the browser closes.
+Evidence: `/tmp/browserpdf-root-compress-native-independent-postfix-first-20261019/report.json`.
+The first 26-case result, original Letter failure and failed classifier remain
+retained. This accepts the structural route checkpoint, with searchable/form
+capability admission, optional raster mode, full locales and final service
+acceptance still open.
+
+### Shared Markdown independent artifact checkpoint
+
+The document owner freezes five new parser/serializer/test/doc paths after
+25/25 scoped portable checks in 1,250.028917 ms and a corrected 200/200 literal
+style corpus. Original first18 14/4 and first literal193/7 results are retained.
+This is shared adapter evidence, with no route, PDF layout or font acceptance.
+
+Root independently takes the retained structural Unicode DOCX through the
+accepted DOCX reader, new Markdown writer, actual saved local Markdown/image
+files and new Markdown reader. The readable 908-byte Markdown has SHA-256
+`0f87b676e5100c32101fd61e91d969e49f2d8c2e15ba721f4d97186f28dc19db`.
+Literal text, coalesced run styles, heading/list sequence and actual image bytes
+remain exact. Expected list identity, table header/width and image size limits
+are finite reported differences. Source and nine-module closure hashes remain
+exact. Report: `/tmp/browserpdf-root-markdown-independent-first-20261019/report.json`.
+Fresh source review remains required before accepting this pure checkpoint.

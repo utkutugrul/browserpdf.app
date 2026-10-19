@@ -1,286 +1,116 @@
 'use strict';
 
-import { ensurePdfJs, ensurePdfLib, PDFJS_ASSET_URLS } from './lib-loader.js';
-import { takeChainedFile } from './tool-ui.js';
+import * as ui from './tool-ui.js';
 import { t } from './i18n.js';
 
-const LOW = { scale: 0.85, quality: 0.55 };
-const MED = { scale: 1.3, quality: 0.78 };
-const HIGH = { scale: 2.0, quality: 0.9 };
-
-function levelForSlider(value) {
-  if (value <= 50) {
-    const t = value / 50;
-    return { scale: LOW.scale + (MED.scale - LOW.scale) * t, quality: LOW.quality + (MED.quality - LOW.quality) * t };
-  }
-  const t = (value - 50) / 50;
-  return { scale: MED.scale + (HIGH.scale - MED.scale) * t, quality: MED.quality + (HIGH.quality - MED.quality) * t };
+const byId = (id) => document.getElementById(id);
+const sameOwner = (a, b) => a.taskId === b.taskId && a.revision === b.revision && a.generation === b.generation;
+let intent = 0, candidate = null, accepted = null, runtimePromise, workspacePromise, runtimeAttempt = 0, workspaceAttempt = 0, cleanup = Promise.resolve();
+let lastSelection = null;
+const retiringWorkspaces = new Set();
+function loadRuntime() {
+  return runtimePromise ||= Promise.all([
+    import(runtimeAttempt ? `./compress-intake.js?retry=${runtimeAttempt}` : './compress-intake.js'),
+    import('./core/image-intake.js'), import('./lib-loader.js'),
+  ]).then(([intake, native, engines]) => {
+    const lane = native.createImageWorkLane();
+    return { lane, engines, intake: intake.createCompressIntake({ session: ui.documentSession, ensureSession: ui.ensureDocumentSession, ensurePdfLib: engines.ensurePdfLib, ensurePdfJs: engines.ensurePdfJs, pdfjsAssets: engines.PDFJS_ASSET_URLS, lane }) };
+  }).catch((error) => { runtimePromise = null; runtimeAttempt++; throw error; });
 }
-
-function labelForSlider(value) {
-  if (value < 20) return t('compress.level_smallest', 'Smallest file');
-  if (value < 40) return t('compress.level_smaller', 'Smaller file');
-  if (value <= 60) return t('compress.level_balanced', 'Balanced');
-  if (value < 80) return t('compress.level_good', 'Good quality');
-  return t('compress.level_highest', 'Highest quality');
+function loadWorkspace() {
+  return workspacePromise ||= import(workspaceAttempt ? `./compress-workspace.js?retry=${workspaceAttempt}` : './compress-workspace.js').catch((error) => { workspacePromise = null; workspaceAttempt++; throw error; });
 }
-
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const optionsSection = document.getElementById('optionsSection');
-const fileSummary = document.getElementById('fileSummary');
-const compressBtn = document.getElementById('compressBtn');
-const levelSlider = document.getElementById('levelSlider');
-const levelLabel = document.getElementById('levelLabel');
-const estimateLabel = document.getElementById('estimateLabel');
-const resultSummary = document.getElementById('resultSummary');
-const progressSection = document.getElementById('progressSection');
-const progressStatus = document.getElementById('progressStatus');
-const progressFill = document.getElementById('progressFill');
-const errorSection = document.getElementById('errorSection');
-const errorText = document.getElementById('errorText');
-
-let currentBytes = null;
-let currentFileName = 'document';
-let currentPdfDoc = null;
-let numPages = 0;
-let estimateToken = 0;
-let estimateDebounceTimer = null;
-
-function showError(message) {
-  errorText.textContent = message;
-  errorSection.hidden = false;
+function removeWorkflow() {
+  const url = new URL(location.href); url.searchParams.delete('workflow'); url.searchParams.delete('file');
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
-function hideError() {
-  errorSection.hidden = true;
-  errorText.textContent = '';
+function status(message) { byId('compressionStatus').textContent = message; }
+function controls() { byId('clearBtn').hidden = !candidate && !accepted; byId('cancelIntakeBtn').hidden = !candidate; }
+async function openAccepted(record) {
+  if (record !== accepted || record.paused || record.controller.signal.aborted) return;
+  if (record.workspace) { await record.workspace.resume(); return; }
+  if (record.opening) return record.opening;
+  record.opening = (async () => {
+    const module = await loadWorkspace();
+    if (record !== accepted || record.paused || record.controller.signal.aborted || !sameOwner(ui.documentSession.snapshot(), record.data.owner)) return;
+    record.workspace = module.createCompressWorkspace({ admitted: record.data, lane: record.runtime.lane, engines: record.runtime.engines, signal: record.controller.signal,
+      isCurrent: () => record === accepted && !record.paused && !record.controller.signal.aborted,
+    });
+    await record.workspace.open();
+  })().finally(() => { record.opening = null; });
+  return record.opening;
 }
-function setProgress(percent, text) {
-  progressFill.style.setProperty('--progress', String(percent));
-  progressStatus.textContent = text;
+function showFailure(error) { if (error.name !== 'AbortError') { ui.showError(error.message || String(error)); byId('retryIntakeBtn').hidden = false; } }
+async function drainBeforeIntake(record, runtime) {
+  // Capture and invalidate shared work outside its own native lane.
+  const resultCleanup = ui.clearResultAndDrain();
+  resultCleanup.catch(() => {});
+  await cleanup; await resultCleanup;
+  for (const workspace of [...retiringWorkspaces]) { await workspace.drained(); retiringWorkspaces.delete(workspace); }
+  await record?.workspace?.drained(); await runtime.intake.drained(); await runtime.lane.drained();
 }
-function formatBytes(bytes) {
-  if (bytes < 1000) return t('compress.js_size_b', '{size} B', { size: bytes });
-  if (bytes < 1000 * 1000) return t('compress.js_size_kb', '{size} KB', { size: (bytes / 1000).toFixed(1) });
-  return t('compress.js_size_mb', '{size} MB', { size: (bytes / (1000 * 1000)).toFixed(1) });
-}
-function checkPdfMagicBytes(bytes) {
-  return bytes.length >= 5 && String.fromCharCode(...bytes.subarray(0, 5)) === '%PDF-';
-}
-
-// Estimating from page 1 alone was wildly wrong on real documents (a light
-// cover page in front of dense scans understated the output size 30x), so
-// sample several pages spread across the document instead.
-const ESTIMATE_SAMPLE_PAGES = 5;
-// What pdf-lib adds around the raw JPEGs: page + XObject dictionaries and the
-// content stream per page, header/xref/trailer per document. Measured against
-// real output, not guessed.
-const ESTIMATE_PAGE_OVERHEAD = 300;
-const ESTIMATE_DOC_OVERHEAD = 1000;
-
-function samplePageNumbers(total) {
-  if (total <= ESTIMATE_SAMPLE_PAGES) return Array.from({ length: total }, (_, i) => i + 1);
-  const picks = new Set();
-  for (let k = 0; k < ESTIMATE_SAMPLE_PAGES; k++) {
-    picks.add(1 + Math.round((k * (total - 1)) / (ESTIMATE_SAMPLE_PAGES - 1)));
-  }
-  return [...picks].sort((a, b) => a - b);
-}
-
-async function pageJpegSize(pageNum, level) {
-  const page = await currentPdfDoc.getPage(pageNum);
-  const renderViewport = page.getViewport({ scale: level.scale });
-  const canvas = document.createElement('canvas');
-  canvas.width = renderViewport.width;
-  canvas.height = renderViewport.height;
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', level.quality));
-  return blob.size;
-}
-
-async function estimateSize() {
-  if (!currentPdfDoc) return;
-  const myToken = ++estimateToken;
-  const level = levelForSlider(Number(levelSlider.value));
-  estimateLabel.textContent = t('compress.js_estimating', 'Estimating…');
+async function choose(file, { inherited = false, initialToken } = {}) {
+  if (!file || (initialToken !== undefined && initialToken !== intent)) return;
+  const token = ++intent, controller = new AbortController(), prior = accepted;
+  lastSelection = { file, inherited };
+  candidate?.controller.abort(); candidate = { controller, token, file, inherited };
+  if (prior) { prior.paused = true; prior.workspace?.pause(); }
+  const expectedOwner = ui.documentSession.snapshot();
+  const current = () => token === intent && candidate?.controller === controller && !controller.signal.aborted;
+  const check = () => { controller.signal.throwIfAborted(); if (!current() || !sameOwner(ui.documentSession.snapshot(), expectedOwner)) throw new DOMException('Selection replaced.', 'AbortError'); };
+  ui.hideError(); status(t('compress.structural_validating', 'Validating the PDF before replacing the current task…')); controls();
   try {
-    const samples = samplePageNumbers(numPages);
-    const sizes = [];
-    for (const pageNum of samples) {
-      sizes.push(await pageJpegSize(pageNum, level));
-      if (myToken !== estimateToken) return; // superseded by a newer drag position
+    const runtime = await loadRuntime(); check();
+    await drainBeforeIntake(prior, runtime); check();
+    const data = await runtime.intake.stage(file, { signal: controller.signal, isCurrent: current, expectedOwner, allowInheritedReadonly: inherited });
+    if (!current() || !sameOwner(ui.documentSession.snapshot(), data.owner)) return;
+    candidate = null;
+    prior?.controller.abort(); prior?.workspace?.dispose();
+    const record = { data, runtime, controller: new AbortController(), paused: false, workspace: null, opening: null };
+    accepted = record;
+    if (!inherited) removeWorkflow();
+    ui.showDocumentIdentity(); status(t('compress.structural_opening', 'Opening the current input preview…')); controls();
+    await openAccepted(record);
+  } catch (error) {
+    if (!current()) { if (token === intent && accepted?.data.owner && sameOwner(ui.documentSession.snapshot(), accepted.data.owner) && accepted !== prior) showFailure(error); return; }
+    candidate = null; showFailure(error);
+    if (error.code === 'COMPRESS_NATIVE_CLEANUP' || error.code === 'DOCUMENT_PREVIEW_CLEANUP') return;
+    if (prior === accepted) {
+      if (prior) { prior.paused = false; try { await openAccepted(prior); showFailure(error); } catch (resumeError) { showFailure(resumeError); } }
+      else status(t('compress.structural_choose', 'Choose a PDF to optimize.'));
     }
-
-    let jpegTotal;
-    if (samples.length >= numPages) {
-      jpegTotal = sizes.reduce((a, b) => a + b, 0);
-    } else {
-      // Page 1 only stands for itself (covers are unrepresentative); the other
-      // samples stand in for the rest of the document.
-      const rest = sizes.slice(1);
-      const restMean = rest.reduce((a, b) => a + b, 0) / rest.length;
-      jpegTotal = sizes[0] + restMean * (numPages - 1);
-    }
-    const estimatedTotal = Math.round(jpegTotal + ESTIMATE_PAGE_OVERHEAD * numPages + ESTIMATE_DOC_OVERHEAD);
-    const originalSize = currentBytes.length;
-    const change = Math.round((1 - estimatedTotal / originalSize) * 100);
-    estimateLabel.textContent =
-      change > 0
-        ? t('compress.js_estimate_smaller', 'Estimated: ~{size} (~{change}% smaller)', { size: formatBytes(estimatedTotal), change })
-        : t('compress.js_estimate_no_shrink', 'Estimated: ~{size} (may not shrink at this level)', { size: formatBytes(estimatedTotal) });
-  } catch (err) {
-    console.warn('Size estimate failed:', err);
-    if (myToken === estimateToken) estimateLabel.textContent = '';
-  }
+  } finally { if (token === intent) { if (candidate?.controller === controller) candidate = null; controls(); } }
 }
-
-levelSlider.addEventListener('input', () => {
-  levelLabel.textContent = labelForSlider(Number(levelSlider.value));
-  if (!currentPdfDoc) return;
-  // Invalidate any in-flight estimate immediately: it was started for an older
-  // slider position and would otherwise overwrite the label with a stale value
-  // while the debounced re-estimate is still pending.
-  estimateToken++;
-  estimateLabel.textContent = t('compress.js_estimating', 'Estimating…');
-  clearTimeout(estimateDebounceTimer);
-  estimateDebounceTimer = setTimeout(estimateSize, 250);
+byId('retryIntakeBtn').addEventListener('click', () => {
+  byId('retryIntakeBtn').hidden = true;
+  const token = intent, record = accepted;
+  if (record) void (async () => { const runtime = await loadRuntime(); await drainBeforeIntake(record, runtime); if (token !== intent || record !== accepted) return; record.paused = false; await openAccepted(record); })().catch(showFailure);
+  else if (lastSelection) void choose(lastSelection.file, { inherited: lastSelection.inherited });
 });
-
-async function handleFile(file) {
-  hideError();
-  optionsSection.hidden = true;
-  resultSummary.hidden = true;
-  estimateToken++; // a previous file's in-flight estimate must not write here
-  estimateLabel.textContent = '';
-  currentPdfDoc = null;
-
-  const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  if (!looksLikePdf) {
-    showError(t('common.js_err_not_pdf', 'Please select a PDF file.'));
-    return;
+byId('cancelIntakeBtn').addEventListener('click', () => {
+  intent++; candidate?.controller.abort(); candidate = null;
+  if (accepted) {
+    const token = intent, record = accepted;
+    void (async () => { await drainBeforeIntake(record, record.runtime); if (token !== intent || record !== accepted) return; record.paused = false; await openAccepted(record); })().catch(showFailure);
   }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!checkPdfMagicBytes(bytes)) {
-    showError(t('common.js_err_invalid_pdf', 'This file does not look like a valid PDF.'));
-    return;
-  }
-  currentBytes = bytes;
-  currentFileName = file.name.replace(/\.pdf$/i, '') || 'document';
-  fileSummary.textContent = t('compress.js_file_summary', '{name} ({size})', { name: file.name, size: formatBytes(file.size) });
-
-  progressSection.hidden = false;
-  setProgress(0, t('common.js_loading_pdf', 'Loading PDF…'));
-  try {
-    const pdfjs = await ensurePdfJs((msg) => setProgress(0, msg));
-    const loadingTask = pdfjs.getDocument({ data: bytes.slice(), ...PDFJS_ASSET_URLS });
-    currentPdfDoc = await loadingTask.promise;
-    numPages = currentPdfDoc.numPages;
-    optionsSection.hidden = false;
-    estimateSize();
-  } catch (err) {
-    console.error(err);
-    showError(err?.message || t('common.js_err_read', 'Could not read this PDF.'));
-  } finally {
-    progressSection.hidden = true;
-  }
-}
-
-dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    fileInput.click();
-  }
+  else status(t('compress.structural_cancelled', 'Selection canceled. Choose a PDF to continue.'));
+  controls();
 });
-['dragenter', 'dragover'].forEach((evt) =>
-  dropzone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    dropzone.classList.add('dragover');
-  })
-);
-['dragleave', 'drop'].forEach((evt) =>
-  dropzone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-  })
-);
-dropzone.addEventListener('drop', (e) => {
-  const file = e.dataTransfer.files?.[0];
-  if (file) handleFile(file);
+byId('clearBtn').addEventListener('click', () => {
+  intent++; candidate?.controller.abort(); candidate = null;
+  const prior = accepted; accepted = null; prior?.controller.abort(); prior?.workspace?.dispose();
+  if (prior?.workspace) retiringWorkspaces.add(prior.workspace);
+  const resultCleanup = ui.clearResultAndDrain();
+  ui.documentSession.clear(); removeWorkflow(); byId('compressionWorkspace').replaceChildren(); byId('compressionWorkspace').hidden = true;
+  byId('retryIntakeBtn').hidden = true; ui.hideError(); status(t('compress.structural_choose', 'Choose a PDF to optimize.')); controls();
+  lastSelection = null;
+  const pendingCleanup = Promise.all([resultCleanup, prior?.workspace?.drained(), prior?.runtime.intake.drained(), prior?.runtime.lane.drained()]).then(() => {});
+  cleanup = pendingCleanup.catch(() => {}); pendingCleanup.catch(showFailure);
 });
-fileInput.addEventListener('change', () => {
-  const file = fileInput.files?.[0];
-  if (file) handleFile(file);
-  fileInput.value = '';
-});
-
-compressBtn.addEventListener('click', async () => {
-  if (!currentBytes || !currentPdfDoc) return;
-  hideError();
-  resultSummary.hidden = true;
-  progressSection.hidden = false;
-  compressBtn.disabled = true;
-  levelSlider.disabled = true;
-  const originalSize = currentBytes.length;
-
-  try {
-    setProgress(0, t('common.js_loading_pdflib', 'Loading pdf-lib…'));
-    const pdfDoc = currentPdfDoc;
-
-    const pdfLib = await ensurePdfLib((msg) => setProgress(0, msg));
-    const outDoc = await pdfLib.PDFDocument.create();
-    const level = levelForSlider(Number(levelSlider.value));
-
-    for (let i = 1; i <= numPages; i++) {
-      setProgress(Math.round((i / numPages) * 90), t('compress.js_compressing_page', 'Compressing page {i}/{n}', { i, n: numPages }));
-      const page = await pdfDoc.getPage(i);
-      const baseViewport = page.getViewport({ scale: 1 });
-      const renderViewport = page.getViewport({ scale: level.scale });
-      const canvas = document.createElement('canvas');
-      canvas.width = renderViewport.width;
-      canvas.height = renderViewport.height;
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', level.quality));
-      const jpgBytes = new Uint8Array(await blob.arrayBuffer());
-      const embedded = await outDoc.embedJpg(jpgBytes);
-      const outPage = outDoc.addPage([baseViewport.width, baseViewport.height]);
-      outPage.drawImage(embedded, { x: 0, y: 0, width: baseViewport.width, height: baseViewport.height });
-    }
-
-    setProgress(95, t('common.js_saving', 'Saving…'));
-    const outBytes = await outDoc.save();
-
-    const blob = new Blob([outBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentFileName}-compressed.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    const change = Math.round((1 - outBytes.length / originalSize) * 100);
-    resultSummary.textContent =
-      change > 0
-        ? t('compress.js_result_smaller', '{from} → {to} ({change}% smaller)', { from: formatBytes(originalSize), to: formatBytes(outBytes.length), change })
-        : t('compress.js_result_no_shrink', '{from} → {to} (this file didn\'t get smaller at this level; try "Smaller file")', { from: formatBytes(originalSize), to: formatBytes(outBytes.length) });
-    resultSummary.hidden = false;
-
-    setProgress(100, t('common.js_done', 'Done.'));
-    setTimeout(() => {
-      progressSection.hidden = true;
-    }, 1200);
-  } catch (err) {
-    console.error(err);
-    showError(err?.message || t('compress.js_err_compress', 'Something went wrong while compressing this PDF.'));
-    progressSection.hidden = true;
-  } finally {
-    compressBtn.disabled = false;
-    levelSlider.disabled = false;
-  }
-});
-
-takeChainedFile().then((file) => {
-  if (file) handleFile(file);
-});
+ui.wireDropzone(byId('dropzone'), byId('fileInput'), (files) => { byId('retryIntakeBtn').hidden = true; void choose(files[0]); });
+// Capture before optional descriptor import and every initial READ.
+const initialToken = intent, initialOwner = ui.documentSession.snapshot(), initial = new AbortController();
+const ownsInitial = () => initialToken === intent && sameOwner(ui.documentSession.snapshot(), initialOwner);
+void ui.takeChainedFile({ signal: initial.signal, isCurrent: ownsInitial }).then((file) => {
+  if (file && ownsInitial()) return choose(file, { inherited: true, initialToken });
+}).catch((error) => { if (ownsInitial()) showFailure(error); });

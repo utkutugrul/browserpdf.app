@@ -1,0 +1,12 @@
+#compressionWorkspace { display: grid; gap: 1rem; min-width: 0; }
+#compressionWorkspace[hidden], #compressionWorkspace [hidden] { display: none !important; }
+#compressionWorkspace .compression-source, #compressionWorkspace .compression-readonly { min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; }
+#compressionWorkspace .compression-identity, #compressionWorkspace .document-result p, #compressionWorkspace .document-result li { overflow-wrap: anywhere; }
+#compressionWorkspace .compression-canvas { overflow: auto; max-height: 70vh; background: var(--bg); }
+#compressionWorkspace canvas { display: block; max-width: 100%; height: auto; margin: auto; -webkit-font-smoothing: auto; }
+#compressionWorkspace .btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+#compressionWorkspace label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+#compressionWorkspace input[type="number"] { width: 5.5rem; max-width: 100%; }
+#compressionWorkspace .compression-page-status { margin-block: .65rem; }
+#compressionWorkspace .compression-result-host { min-width: 0; }
+@media (max-width: 390px) { #compressionWorkspace .btn { max-width: 100%; white-space: normal; } #compressionWorkspace .compression-source { padding: .65rem; } }

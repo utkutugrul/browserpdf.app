@@ -55,7 +55,8 @@ export const documentOperations = {
 export { createOperationScope };
 const loadStoreModule = retryableModule('./core/workflow-store.js');
 const loadWorkflowStore = async () => (await loadStoreModule()).createWorkflowStore();
-let resultModule;
+let resultModule, resultUi;
+const resultWork = new Set();
 let pendingResult = null;
 let resultGeneration = 0;
 let resultGroupGeneration = 0;
@@ -63,7 +64,7 @@ let activeRail = null, railIntent = 0;
 const sameOwner = (a, b) => a.taskId === b.taskId && a.revision === b.revision && a.generation === b.generation;
 let intakeGeneration = 0;
 const loadResultModule = retryableModule('./document-result.js');
-const loadResultUi = () => (resultModule ||= loadResultModule().catch((error) => { resultModule = null; throw error; }));
+const loadResultUi = () => (resultModule ||= loadResultModule().then((ui) => { resultUi = ui; return ui; }).catch((error) => { resultModule = null; throw error; }));
 const loadWorkspaceSupport = retryableModule('./document-workspace-support.js');
 const loadHandoffSupport = retryableModule('./document-handoff.js');
 const workspaceEnvironment = { ensureDocumentSession, documentSession, t, looksLikePdfFile, checkPdfMagicBytes, stashCompositionForChain };
@@ -98,7 +99,15 @@ export async function restoreCompositionHistory(kind, options = {}) {
   return (await loadWorkspaceSupport()).restoreCompositionHistory(kind, options, workspaceEnvironment);
 }
 
-export async function reviewResult(bytes, name, options = {}) {
+export function reviewResult(bytes, name, options = {}) {
+  return trackResult(reviewResultWork(bytes, name, options));
+}
+function trackResult(promise) {
+  resultWork.add(promise);
+  promise.then(() => resultWork.delete(promise), () => resultWork.delete(promise));
+  return promise;
+}
+async function reviewResultWork(bytes, name, options = {}) {
   if (options.operation && !options.operation.isCurrent()) return Promise.resolve(null);
   if (options.groupOwner !== undefined && options.groupOwner !== resultGroupGeneration) return null;
   activeRail = null; railIntent++;
@@ -130,18 +139,28 @@ export async function reviewResult(bytes, name, options = {}) {
   }));
 }
 
-export function clearResult() {
+function invalidateResult() {
   pendingResult = null;
   activeRail = null; railIntent++;
   resultGeneration++;
   resultGroupGeneration++;
   const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
-  if (resultModule) void resultModule.then((ui) => ui.clearDocumentResult()).catch(() => {});
   const row = document.getElementById('chainRow'); if (row) row.hidden = true;
   document.getElementById('documentResultGroup')?.remove();
 }
 
-export async function reviewResults(results, options = {}) {
+export function clearResult() { invalidateResult(); resultUi?.clearDocumentResult(); }
+
+export function clearResultAndDrain() {
+  invalidateResult();
+  const captured = Promise.allSettled([...resultWork]);
+  const native = resultUi?.clearDocumentResultAndDrain();
+  native?.catch(() => {});
+  return captured.then(() => native);
+}
+
+export function reviewResults(results, options = {}) { return trackResult(reviewResultsWork(results, options)); }
+async function reviewResultsWork(results, options = {}) {
   if (options.operation && !options.operation.isCurrent()) return null;
   if (!Array.isArray(results) || !results.length || results.length > 20) throw new RangeError('Review between 1 and 20 result files.');
   const total = results.reduce((sum, value) => sum + value.bytes.byteLength, 0);
