@@ -1,0 +1,91 @@
+{
+  "package": "pdfstudio",
+  "version": "0.4.0",
+  "registryIntegrity": "sha512-yFHlp/VHxKmrYxYA45ACkh24c4mCBa/Al3EmajnlBnN9FzfynZz63sR2do2kBH34XoTAQSXy+ywijAcq0DUcSQ==",
+  "sourceCommit": "c5c1f2d9f378199d1e2d333dbe4ca20e9ff737ad",
+  "engineVersion": "12.3.2",
+  "engineVersionEvidence": "Observed documented generated module version diagnostic and matching committed WASM/glue Git blobs.",
+  "compilerIdentity": "unproved",
+  "runtimeLicenseReferenceCommit": "30bbb45939d0136eae1637dd17146cc02ee1658f",
+  "sourceGitBlobs": {
+    "qpdf.js": "49fc48e71447d5b9e1ddafc5f6b748864ec13cca",
+    "qpdf.wasm": "9731f64b54813b631c07ec46fc2183331de93874"
+  },
+  "assets": [
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/qpdf.js",
+      "bytes": 62770,
+      "sha256": "30f0a3407e6f6058def17d6080f94a797a53c03afd6b93f2e9ebf29881dce037",
+      "integrity": "sha384-SwmYYv6pk3pPUYNbUbKu/7Eo0FAJkWd3mjGw5OQOle+uOtStGwvLRt9PzAcpOXfP"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/qpdf.wasm",
+      "bytes": 2244725,
+      "sha256": "48a6044e2b5abb32295fa1682e26f20338181bb2423b2ab6e8456b7c4a8c9756",
+      "integrity": "sha384-UemhVPGx1Rw4X1L+XFylC8BC8tdxGItz6QoomcZo8GI/S+kgSaAQ4pvhDGAS5AAu"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.pdfstudio.txt",
+      "toolchainReferenceOnly": false,
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "integrity": "sha384-II9e1ieUDl5AxyiVq3/FflTua1Sr0kMJ25e6imG7rXg7SiAsA2VemsvEqVsLqM7/"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.qpdf.txt",
+      "toolchainReferenceOnly": false,
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "integrity": "sha384-II9e1ieUDl5AxyiVq3/FflTua1Sr0kMJ25e6imG7rXg7SiAsA2VemsvEqVsLqM7/"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/NOTICE.qpdf.md",
+      "toolchainReferenceOnly": false,
+      "bytes": 2729,
+      "sha256": "b207f65a9e5491195ded63b2941199b19a4d30148871f2742c88eae7bfc513a6",
+      "integrity": "sha384-3zEl1K0H7weNxZ5aWFmtr/2PzxBhlgqMGbloOEFIgQTgIsD6Yf58Q+R1Cvoo+jm3"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.zlib-1.3.2.txt",
+      "toolchainReferenceOnly": false,
+      "bytes": 1002,
+      "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+      "integrity": "sha384-xVBRwUW3dSJeV/8NG0bQx1FFay+qXiC3GYf6QZwlXoA6zZLjvNbLb8K4jHxyGYzi"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/README.jpeg-9f.txt",
+      "toolchainReferenceOnly": false,
+      "bytes": 18719,
+      "sha256": "7c25493a9f64fed34d01445467341bda77bc1cdbeccbe33558659ef173fb9ff2",
+      "integrity": "sha384-A9eVgFDnCdwEbJ6bTpRGn1hBjbaaT1we77yDIDkl0tlwlRJM+/UvEVjyscfWcpqL"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.emscripten.txt",
+      "toolchainReferenceOnly": true,
+      "bytes": 5093,
+      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
+      "integrity": "sha384-8NU/vOpkEb1GXzEgJG4rm9OkH0NS14T44WXVcpspzP+fdlbQqQJjMRztS/fj+lMC"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/COPYRIGHT.musl.txt",
+      "toolchainReferenceOnly": true,
+      "bytes": 6196,
+      "sha256": "b870108ec5e7790e9f9919064f1b9421d62d5f9b0e6c230c6adf7ea2da62e97b",
+      "integrity": "sha384-5RPmSm7d8efkD003mGS8EHNmTCMBrJh4L1VZWpHKAq5wJSElSL4+48zzjxpTEbHe"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.libcxx.txt",
+      "toolchainReferenceOnly": true,
+      "bytes": 16703,
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+      "integrity": "sha384-s+2gRF9W+Bn+g4mHDKQGKWppcPnX1j3fpdDSYqPljR12e11tBncXZ6TYfBO8o1As"
+    },
+    {
+      "path": "public/vendor/pdfstudio-0.4.0/LICENSE.libcxxabi.txt",
+      "toolchainReferenceOnly": true,
+      "bytes": 16706,
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+      "integrity": "sha384-/LLt91oCs2C5kQsNmkm0uLEjzHPYIZsf7eMdVRE0IDTYh1WtneA2zxDEk8tERoAJ"
+    }
+  ]
+}

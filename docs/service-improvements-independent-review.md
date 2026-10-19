@@ -784,3 +784,39 @@ probe JSON files. A narrow genuine-brand/captured-intrinsic/independent-cleanup
 correction is approved. The first native and independent artifact results
 predate this correction; they do not close that finding. Protection engine
 acceptance and both Protect/Unlock route/UI tasks remain open.
+
+
+### Protection engine checkpoint acceptance
+
+The signal cleanup finding is closed by genuine native signal brand checks,
+captured native aborted/listener operations, an immutable admitted option
+snapshot and independent finite cleanup steps. A failed actual worker stop
+still fences a successor. Targeted policy/loader tests pass 22/22; independent
+copies of both original failure probes now return finite errors and reach
+successor asset work. Original raw-error/permanent-busy results stay retained.
+Focused review passes at
+`/tmp/browserpdf-protection-production-signal-corrected-review-20261019.md`.
+Engine, serializer, worker, prepared browser cases and all vendor files remain
+byte-identical; only policy/loader, their tests and the checkpoint doc change.
+
+Root then runs the three affected actual protection cases on the corrected
+source: **3/3 PASS**, 3,425.475 ms, zero skipped/flaky/unexpected cases or
+top-level errors. All 310 included runtime/test hashes, path inventory,
+configuration, private idle test and 22 fixtures remain exact. Three traces
+are retained. Existing server only, no globalSetup, server lifecycle or fixture
+generation. The browser closes. Evidence:
+`/tmp/browserpdf-protection-native-signal-corrected3-20261019/final.json`.
+The earlier Root AES-128/AES-256 artifacts remain separate pre-correction
+semantic evidence for unchanged engine/serializer code, without an unnecessary
+repeat or a claim that they were generated after this correction.
+
+This accepts the exact 24-path unreachable engine distribution and owned
+policy/worker/loader checkpoint. Final documentation-only reconciliation leaves
+its other 23 paths exact. The pinned JS/WASM and nine copied notice materials,
+13-file distribution, all 328 old PDFs, 99 evidence files, audit40 and frozen
+isolated parser stay unchanged. The actual CSP, verified Blob module/WASM,
+abort/overlap/stale/integrity and positive successor behavior are now supported
+by native execution. Compiler identity remains honestly unproved provenance;
+no hard native heap or browser termination acknowledgement is claimed.
+Protect and Unlock route/UI, private encrypted preview, explicit adoption,
+finite return intent, full locales and final service acceptance remain open.
