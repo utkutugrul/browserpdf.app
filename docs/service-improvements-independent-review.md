@@ -1973,3 +1973,65 @@ must explicitly account for retained extraction sidecars and their ownership
 handoff. The three service workspaces, source preview, editable order, original
 PDF OCR handoff, locale coverage and final service20/21/23/all32 gates remain
 open. No production deployment occurs.
+
+## Literal spreadsheet reader and intake checkpoint, 2026-10-19
+
+The five new pure reader/intake/test/checkpoint paths preserve XLSX raw values,
+source formula caches, date system and separate provenance. CSV fields remain
+literal strings, including leading zeros, formula-looking text and embedded CRLF.
+Unsupported meaningful workbook projections return needs-choice with no usable
+partial model. The public pinned SheetJS 0.18.5 SSF formatter supplies supported
+number displays; the reader does not call XLSX.read or recalculate formulas.
+
+The retained initial nineteen owner controls pass. Fresh review finds three P2s:
+the intake rejects the genuine nineteen-field canonical snapshot, a falsy release
+failure can lose its shared cleanup error or fence, and the final usage callback
+can invalidate ownership after the last check. The same five paths correct these
+cases. Six focused regressions and the original failure replays pass. Independent
+review then passes nine further controls with all sixty-four pins unchanged.
+No broad nineteen-case or earlier model/SSF matrix is repeated.
+Corrected five-file manifest:
+`/tmp/browserpdf-spreadsheet-reader-corrected-20261019/freeze-manifest.json`, SHA-256
+`ffe6a62b634d874fef34ee1bf01faa7c166c221469ee6fc9099b4015314f6064`.
+Independent corrected review:
+`/tmp/browserpdf-spreadsheet-reader-corrected-review-20261019.md`, SHA-256
+`89a716a8665c3d696e9ee07cfdfa454305ed74e90d752c6900ba29e15c33a3eb`.
+
+Root's actual Chromium 151.0.7922.34 gate passes two tests in 1932.557 ms. The
+first uses the real public verified formatter and fourteen real raw-DEFLATE part
+inflations on two independently authored workbooks. Both sheet names, Unicode,
+leading zeros, spaces, uncalculated source formula/cache, the 1904 date, percent
+and decimal displays agree with the independent input manifest. The unsafe 1900
+serial-sixty workbook retains its raw source and reports a blocked date projection
+without inventing a date. The UTF-8 BOM CSV preserves all nine literal cells,
+including CRLF and formula-looking strings. FIRST disposal erases owned buffers
+and releases declared usage while every independent source remains exact.
+
+The second test holds the actual first File arrayBuffer result. Cancellation with
+false leaves that promise and its 252-byte artifact charge live; queued B stays
+unread until the held first operation drains. A never parses or publishes. B is
+accepted through actual tool-ui documentSession adoption with the same task and
+one revision/generation advance. Invalid UTF-8 C preserves B's model, source,
+owner and original. A tiny D succeeds afterward. Each real File is read once,
+the publisher owns its candidate before the intake releases its lease, and the
+final FIRST disposers leave zero owned usage and a cleared canonical session.
+
+Native report:
+`/tmp/browserpdf-root-spreadsheet-native2-20261019/report.json`, SHA-256
+`367109b7e479ee98cf0795dec2d33838c090acb85a5d109ee0c714c22c3bc801`.
+Root independently rechecks the evidence and current source/input/harness bytes:
+`/tmp/browserpdf-root-spreadsheet-native2-verification-20261019.json`, SHA-256
+`11736e08c3621a9b82e266dd3ebfb92b79e9fa217becbc501af852c5a19e4965`,
+651 checks pass. All 508 included source hashes/path inventory, twenty-two
+generated fixtures and private harness files stay unchanged. No skipped/flaky
+case, page error, excluded import or non-GET request occurs. Peak declared
+resource use is 53181470 bytes and seventy-six groups in case one, and 147516
+bytes and twenty-six groups in case two, inside the shared limits.
+
+The fixed private HTML route does not prove production CSP or workspace UI.
+These are controlled literal workbook and CSV cases, not a general spreadsheet
+fidelity, native heap or physical-exit guarantee. The old independent long-sheet
+corpus is unused here. This accepts the pure reader/intake checkpoint only.
+Editable grids, spreadsheet print/export, PDF table extraction, service26/27
+workspaces, full locales and all32 final acceptance remain open. No production
+deployment occurs.
