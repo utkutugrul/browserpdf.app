@@ -1610,3 +1610,121 @@ and the browser closes. Report:
 This accepts the scoped five-path OCR model/writer/test/documentation checkpoint.
 Production engine distribution, OCR editor/route, additional scripts/languages,
 locales and final service-17/all-32 acceptance remain open. No deployment occurred.
+
+### OCR pure checkpoint sync
+
+The accepted five OCR paths and this ledger are committed and feature-pushed as
+`aefec751f244347137941a57bc92e30c44d984a4`, `Add bounded OCR editing and PDF writer`.
+The body is empty, parent is `661fc03cda5370d35e7fed7b86db249235612577`, and tree is
+`df21bc9b0dfac8484535588f1811c4d81260ecec`. Root independently verifies actual remote,
+upstream, exact six changed paths/committed blobs, 436 protected files, ten evidence
+pins, forty untracked audit files, the path set outside 23 mutable exceptions and
+an empty index. Proof:
+`/tmp/browserpdf-root-ocr-pure-checkpoint-remote-verification-20261019.json`, SHA-256
+`63d9e134409d86c00b17de3481f0ae804a23d2169dc81db5724fe969f80161ea`.
+No main push or deployment occurred; the existing deployment workflow triggers
+only on main pushes.
+
+### Pure spreadsheet model and bounded inference acceptance
+
+The first five-path spreadsheet checkpoint supplies a strict sparse typed model,
+immutable source, explicit raw/display/formula/cache distinctions, atomic edits,
+six-version history and bounded view windows. Edits mark remaining formula caches
+unverified and never calculate formulas or infer dates/numbers from literal text.
+The separate inference core consumes already admitted page/item geometry, retains
+exact source text/references and records angled, outside or ambiguous content as
+explicit unplaced data. It does not perform PDF extraction or open workbooks.
+
+The affected owner invocation passes 22/22 in 1065.030375 ms, with four syntax
+checks and nine unchanged protected sources. Earlier failed invocations remain
+retained. Fresh review independently finds a final callback guard P2: an external
+budget callback can abort with false immediately before Apply or Undo mutates
+current/history. Original actual-API reproductions retain those failed outcomes.
+The correction adds callback-free checks after budget/owner callbacks and before
+publication/history mutation, including admission and final initialization.
+
+Five focused owner tests pass in 112.254167 ms, with two syntax checks. Both
+original independent scripts now reject with the exact false reason and preserve
+the previous model/history. Two additional independent held-FIRST-disposer
+controls prove pending usage stays charged until the once-only disposer drains,
+then canonical replacement/disposal rejects without publication. All 37 scoped
+source/evidence checks remain exact. The inference core and its test are unchanged.
+Fresh corrected review:
+`/tmp/browserpdf-spreadsheet-core-corrected-review-20261019.md`, SHA-256
+`2ef90a009312d8c2d4acc669ea7c87d0c78dc8ed400a4d895b9acb129026d2b3`.
+
+The accepted five-path freeze is
+`/tmp/browserpdf-spreadsheet-core-final-guard-corrected-20261019/final-five-manifest.json`,
+SHA-256 `9b3831e206ce5dfbd30cae5895455c1b95e37b5ce707b1e4cd78476c4edb1929`.
+The model is `95efb72e313f808dce8b48f35fdf69387e4fa9a8a2203979df2a33737ce34751`;
+inference is `f97729bcb70fb3a26c33f133f4a17a52df18f91531b458e1feef0a256a5a22fb`.
+The accepted document budget dependency remains unchanged. This accepts only the
+pure model/inference checkpoint. XLSX/CSV admission, SheetJS integration, editable
+route UI, actual PDF extraction, saved workbook/PDF, browser integration, locales
+and final services 26/27 remain open.
+
+### Document UI functional gates and remaining default-layout refinement
+
+Fresh review reproduces four UI P2s: loss of an initial Markdown BOM from immutable
+original bytes, releasing an unproved result panel from inertness, boundary page
+buttons invalidating ready actions without rendering, and stale fulfilled source
+producers missing their first disposer before releasing accounting. The narrow
+correction preserves exact source bytes, separates the readonly display projection,
+keeps failed initial/post-Use panels inert, preserves no-op page readiness and
+captures/drains each fulfilled producer's first disposer before stale/admission
+checks. Nineteen owner controls and the independent original four plus three
+additional controls pass. Fresh scoped review:
+`/tmp/browserpdf-document-ui-corrected-review-20261019.md`, SHA-256
+`13a818c34ac13c2f90b43dc9106e56a128cbb174f9e003b82a3fd6c831fce74a`.
+
+The first actual route run passes 10/11 in 43954.594 ms. Its one failure waits for
+the nonexistent Add Text selector previewCanvas after successful handoff; that
+mode actually uses placementCanvas. A test-only correction keeps all artifact and
+handoff assertions and adds finite canvas/page/current scene-revision and task-ID
+proof. Only that affected case is rerun and passes in 4655.638 ms. The first failed
+run remains exact; a clean new all-eleven invocation is not claimed.
+Evidence: `/tmp/browserpdf-root-document-workspace-native-first-20261019/report.json`
+and `/tmp/browserpdf-root-document-workspace-handoff-native-first-20261019/report.json`,
+the latter SHA-256 `2e35a8cb1f2960b376f2dbca437ad5b33e79ca2d1bfcfe503ccfd1cfca16914f`.
+Both runs preserve all 448 included source hashes/path inventory, 22 generated
+fixtures and private harness files, with no skipped/flaky cases.
+
+Root independently reopens the actual five-page Word and Markdown PDFs. The
+39470-byte Word PDF, SHA-256 `0ff93734f6076d70b6b67e3afc2965d0136648b5a6d9e650e1089e9edb272a7b`,
+has Letter geometry, five used font IDs, literal Unicode and final Page marker 69.
+The 32413-byte Markdown PDF, SHA-256
+`464f7c88380e85544741a736bcdd819e38124cfd104fb622161447b6027b1b48`,
+has A4 landscape geometry, five used font IDs and final Marker 89. Root renders
+and visually inspects the actual saved pages, independently of element screenshots.
+Proof: `/tmp/browserpdf-root-document-native-artifact-inspection-20261019/report.json`,
+SHA-256 `8bb3505e881e4f747c21fcd9128c71c2a533f398828216e03b7ecac956a5750d`.
+
+Independent ZIP CRC and payload inspection verifies exact original/current/ZIP
+Markdown bytes, the two named entries and local PNG signature. Actual original
+and current BOM downloads match at 37 bytes with BOM and CRLF preserved.
+Proof: `/tmp/browserpdf-root-document-native-zip-bom-reconciliation-20261019.json`,
+SHA-256 `c29582ba15e60d4910505fd5ffe9e706868eb0e6791d77665b8ad21130e2e865`.
+
+Root's two additional actual cases pass in 5560.787 ms: explicit plain-Markdown
+Use to the next Markdown converter preserves exact current/original SHA and task,
+and three 320/390-pixel Word/Viewer/converter layouts have no horizontal overflow,
+finite selected-page canvases and ready Download/Use buttons inside the viewport.
+All 448 included source hashes and 22 generated fixtures remain exact. Report:
+`/tmp/browserpdf-root-document-ui-independent-first-20261019/report.json`, SHA-256
+`be855e8ccc4d1d1e38bcac95481a2781d3863ee9d7e05a6b05200b150717461b`.
+The separate idle case passes: Word 49641 bytes/11 requests, both Markdown routes
+49649/11, with no parser/font/PDF workspace loaded before deliberate use.
+
+Root's actual mobile screenshot still exposes too many technical editing controls
+by default. A bounded same-twelve-path refinement now groups advanced controls in
+collapsed sections while retaining the primary source/text/review/Download/Use
+flow and every existing operation. The author owns that DOM/layout-only delta;
+affected source review/native checks and checkpoint acceptance remain pending it.
+Image-bearing standalone Markdown Use stays explicitly unavailable because the
+shared API cannot adopt named sidecar resources; complete ZIP download and PDF
+continuation remain supported. All three service/locales/final rows remain open.
+
+Privacy UI fresh review separately finds restored-page selection, inherited alias
+entry-count admission and original-alias/Redo history-copy reservation P2s.
+The same six-path author is correcting those; the accepted Privacy core remains
+frozen. No Privacy UI native or service acceptance is claimed.
