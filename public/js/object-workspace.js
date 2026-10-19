@@ -1,5 +1,5 @@
 import { ensurePdfJs, ensurePdfLib, PDFJS_ASSET_URLS } from './lib-loader.js';
-import { documentSession, documentOperations, clearResult, reviewResult, offerChain, stashForChain, showDocumentIdentity, showError, hideError, getWorkspaceInput } from './tool-ui.js';
+import { documentSession, documentOperations, clearResult, reviewResult, offerChain, stashForChain, showDocumentIdentity, showError, hideError, getWorkspaceInput, restoreCompositionHistory } from './tool-ui.js';
 import { getLang, t } from './i18n.js';
 import { renderBoundedPage } from './core/bounded-renderer.js';
 import { renderScenePdf, formModel, imageAsset } from './core/object-scene.js';
@@ -51,8 +51,8 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
         const operation = documentOperations.begin();
         const input = await getWorkspaceInput({ operation }); if (!input) return;
         documentSession.publishScene(input.bytes, input.name, { capabilities: input.capabilities });
-        const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities });
-        if (!operation.isCurrent()) return;
+        const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities, operation });
+        if (!operation.isCurrent() || !handoff.isCurrent()) return;
         const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (error) { showError(error.message); busy = false; controls(); }
     });
@@ -377,6 +377,11 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
     try {
       await rendering.catch(() => {});
       if (!operation.isCurrent()) return;
+      const compositionTarget = await restoreCompositionHistory(kind,{ operation });
+      if (compositionTarget) {
+        if (compositionTarget.handoff.isCurrent()) { const { handoff,targetSlug } = compositionTarget,lang = getLang(); navigating = true; location.href = `${lang === 'en' ? '' : '/' + lang}/${targetSlug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`; }
+        return;
+      }
       const target = documentSession.historyTarget(kind); if (!target) return;
       // Render a read-only target first: a failed Undo keeps the complete
       // canonical source, draft, history and redo stacks unchanged.
@@ -394,8 +399,8 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
       if (target.scene) documentSession.publishScene(output.bytes, artifact.name, artifact);
       selected = null; showDocumentIdentity();
       if (!target.scene || target.scene.sourceRef !== source.id) {
-        const handoff = await stashForChain(output.bytes, artifact.name, mode, artifact);
-        if (operation.isCurrent()) { navigating = true; location.href = `${location.pathname}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`; }
+        const handoff = await stashForChain(output.bytes, artifact.name, mode, { ...artifact, operation });
+        if (operation.isCurrent() && handoff.isCurrent()) { navigating = true; location.href = `${location.pathname}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`; }
         return;
       }
       if (mode === 'fill-sign') { buildFields(); $('flattenInput').checked = scene().flatten; }

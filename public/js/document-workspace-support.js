@@ -1,15 +1,21 @@
 // Loaded only for workspace input, extra local sources, or PDF previews.
 // Dependencies use the caller's existing session and validation helpers.
 
-export async function getWorkspaceInput({ bakeScene = true, operation } = {}, { ensureDocumentSession, documentSession }) {
+export async function getWorkspaceInput({ bakeScene = true, bakeComposition = true, operation } = {}, { ensureDocumentSession, documentSession }) {
   await ensureDocumentSession();
   operation?.signal?.throwIfAborted();
   if (operation && !operation.isCurrent()) return null;
   const snapshot = documentSession.snapshot();
   if (!snapshot.current) throw new Error('Open a document first.');
   const scene = documentSession.scene();
+  const composition = documentSession.composition();
   let bytes;
   let capabilities = { ...snapshot.current.capabilities };
+  if (composition && bakeComposition) {
+    const [{ composeImagesPdf }, runtime] = await Promise.all([import('./core/image-composition.js'), import('./lib-loader.js')]);
+    const rendered = await composeImagesPdf(composition, { resource: documentSession.resource, pdfLib: await runtime.ensurePdfLib(), signal: operation?.signal });
+    bytes = rendered.bytes; capabilities = rendered.capabilities;
+  }
   if (scene && bakeScene) {
     const [{ renderScenePdf }, runtime] = await Promise.all([import('./core/object-scene.js'), import('./lib-loader.js')]);
     const [pdfLib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
@@ -22,8 +28,35 @@ export async function getWorkspaceInput({ bakeScene = true, operation } = {}, { 
   }
   if (!bytes) bytes = documentSession.current().bytes;
   if (operation && !operation.isCurrent()) return null;
-  return { bytes, capabilities, name: snapshot.current.name, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene,
-    losses: scene && (scene.objects.length || Object.keys(scene.fields).length || scene.flatten) ? ['scene-baked'] : [] };
+  const now = documentSession.snapshot();
+  if (now.taskId !== snapshot.taskId || now.revision !== snapshot.revision || now.generation !== snapshot.generation) return null;
+  return { bytes, capabilities, name: composition && bakeComposition ? snapshot.current.name.replace(/\.[^.]+$/, '') + '.pdf' : snapshot.current.name, type: composition && bakeComposition ? 'application/pdf' : snapshot.current.type, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene, hasComposition: !!composition,
+    losses: composition && bakeComposition ? ['composition-baked'] : scene && (scene.objects.length || Object.keys(scene.fields).length || scene.flatten) ? ['scene-baked'] : [] };
+}
+
+// PDF-mode history must reopen editable image state through a compatible mode.
+export async function restoreCompositionHistory(kind, { operation } = {}, { ensureDocumentSession, documentSession, stashCompositionForChain }) {
+  if (!['undo','redo'].includes(kind)) throw new TypeError('Choose Undo or Redo.');
+  await ensureDocumentSession(); operation?.signal?.throwIfAborted();
+  const target = documentSession.historyTarget(kind); if (!target?.composition) return null;
+  const initial = documentSession.snapshot(), owns = () => { const now = documentSession.snapshot(); return now.taskId === initial.taskId && now.revision === initial.revision && now.generation === initial.generation && (!operation || operation.isCurrent()); };
+  let rendered;
+  if (target.composition.items.length) {
+    const [{ composeImagesPdf }, runtime] = await Promise.all([import('./core/image-composition.js'),import('./lib-loader.js')]);
+    if (!owns()) throw new DOMException('History was replaced or cancelled.','AbortError');
+    rendered = await composeImagesPdf(target.composition,{ resource:documentSession.resource,pdfLib:await runtime.ensurePdfLib(),signal:operation?.signal });
+  }
+  if (!owns()) throw new DOMException('History was replaced or cancelled.','AbortError');
+  documentSession[kind](); let committed = documentSession.snapshot();
+  try {
+    if (rendered) { documentSession.publishComposition(rendered.bytes,target.artifact.name.replace(/\.[^.]+$/,'') + '.pdf',{ ...rendered,expectedTaskId:committed.taskId,expectedRevision:committed.revision }); committed = documentSession.snapshot(); }
+    const handoff = await stashCompositionForChain('jpg-to-pdf',{ expectedTaskId:committed.taskId,expectedRevision:committed.revision,operation,signal:operation?.signal });
+    return { targetSlug:'jpg-to-pdf',handoff };
+  } catch (error) {
+    const now = documentSession.snapshot();
+    if (now.taskId === committed.taskId && now.revision === committed.revision && now.generation === committed.generation) documentSession[kind === 'undo' ? 'redo' : 'undo']();
+    throw error;
+  }
 }
 
 export async function readExternalPdfFile(file, { maxBytes = 80 * 1024 * 1024, maxPages = 5000, signal } = {}, { t, looksLikePdfFile, checkPdfMagicBytes }) {

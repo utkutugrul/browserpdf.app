@@ -202,7 +202,7 @@ export async function openReaderWorkspace(parsed, { isCurrent = () => true, sign
     try {
       const operation = { signal: lifetime.signal, isCurrent: alive }, input = await getWorkspaceInput({ operation }); assert(); if (!input) return;
       if (input.hasScene) documentSession.publishScene(input.bytes, input.name, { capabilities: input.capabilities });
-      const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities }); assert();
+      const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities, operation }); assert(); if (!handoff.isCurrent()) return;
       const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
     } catch (error) { if (alive()) { showError(error.message); busy = false; controls(); } }
   }

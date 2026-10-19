@@ -102,7 +102,7 @@ const CASES = [
   { route: 'pdf-to-markdown', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.md$/, direct: true }, // visible text is already reviewed
   { route: 'extract-text', input: '#fileInput', files: ['report.pdf'], click: '#downloadBtn', out: /\.txt$/, direct: true },
   { route: 'pdf-to-excel', input: '#fileInput', files: ['report.pdf'], click: '#convertBtn', out: /\.xlsx$/ },
-  { route: 'images', input: '#pdfFileInput', files: ['report.pdf'], click: '#exportImagesBtn', out: /\.(zip|png)$/, direct: true }, // Phase 3 output-list migration
+  { route: 'images', input: '#pdfFileInput', files: ['report.pdf'], click: '#exportImagesBtn', out: /\.zip$/, zip: true }, // complete reviewed image group; explicit final ZIP
   { route: 'jpg-to-pdf', input: '#fileInput', files: ['photo.png', 'photo.png'], click: '#createBtn', out: /\.pdf$/ },
   {
     route: 'edit-metadata',
@@ -141,6 +141,29 @@ for (const c of CASES) {
       }
       const source = readFileSync(fx('report.pdf')[0]), original = await PDFDocument.load(source);
       expect(entries).toHaveLength(original.getPageCount());
+      if (c.route === 'images') {
+        for (const [index,entry] of entries.entries()) expect(entry.name).toBe(`report-page-${index + 1}.png`);
+        const images = await page.evaluate(async ({ source, outputs }) => {
+          const { ensurePdfJs, PDFJS_ASSET_URLS } = await import('/js/lib-loader.js'), loading = (await ensurePdfJs()).getDocument({ data:new Uint8Array(source), ...PDFJS_ASSET_URLS });
+          try {
+            const doc = await loading.promise, results = [];
+            for (let index = 0; index < outputs.length; index++) {
+              const page = await doc.getPage(index + 1), viewport = page.getViewport({ scale:2 }), expected = document.createElement('canvas'), actual = document.createElement('canvas');
+              expected.width = Math.floor(viewport.width); expected.height = Math.floor(viewport.height);
+              const bitmap = await createImageBitmap(new Blob([new Uint8Array(outputs[index])],{type:'image/png'}));
+              try {
+                actual.width = bitmap.width; actual.height = bitmap.height; actual.getContext('2d').drawImage(bitmap,0,0);
+                await page.render({ canvasContext:expected.getContext('2d'),viewport }).promise;
+                const before = expected.getContext('2d').getImageData(0,0,expected.width,expected.height).data, after = actual.getContext('2d').getImageData(0,0,actual.width,actual.height).data;
+                let different = 0; for (let offset = 0; offset < before.length; offset++) different += Number(before[offset] !== after[offset]);
+                results.push({ original:[expected.width,expected.height], output:[actual.width,actual.height], length:before.length, different });
+              } finally { bitmap.close(); expected.width = expected.height = actual.width = actual.height = 0; page.cleanup(); }
+            }
+            return results;
+          } finally { await loading.destroy(); }
+        }, { source:Array.from(source), outputs:entries.map((entry) => Array.from(entry.bytes)) });
+        for (const image of images) { expect(image.output).toEqual(image.original); expect(image.length).toBeGreaterThan(1000); expect(image.different).toBe(0); }
+      } else {
       for (const [index, entry] of entries.entries()) {
         expect(entry.name).toBe(`report-page-${index + 1}.pdf`);
         expect((await PDFDocument.load(entry.bytes)).getPageCount()).toBe(1);
@@ -155,6 +178,7 @@ for (const c of CASES) {
         return { original: await text(source), split: (await Promise.all(outputs.map(text))).flat() };
       }, { source: Array.from(source), outputs: entries.map((entry) => Array.from(entry.bytes)) });
       expect(content.split).toEqual(content.original);
+      }
     }
     await expect(page.locator('#errorSection')).toBeHidden();
   });

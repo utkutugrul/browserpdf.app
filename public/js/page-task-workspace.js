@@ -1,7 +1,7 @@
 import { t, getLang } from './i18n.js';
 import { ensurePdfLib, ensurePdfJs, PDFJS_ASSET_URLS } from './lib-loader.js';
 import { documentSession, documentOperations, getWorkspaceInput, reviewResult, clearResult,
-  showDocumentIdentity, showError, hideError, stashForChain, showProgress, setProgress, hideProgress } from './tool-ui.js';
+  showDocumentIdentity, showError, hideError, stashForChain, showProgress, setProgress, hideProgress, restoreCompositionHistory } from './tool-ui.js';
 import { createPageWorkspace } from './page-workspace.js';
 import { createPagePlan, createPagePlanHistory, movePageGroup, duplicatePageGroup, deletePageGroup,
   rotatePageGroup, cropPageGroup, insertPageSource } from './core/page-plan.js';
@@ -83,16 +83,20 @@ export async function openPageTask(mode, { isCurrent = () => true } = {}) {
       // Preserve an existing editable scene across modes. Page results themselves
       // enter the canonical session only through explicit result adoption.
       if (value.hasScene) documentSession.publishScene(value.bytes, value.name, { capabilities: value.capabilities });
-      const handoff = await stashForChain(value.bytes, value.name, slug, { capabilities: value.capabilities });
-      if (!request.isCurrent() || !owns()) return;
+      const handoff = await stashForChain(value.bytes, value.name, slug, { capabilities: value.capabilities, operation: request });
+      if (!request.isCurrent() || !owns() || !handoff.isCurrent()) return;
       const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
     } catch (error) { busy = false; update(); throw error; }
   }
   async function documentHistory(kind) {
     if (busy || planPending || planFailed || !owns()) return;
     if (pending()) { pendingWarning(); return; }
-    busy = true; update(); invalidate(); documentSession[kind](); showDocumentIdentity();
-    await hydrateCurrent();
+    busy = true; update(); invalidate();
+    try {
+      const request = documentOperations.begin(), compositionTarget = await restoreCompositionHistory(kind,{ operation:request });
+      if (compositionTarget) { if (owns() && compositionTarget.handoff.isCurrent()) { const { handoff,targetSlug } = compositionTarget,lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${targetSlug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`; } return; }
+      documentSession[kind](); showDocumentIdentity(); await hydrateCurrent();
+    } catch (error) { if (owns()) { busy = false; showDocumentIdentity(); update(); } throw error; }
   }
   function update() {
     if (!owns()) return;

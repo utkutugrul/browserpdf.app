@@ -41,9 +41,10 @@ export function openWorkflowDb(indexedDb = globalThis.indexedDB) {
 }
 
 export function createWorkflowStore({ indexedDb = globalThis.indexedDB, now = () => Date.now() } = {}) {
-  async function withDb(storeNames, mode, operation) {
+  async function withDb(storeNames, mode, operation, assertOwner = () => {}) {
     const db = await openWorkflowDb(indexedDb);
     try {
+      assertOwner();
       const tx = db.transaction(storeNames, mode);
       let result;
       try {
@@ -90,7 +91,11 @@ export function createWorkflowStore({ indexedDb = globalThis.indexedDB, now = ()
     return record;
   }
 
-  async function putWorkflowBundle(workflow, files) {
+  async function putWorkflowBundle(workflow, files, { isCurrent = () => true, signal } = {}) {
+    const assertOwner = () => { signal?.throwIfAborted(); if (!isCurrent()) throw new DOMException('This stored continuation was replaced or cancelled.', 'AbortError'); };
+    assertOwner();
+    if (!Array.isArray(files) || files.length > 160 || new Set(files.map((file) => file.id)).size !== files.length || files.some((file) => typeof file.id !== 'string' || !file.id.startsWith(`${workflow.id}:`)) || !Array.isArray(workflow.fileRefs) || workflow.fileRefs.length > 160 || workflow.fileRefs.some((id) => !files.some((file) => file.id === id))) throw new RangeError('Invalid owned workflow file references (at most 160).');
+    if (files.reduce((n, file) => n + (file.bytes?.byteLength || 0), 0) > 512 * 1024 * 1024) throw new RangeError('This task exceeds the 512 MB local resource limit.');
     const stamp = now();
     const workflowRecord = {
       ...workflow,
@@ -109,13 +114,14 @@ export function createWorkflowStore({ indexedDb = globalThis.indexedDB, now = ()
       const workflowStore = tx.objectStore(WORKFLOWS);
       const fileStore = tx.objectStore(FILES);
       const existingIds = await requestResult(fileStore.index('workflowId').getAllKeys(workflowRecord.id));
+      assertOwner();
       const retainedIds = new Set(fileRecords.map((file) => file.id));
       existingIds.filter((id) => !retainedIds.has(id)).forEach((id) => fileStore.delete(id));
-      for (const file of fileRecords) await requestResult(fileStore.put(file));
+      for (const file of fileRecords) { assertOwner(); await requestResult(fileStore.put(file)); }
       // Write the owner last. If it or any file cannot be cloned, abort rolls
       // back every request in this transaction, leaving no orphan bytes.
-      await requestResult(workflowStore.put(workflowRecord));
-    });
+      assertOwner(); await requestResult(workflowStore.put(workflowRecord));
+    }, assertOwner);
     return { workflow: workflowRecord, files: fileRecords };
   }
 

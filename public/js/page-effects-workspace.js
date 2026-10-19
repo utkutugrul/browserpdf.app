@@ -1,6 +1,6 @@
 import { t, getLang } from './i18n.js';
 import { ensurePdfLib, ensurePdfJs, PDFJS_ASSET_URLS } from './lib-loader.js';
-import { documentSession, documentOperations, getWorkspaceInput, reviewResult, offerChain, clearResult, showDocumentIdentity, showError, hideError, stashForChain, showProgress, setProgress, hideProgress } from './tool-ui.js';
+import { documentSession, documentOperations, getWorkspaceInput, reviewResult, offerChain, clearResult, showDocumentIdentity, showError, hideError, stashForChain, showProgress, setProgress, hideProgress, restoreCompositionHistory } from './tool-ui.js';
 import { createPageWorkspace } from './page-workspace.js';
 import { createPagePlan } from './core/page-plan.js';
 import { applyPageEffect } from './core/page-effects.js';
@@ -210,13 +210,20 @@ export async function openPageEffectWorkspace(mode, { isCurrent = () => true } =
       }
     } finally { if(owns()&&token===epoch){processing=false;hideProgress();update();} }
   }
-  async function restore(kind) { if(hydrating||processing)return; invalidate();documentSession[kind](); await hydrate(); }
+  async function restore(kind) {
+    if(hydrating||processing)return; invalidate(); processing=true;update();const request=documentOperations.begin();
+    try{
+      const target=await restoreCompositionHistory(kind,{operation:request});
+      if(target){if(owns()&&target.handoff.isCurrent()){const {handoff,targetSlug}=target,lang=getLang();location.href=`${lang==='en'?'':'/'+lang}/${targetSlug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;}return;}
+      documentSession[kind](); await hydrate();
+    }finally{if(owns()&&request.isCurrent()){processing=false;update();}}
+  }
   async function changeMode(slug) {
     if(hydrating||processing||!owns())return;
     if(dirty){status.textContent=t('pages.review_before_mode','Review and use the result, or discard pending settings before changing tools.');return;}
     const request=documentOperations.begin(); const current=await getWorkspaceInput({operation:request}); if(!current||!owns()||!request.isCurrent())return;
     if(current.hasScene)documentSession.publishScene(current.bytes,current.name,{capabilities:current.capabilities});
-    const handoff=await stashForChain(current.bytes,current.name,slug,{capabilities:current.capabilities}); if(!owns()||!request.isCurrent())return;
+    const handoff=await stashForChain(current.bytes,current.name,slug,{capabilities:current.capabilities,operation:request}); if(!owns()||!request.isCurrent()||!handoff.isCurrent())return;
     const lang=getLang();location.href=`${lang==='en'?'':'/'+lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
   }
   for (const control of Object.values(controls)) { control.dataset.initialValue = control.value; control.dataset.initialChecked = String(control.checked); }

@@ -82,9 +82,11 @@ export async function renderScenePdf({ scene, resource, pdfLib, pdfjs, pdfjsAsse
   finally { signal?.removeEventListener('abort', cancel); try { await task.destroy(); } catch (error) { if (!signal?.aborted) throw error; } }
 }
 
-export async function imageAsset(file, { trim = false } = {}) {
+export async function imageAsset(file, { trim = false, signal } = {}) {
+  signal?.throwIfAborted();
   if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > 16 * 1024 * 1024) throw new Error('Choose a PNG or JPEG smaller than 16 MB.');
   const encoded = new Uint8Array(await file.arrayBuffer());
+  signal?.throwIfAborted();
   let width, height;
   if (encoded.length >= 24 && encoded[0] === 137 && encoded[1] === 80 && encoded[2] === 78 && encoded[3] === 71) {
     const view = new DataView(encoded.buffer); width = view.getUint32(16); height = view.getUint32(20);
@@ -106,9 +108,11 @@ export async function imageAsset(file, { trim = false } = {}) {
   }
   if (!(width > 0 && height > 0) || width > 4096 || height > 4096 || width * height > 16_000_000) throw new RangeError('Choose a PNG or JPEG at most 4096 pixels wide or tall and 16 million pixels.');
   const bitmap = await createImageBitmap(new Blob([encoded], { type: file.type }), { imageOrientation: 'from-image' });
+  let canvas, cropped;
   try {
+    signal?.throwIfAborted();
     if (bitmap.width > 4096 || bitmap.height > 4096 || bitmap.width * bitmap.height > 16_000_000) throw new RangeError('Choose an image at most 4096 pixels wide or tall and 16 million pixels.');
-    const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
+    canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
     const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.drawImage(bitmap, 0, 0);
     let left = 0, top = 0, right = canvas.width - 1, bottom = canvas.height - 1;
     if (trim) {
@@ -123,9 +127,11 @@ export async function imageAsset(file, { trim = false } = {}) {
       if (right < left) throw new Error('Draw, type, or upload a visible signature first.');
       left = Math.max(0, left - 3); top = Math.max(0, top - 3); right = Math.min(canvas.width - 1, right + 3); bottom = Math.min(canvas.height - 1, bottom + 3);
     }
-    const cropped = document.createElement('canvas'); cropped.width = right - left + 1; cropped.height = bottom - top + 1;
+    cropped = document.createElement('canvas'); cropped.width = right - left + 1; cropped.height = bottom - top + 1;
     cropped.getContext('2d').drawImage(canvas, left, top, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
     const blob = await new Promise((resolve, reject) => cropped.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Image capture failed.')), 'image/png'));
-    return { bytes: new Uint8Array(await blob.arrayBuffer()), width: cropped.width, height: cropped.height, type: 'image/png', name: trim ? 'signature.png' : file.name };
-  } finally { bitmap.close(); }
+    signal?.throwIfAborted();
+    const bytes = new Uint8Array(await blob.arrayBuffer()); signal?.throwIfAborted();
+    return { bytes, width: cropped.width, height: cropped.height, type: 'image/png', name: trim ? 'signature.png' : file.name };
+  } finally { bitmap.close(); if (canvas) canvas.width = canvas.height = 0; if (cropped) cropped.width = cropped.height = 0; }
 }

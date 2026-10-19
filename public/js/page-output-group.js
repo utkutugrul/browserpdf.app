@@ -4,7 +4,7 @@ import { outputBudget } from './core/page-split.js';
 import { safeOutputName, outputExtension } from './core/output-names.js';
 import { createOutputZip } from './core/output-zip.js';
 
-export function createOutputGroup(results, { container, signal, isCurrent = () => true, onAdopt, zipName = 'outputs.zip' } = {}) {
+export function createOutputGroup(results, { container, signal, isCurrent = () => true, continuationIsCurrent, onAdopt, imageWorkLane, zipName = 'outputs.zip' } = {}) {
   const total = outputBudget(results), used = new Set();
   const artifacts = results.map((value) => ({ ...value, name: safeOutputName(value.name, outputExtension(value.type), used) }));
   results = null; // Drop the caller's full group reference before any asynchronous review.
@@ -33,9 +33,13 @@ export function createOutputGroup(results, { container, signal, isCurrent = () =
   async function select(index) {
     if (!owns() || !artifacts[index]) return; selected = index; const token = ++selection;
     const operation = { isCurrent: () => owns() && token === selection };
+    // A chosen result may deliberately replace the source's format/revision.
+    // Only continuation receives that longer-lived owner; review/export retain
+    // the source owner above. Selecting a sibling still cancels this rail.
+    const continuationOperation = continuationIsCurrent ? { signal, isCurrent: () => !disposed && !signal?.aborted && token === selection && continuationIsCurrent() } : undefined;
     clearResult(); const artifact = artifacts[index];
-    await reviewResult(artifact.bytes, artifact.name, { ...artifact, operation, onAdopt });
-    if (operation.isCurrent()) await offerChain(artifact.bytes, artifact.name, artifact.type.startsWith('image/') ? [{ slug: 'jpg-to-pdf', label: 'JPG / PNG to PDF' }, { slug: 'images', label: 'Images' }] : [], { ...artifact, operation });
+    await reviewResult(artifact.bytes, artifact.name, { ...artifact, operation, onAdopt, imageWorkLane });
+    if (operation.isCurrent()) await offerChain(artifact.bytes, artifact.name, artifact.type.startsWith('image/') ? [{ slug: 'jpg-to-pdf', label: 'JPG / PNG to PDF' }, { slug: 'images', label: 'Images' }] : [], { ...artifact, operation, continuationOperation });
     if (operation.isCurrent()) render();
   }
   function render() {

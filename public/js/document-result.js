@@ -6,13 +6,14 @@ import { t } from './i18n.js';
 let currentGeneration = 0;
 let activeTask = null;
 let objectUrl = null;
+let imageWork = Promise.resolve();
 
 export function ensureWorkspaceStyles() {
   if (document.getElementById('documentWorkspaceStyles')) return;
   const link = document.createElement('link'); link.id = 'documentWorkspaceStyles'; link.rel = 'stylesheet'; link.href = '/css/document-workspace.css'; document.head.appendChild(link);
 }
 
-export async function showDocumentResult(artifact, { session, download, adopt } = {}) {
+export async function showDocumentResult(artifact, { session, download, adopt, imageWorkLane } = {}) {
   ensureWorkspaceStyles();
   const generation = ++currentGeneration;
   const previousTask = activeTask;
@@ -43,6 +44,7 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
     'page-copy-labels': 'Page copying may lose page labels.', 'signature-rewrite': 'Rewriting signed content can invalidate existing digital signatures.',
     'structure-inspection-incomplete': 'Some document structures could not be inspected.', 'crop-hidden-content': 'Cropping hides content; it does not securely remove it.',
     'scene-baked': 'This operation includes pending edits in the PDF. Undo restores the preceding editable state.',
+    'composition-baked': 'This operation includes the image composition in the PDF. Undo restores the preceding editable state.',
   };
   if (artifact.boundary?.losses?.length) {
     const losses = document.createElement('ul'); losses.id = 'documentResultLosses';
@@ -59,13 +61,14 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
   let pageGeneration = 0;
   let renderTask = null;
   let rendering = Promise.resolve();
+  const runImageWork = (work) => { if (imageWorkLane) return imageWorkLane.run(work); const next = imageWork.catch(() => {}).then(work); imageWork = next.catch(() => {}); return next; };
   const canvas = document.createElement('canvas');
   const pageStatus = document.createElement('span'); pageStatus.id = 'documentResultPage'; pageStatus.setAttribute('aria-live', 'polite');
   async function renderPage() {
     const loadGeneration = previewGeneration, renderGeneration = ++pageGeneration, requestedPage = pageNumber, requestedDoc = doc;
     renderTask?.cancel(); preview.setAttribute('aria-busy', 'true');
     pageStatus.textContent = `${requestedPage} / ${requestedDoc?.numPages || '…'} · ${t('workspace.loading_page', 'Loading page…')}`;
-    rendering = rendering.catch(() => {}).then(async () => {
+    rendering = rendering.catch(() => {}).then(() => runImageWork(async () => {
       if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration || !requestedDoc) return;
       const page = await requestedDoc.getPage(requestedPage);
       if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration) return;
@@ -75,7 +78,7 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
       renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport });
       try { await renderTask.promise; } catch (error) { if (error.name !== 'RenderingCancelledException') throw error; }
       if (generation === currentGeneration && loadGeneration === previewGeneration && renderGeneration === pageGeneration) { pageStatus.textContent = `${requestedPage} / ${requestedDoc.numPages}`; preview.setAttribute('aria-busy', 'false'); canvas.dataset.pdfPage = String(requestedPage); }
-    });
+    }));
     return rendering.catch((error) => { if (generation !== currentGeneration || loadGeneration !== previewGeneration || renderGeneration !== pageGeneration) return; throw error; });
   }
   async function loadPdf(value) {
@@ -93,8 +96,31 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
     try { loaded = await task.promise; } catch (error) { if (generation !== currentGeneration || loadGeneration !== previewGeneration) return; throw error; }
     if (generation !== currentGeneration || loadGeneration !== previewGeneration) { await task.destroy(); return; }
     doc = loaded; loadedValue = value;
-    pageNumber = Math.max(1, Math.min(doc.numPages, pageNumber)); preview.replaceChildren(canvas); await renderPage();
+    pageNumber = Math.max(1, Math.min(doc.numPages, pageNumber)); canvas.setAttribute('aria-label',value.name); preview.replaceChildren(canvas); await renderPage();
     if (generation === currentGeneration && loadGeneration === previewGeneration) status.textContent = `${value === artifact ? t('workspace.result', 'Result') : t('workspace.original', 'Original')}: ${value.name}. ${t('workspace.preview_ready', 'The actual file is shown below. Download when ready.')}`;
+  }
+  async function loadImage(getValue, original) {
+    const loadGeneration = ++previewGeneration, previous = activeTask; activeTask = null; doc = null; loadedValue = null;
+    renderTask?.cancel(); preview.setAttribute('aria-busy', 'true');
+    try { await previous?.destroy(); } catch { /* previous PDF preview */ }
+    if (generation !== currentGeneration || loadGeneration !== previewGeneration) return;
+    await runImageWork(async () => {
+      const current = () => generation === currentGeneration && loadGeneration === previewGeneration;
+      if (!current()) return;
+      const value = getValue(); if (!value || !['image/png','image/jpeg'].includes(value.type)) throw new Error('This image is unavailable.');
+      const { imageDimensions } = await import('./core/composition-state.js'); imageDimensions(value.bytes,value.type); if (!current()) return;
+      // Decode the immutable raw original with its EXIF orientation once. Only
+      // the bounded selected canvas survives; codec work drains on replacement.
+      const bitmap = await createImageBitmap(new Blob([value.bytes], { type: value.type }), { imageOrientation: 'from-image' });
+      try {
+        if (!current()) return;
+        if (bitmap.width > 4096 || bitmap.height > 4096 || bitmap.width * bitmap.height > 16000000) throw new RangeError('This original image exceeds the preview limits.');
+        const scale = Math.min(1,1200 / Math.max(bitmap.width,bitmap.height),Math.sqrt(2000000 / (bitmap.width * bitmap.height)));
+        canvas.width = Math.max(1,Math.floor(bitmap.width * scale)); canvas.height = Math.max(1,Math.floor(bitmap.height * scale)); canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
+        canvas.setAttribute('aria-label',value.name); canvas.removeAttribute('data-pdf-page'); preview.replaceChildren(canvas);
+        status.textContent = `${original ? t('workspace.original', 'Original') : t('workspace.result', 'Result')}: ${value.name}${original ? '' : '. ' + t('workspace.preview_ready','The actual file is shown below. Download when ready.')}`; preview.setAttribute('aria-busy', 'false'); pageStatus.textContent = '';
+      } finally { bitmap.close(); }
+    });
   }
   try {
     if (artifact.type === 'application/pdf' && !artifact.capabilities.encrypted) {
@@ -105,11 +131,19 @@ export async function showDocumentResult(artifact, { session, download, adopt } 
         button(t('workspace.show_original', 'Show original'), () => loadPdf(source).catch(fail));
         button(t('workspace.show_result', 'Show result'), () => loadPdf(artifact).catch(fail));
       }
+      if (session?.compositionSources?.originals.length) {
+        const label = document.createElement('label'), choose = document.createElement('select'); choose.id = 'documentResultOriginal';
+        label.textContent = t('workspace.original_images', 'Original images ({n})', { n: session.compositionSources.originals.length });
+        for (const original of session.compositionSources.originals) { const option = document.createElement('option'); option.value = original.originalRef; option.textContent = original.name; choose.append(option); }
+        label.append(choose); controls.append(label);
+        button(t('workspace.show_original_image', 'Show selected original image'), () => { const ref = choose.value, original = session.compositionSources.originals.find((item) => item.originalRef === ref); return loadImage(() => { const resource = session.resource?.(ref); return resource ? { ...resource,name:original.name } : null; },true).catch(fail); }, 'showOriginalImageBtn');
+        button(t('workspace.show_result', 'Show result'), () => loadPdf(artifact).catch(fail), 'showCompositionResultBtn');
+      }
       await loadPdf(artifact);
     } else if (artifact.type.startsWith('text/')) {
       const text = document.createElement('textarea'); text.readOnly = true; text.setAttribute('aria-label', t('workspace.text_result', 'Result text')); text.value = new TextDecoder().decode(artifact.bytes); preview.append(text);
     } else if (artifact.type.startsWith('image/')) {
-      objectUrl = URL.createObjectURL(new Blob([artifact.bytes], { type: artifact.type })); const image = document.createElement('img'); image.src = objectUrl; image.alt = artifact.name; preview.append(image);
+      await loadImage(() => artifact,false);
     } else if (/wordprocessingml/.test(artifact.type)) {
       const mammoth = await ensureMammoth(); const result = await mammoth.extractRawText({ arrayBuffer: artifact.bytes.slice().buffer });
       if (generation !== currentGeneration) return;
@@ -132,4 +166,5 @@ export function clearDocumentResult() {
   void activeTask?.destroy().catch(() => {}); activeTask = null;
   if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null;
   const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
+  for (const canvas of panel?.querySelectorAll('canvas') || []) canvas.width = canvas.height = 0;
 }

@@ -25,6 +25,14 @@ export const documentSession = {
   original: () => sessionDelegate?.original() || null,
   beginScene: () => sessionDelegate.beginScene(),
   scene: () => sessionDelegate?.scene() || null,
+  composition: () => sessionDelegate?.composition() || null,
+  compositionSources: () => sessionDelegate?.compositionSources() || null,
+  beginComposition: (...args) => sessionDelegate.beginComposition(...args),
+  startCompositionFromCurrent: (...args) => sessionDelegate.startCompositionFromCurrent(...args),
+  appendCompositionInputs: (...args) => sessionDelegate.appendCompositionInputs(...args),
+  changeComposition: (...args) => sessionDelegate.changeComposition(...args),
+  setCompositionSelection: (...args) => sessionDelegate.setCompositionSelection(...args),
+  publishComposition: (...args) => sessionDelegate.publishComposition(...args),
   resource: (id) => sessionDelegate?.resource(id) || null,
   addAsset: (...args) => sessionDelegate.addAsset(...args),
   changeScene: (state) => sessionDelegate.changeScene(state),
@@ -37,7 +45,7 @@ export const documentSession = {
   redo: () => sessionDelegate?.redo() || null,
   setSelection: (pages) => sessionDelegate?.setSelection(pages),
   invalidate: () => sessionDelegate?.invalidate(),
-  clear: () => { sessionDelegate?.clear(); documentOperations.cancel(); clearResult(); document.getElementById('documentIdentity')?.remove(); },
+  clear: () => { intakeGeneration++; sessionDelegate?.clear(); documentOperations.cancel(); clearResult(); document.getElementById('documentIdentity')?.remove(); },
 };
 const operationScope = createOperationScope();
 export const documentOperations = {
@@ -56,7 +64,7 @@ const loadResultModule = retryableModule('./document-result.js');
 const loadResultUi = () => (resultModule ||= loadResultModule().catch((error) => { resultModule = null; throw error; }));
 const loadWorkspaceSupport = retryableModule('./document-workspace-support.js');
 const loadHandoffSupport = retryableModule('./document-handoff.js');
-const workspaceEnvironment = { ensureDocumentSession, documentSession, t, looksLikePdfFile, checkPdfMagicBytes };
+const workspaceEnvironment = { ensureDocumentSession, documentSession, t, looksLikePdfFile, checkPdfMagicBytes, stashCompositionForChain };
 const handoffEnvironment = { ensureDocumentSession, documentSession, getSessionCore: () => sessionCore, loadWorkflowStore };
 
 export function showDocumentIdentity() {
@@ -83,6 +91,9 @@ export function showDocumentIdentity() {
 export async function getWorkspaceInput(options = {}) {
   return (await loadWorkspaceSupport()).getWorkspaceInput(options, workspaceEnvironment);
 }
+export async function restoreCompositionHistory(kind, options = {}) {
+  return (await loadWorkspaceSupport()).restoreCompositionHistory(kind, options, workspaceEnvironment);
+}
 
 export async function reviewResult(bytes, name, options = {}) {
   if (options.operation && !options.operation.isCurrent()) return Promise.resolve(null);
@@ -92,15 +103,20 @@ export async function reviewResult(bytes, name, options = {}) {
   await ensureDocumentSession();
   if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return null;
   const artifact = sessionCore.createArtifact(bytes, name, { ...options, capabilities: options.capabilities || documentSession.snapshot().current?.capabilities });
+  const compositionOwner = options.compositionRevision === undefined ? null : documentSession.snapshot();
+  if (compositionOwner && (!compositionOwner.hasComposition || options.compositionRevision !== compositionOwner.revision)) return null;
   pendingResult = artifact;
   if (options.adopt) documentSession.adopt(artifact.bytes, artifact.name, artifact);
   showDocumentIdentity();
   return loadResultUi().then((ui) => generation !== resultGeneration || (options.operation && !options.operation.isCurrent()) ? null : ui.showDocumentResult(artifact, {
-    session: { ...documentSession.snapshot(), original: documentSession.original() },
+    imageWorkLane: options.imageWorkLane,
+    session: { ...documentSession.snapshot(), original: documentSession.original(), compositionSources: documentSession.compositionSources(), resource: documentSession.resource },
     download: (value) => { if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return; downloadBlob(new Blob([value.bytes], { type: value.type }), value.name, { download: true }); },
     adopt: options.allowAdopt === false ? null : (value) => {
       if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return null;
-      const snapshot = documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity();
+      const now = documentSession.snapshot();
+      if (compositionOwner && (now.taskId !== compositionOwner.taskId || now.revision !== compositionOwner.revision || now.generation !== compositionOwner.generation)) return null;
+      const snapshot = compositionOwner ? documentSession.publishComposition(value.bytes, value.name, { ...value, expectedTaskId: compositionOwner.taskId, expectedRevision: compositionOwner.revision }) : documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity();
       // Synchronous notification. Consumers own cancellation/busy/errors for any
       // subsequent asynchronous hydration; this callback does not delay adoption.
       options.onAdopt?.(snapshot, documentSession.current()); return snapshot;
@@ -309,6 +325,8 @@ export async function readExternalPdfFile(file, options = {}) {
 }
 
 export async function readPdfFile(file, options = {}) {
+  const operation = options.operation;
+  if (operation?.signal?.aborted || (operation && !operation.isCurrent())) return null;
   // Owned handoffs can have a baked current PDF larger than the editable
   // source. begin() validates every inherited source/resource before commit.
   const inheritedScene = options.allowInheritedScene && file.browserpdfSession?.scene;
@@ -316,6 +334,7 @@ export async function readPdfFile(file, options = {}) {
   if (options.maxPages !== undefined && (!Number.isSafeInteger(options.maxPages) || options.maxPages < 1 || options.maxPages > 10000)) { showError(t('workspace.invalid_page_limit', 'Invalid PDF page limit.')); return null; }
   if (options.maxBytes && file.size > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   const intake = ++intakeGeneration;
+  const ownsIntake = () => intake === intakeGeneration && !operation?.signal?.aborted && (!operation || operation.isCurrent());
   documentOperations.cancel();
   if (file.size > 250 * 1024 * 1024) { showError(t('workspace.file_too_large', 'Choose a PDF smaller than 250 MB.')); return null; }
   if (!looksLikePdfFile(file)) {
@@ -324,30 +343,34 @@ export async function readPdfFile(file, options = {}) {
   }
   let bytes;
   try { bytes = new Uint8Array(await file.arrayBuffer()); }
-  catch (error) { if (intake === intakeGeneration) showError(t('workspace.read_failed', 'Could not read this PDF: {message}', { message: error.message })); return null; }
-  if (intake !== intakeGeneration) return null;
+  catch (error) { if (ownsIntake()) showError(t('workspace.read_failed', 'Could not read this PDF: {message}', { message: error.message })); return null; }
+  if (!ownsIntake()) return null;
   if (bytes.length > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   if (!checkPdfMagicBytes(bytes)) {
     showError(t('common.js_err_invalid_pdf', 'This file does not look like a valid PDF.'));
     return null;
   }
-  if (intake !== intakeGeneration) return null;
+  if (!ownsIntake()) return null;
   if (options.validate) {
     try {
       const runtime = await import('./lib-loader.js');
+      if (!ownsIntake()) return null;
       const [lib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
+      if (!ownsIntake()) return null;
       await lib.PDFDocument.load(bytes.slice());
+      if (!ownsIntake()) return null;
       const task = pdfjs.getDocument({ data: bytes.slice(), ...runtime.PDFJS_ASSET_URLS });
+      const cancel = () => { void task.destroy().catch(() => {}); }; operation?.signal?.addEventListener('abort',cancel,{ once: true });
       try { const doc = await task.promise; if (!doc.numPages) throw new Error('This PDF has no readable pages.'); if (options.maxPages && doc.numPages > options.maxPages) throw new RangeError(t('workspace.page_limit', 'Choose a PDF with 1–{n} readable pages.', { n: options.maxPages })); }
-      finally { await task.destroy(); }
+      finally { operation?.signal?.removeEventListener('abort',cancel); await task.destroy(); }
     } catch (error) {
-      if (intake === intakeGeneration) showError(t('workspace.parse_failed', 'Could not open this PDF: {message}', { message: error.message }));
+      if (ownsIntake()) showError(t('workspace.parse_failed', 'Could not open this PDF: {message}', { message: error.message }));
       return null;
     }
   }
-  if (intake !== intakeGeneration) return null;
-  try { await ensureDocumentSession(); if (intake !== intakeGeneration) return null; documentSession.begin(bytes, file.name, { ...file.browserpdfSession, type: 'application/pdf' }); }
-  catch (error) { showError(error.message); return null; }
+  if (!ownsIntake()) return null;
+  try { await ensureDocumentSession(); if (!ownsIntake()) return null; documentSession.begin(bytes, file.name, { ...file.browserpdfSession, type: 'application/pdf' }); }
+  catch (error) { if (ownsIntake()) showError(error.message); return null; }
   clearResult();
   showDocumentIdentity();
   return { bytes, baseName: file.name.replace(/\.pdf$/i, '') || 'document' };
@@ -387,7 +410,20 @@ export async function renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, ta
 }
 
 export async function stashForChain(bytes, name, targetSlug, options = {}) {
-  return (await loadHandoffSupport()).stashForChain(bytes, name, targetSlug, options, handoffEnvironment);
+  const owner = documentSession.snapshot(), operation = options.operation;
+  const owns = () => { const now = documentSession.snapshot(); return now.taskId === owner.taskId && now.revision === owner.revision && now.generation === owner.generation && (!operation || operation.isCurrent()); };
+  const module = await loadHandoffSupport();
+  if (!owns()) throw new DOMException('This continuation was replaced or cancelled.', 'AbortError');
+  // Module loading and storage have separate ownership boundaries. The module
+  // captures any deliberate adoption itself; preserve only the caller's token.
+  return module.stashForChain(bytes, name, targetSlug, options, handoffEnvironment);
+}
+
+export async function stashCompositionForChain(targetSlug, options = {}) {
+  const state = documentSession.snapshot();
+  if (state.taskId !== options.expectedTaskId || state.revision !== options.expectedRevision || !state.hasComposition) throw new DOMException('This composition was replaced.', 'AbortError');
+  const current = documentSession.current();
+  return stashForChain(current.bytes, current.name, targetSlug, { ...current, ...options, compositionRevision: state.revision, operation: { signal: options.signal || options.operation?.signal, isCurrent: () => !options.signal?.aborted && (!options.operation || options.operation.isCurrent()) } });
 }
 
 // Keep empty-page handoff checks ahead of the optional module request.
@@ -408,6 +444,14 @@ export async function offerChain(bytes, name, targets, options = {}) {
   await ensureDocumentSession();
   if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return;
   const artifact = sessionCore.createArtifact(bytes, name, { ...(pendingResult?.name === name ? pendingResult : {}), ...options });
+  const owner = documentSession.snapshot();
+  let continuationOwner = owner;
+  const continuationOperation = options.continuationOperation || options.operation;
+  const ownsContinuation = () => {
+    const now = documentSession.snapshot();
+    return generation === resultGeneration && now.taskId === owner.taskId && (!continuationOperation || continuationOperation.isCurrent()) &&
+      (!options.continuationOperation || (now.revision === continuationOwner.revision && now.generation === continuationOwner.generation));
+  };
   let row = document.getElementById('chainRow');
   if (!row) { row = document.createElement('div'); row.id = 'chainRow'; row.className = 'chain-row'; (document.getElementById('documentResult') || document.querySelector('main') || document.body).appendChild(row); }
   row.textContent = '';
@@ -430,12 +474,19 @@ export async function offerChain(bytes, name, targets, options = {}) {
     btn.textContent = t(hubKey, target.label);
     btn.addEventListener('click', async () => {
       try {
+        if (!ownsContinuation()) return;
         btn.disabled = true;
-        const handoff = await stashForChain(artifact.bytes, artifact.name, target.slug, artifact);
+        const handoff = await stashForChain(artifact.bytes, artifact.name, target.slug, { ...artifact,
+          operation: { signal: continuationOperation?.signal, isCurrent: ownsContinuation },
+          ...(options.continuationOperation ? { onAdoptionOwner: (next) => { continuationOwner = next; } } : {}),
+        });
+        if (!handoff.isCurrent()) return;
         const lang = getLang();
         const path = lang === 'en' ? '/' + target.slug : `/${lang}/${target.slug}`;
         window.location.href = `${path}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (err) {
+        if (err?.name === 'AbortError') { if (btn.isConnected) btn.disabled = false; return; }
+        if (options.continuationOperation && !ownsContinuation()) return;
         showError(t('workspace.handoff_failed', 'Could not continue with this result: {message}', { message: err?.message || 'local storage is unavailable' }));
         btn.disabled = false;
       }
