@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="index, follow">
-<title>Markdown Viewer: Free Live Preview and PDF Export | BrowserPDF</title>
-<meta name="description" content="Paste or drop a Markdown file and see it rendered instantly, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.">
+<title>Markdown Viewer: Editable Source and Saved PDF Review | BrowserPDF</title>
+<meta name="description" content="Apply supported Markdown, edit literal blocks and tables, copy visible source, and review Markdown/local-image ZIP or saved PDF output before manual download.">
 <link rel="canonical" href="https://browserpdf.app/markdown-viewer">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrowserPDF">
-<meta property="og:title" content="Markdown Viewer: Free Live Preview, Runs in Your Browser">
-<meta property="og:description" content="Paste or drop a Markdown file and see it rendered instantly, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.">
+<meta property="og:title" content="Markdown Viewer: Editable Source and Saved PDF Review | BrowserPDF">
+<meta property="og:description" content="Apply supported Markdown, edit literal blocks and tables, copy visible source, and review Markdown/local-image ZIP or saved PDF output before manual download.">
 <meta property="og:url" content="https://browserpdf.app/markdown-viewer">
 <meta property="og:image" content="https://browserpdf.app/og/markdown-viewer.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/png">
-<meta property="og:image:alt" content="Preview of the Markdown Viewer tool: Markdown source next to its live rendered preview.">
+<meta property="og:image:alt" content="Preview of the Markdown Viewer tool: Markdown source, bounded literal block editor and saved PDF review.">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Markdown Viewer: Free Live Preview, Runs in Your Browser">
-<meta name="twitter:description" content="Paste or drop a Markdown file and see it rendered instantly, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.">
+<meta name="twitter:title" content="Markdown Viewer: Editable Source and Saved PDF Review | BrowserPDF">
+<meta name="twitter:description" content="Apply supported Markdown, edit literal blocks and tables, copy visible source, and review Markdown/local-image ZIP or saved PDF output before manual download.">
 <meta name="twitter:image" content="https://browserpdf.app/og/markdown-viewer.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -30,7 +30,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Markdown Viewer - BrowserPDF","description":"Paste or drop a Markdown file and see it rendered instantly, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/markdown-viewer","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Markdown Viewer","item":"https://browserpdf.app/markdown-viewer"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I export the preview as a PDF?","acceptedAnswer":{"@type":"Answer","text":"Yes. Save as PDF lays your Markdown out onto paginated US Letter pages using the same engine as the Markdown to PDF tool."}},{"@type":"Question","name":"Which Markdown syntax is supported?","acceptedAnswer":{"@type":"Answer","text":"Headings, bold, italic, bold-italic, inline code, bullet and numbered lists, and horizontal rules. Tables and images aren't parsed yet."}},{"@type":"Question","name":"Can I make the editor bigger?","acceptedAnswer":{"@type":"Answer","text":"Yes. Drag the divider between the panes to resize them, or use the fullscreen button to take over the whole screen."}}]}]}</script>
+<link rel="stylesheet" href="css/document-model-workspace.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Markdown Viewer - BrowserPDF","description":"Apply supported Markdown, edit literal blocks and tables, copy visible source, and review Markdown/local-image ZIP or saved PDF output before manual download.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/markdown-viewer","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Local bounded document processing","Editable literal blocks, lists, tables and owned images","Actual saved PDF review with manual Download and explicit Use"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Markdown Viewer","item":"https://browserpdf.app/markdown-viewer"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Which Markdown is supported?","acceptedAnswer":{"@type":"Answer","text":"The supported subset includes headings, emphasis, code, numbered and bullet lists, pipe tables and owned local image references. Apply source shows the parsed model. It is not a general CommonMark claim."}},{"@type":"Question","name":"When does a download start?","acceptedAnswer":{"@type":"Answer","text":"Only when you press Download result after preparing and reviewing a saved file. Building, importing and retrying never start a download."}},{"@type":"Question","name":"Can I export Arabic or Hebrew as PDF?","acceptedAnswer":{"@type":"Answer","text":"The exact text remains editable. RTL and other unproved script or positioning cases show a precise unsupported PDF state before font loading; there is no silent character substitution."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -81,7 +82,7 @@
 
     <section class="intro">
       <h1 data-i18n="markdown-viewer.h1">Markdown Viewer</h1>
-      <p data-i18n="markdown-viewer.intro">Type or paste Markdown and see it rendered instantly, side by side. Drop in a .md file to load it. Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint.</p>
+      <p data-i18n="document_workspace.markdown_viewer_intro">Apply supported Markdown, edit literal blocks and tables, copy visible source, and review Markdown/local-image ZIP or saved PDF output before manual download.</p>
     </section>
 
     <section class="dropzone-section">
@@ -93,7 +94,7 @@
         </svg>
         <p class="dropzone-title" data-i18n="markdown-viewer.dropzone_title">Drop a Markdown file here</p>
         <p class="dropzone-subtitle"><span data-i18n="common.dropzone_or">or</span> <span class="link-like" data-i18n="common.dropzone_link">choose from your computer</span><span data-i18n="markdown-viewer.dropzone_typing">, or just start typing below</span></p>
-        <input type="file" id="fileInput" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+        <input type="file" id="fileInput" accept=".md,.markdown,.txt,.png,.jpg,.jpeg,text/markdown,text/plain,image/png,image/jpeg" hidden multiple>
       </div>
     </section>
 
@@ -106,89 +107,58 @@
       <span id="errorText"></span>
     </section>
 
-    <section class="result-section" id="resultSection">
-      <div class="result-toolbar">
-        <div class="tabs" role="tablist">
-          <button class="tab active" id="tabSource" role="tab" aria-selected="true" type="button" data-i18n="markdown-viewer.tab_markdown">Markdown</button>
-          <button class="tab" id="tabPreview" role="tab" aria-selected="false" type="button" data-i18n="markdown-viewer.tab_preview">Preview</button>
-        </div>
-        <div class="result-actions">
-          <button id="copyBtn" class="btn btn-secondary" type="button">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="9" y="9" width="13" height="13" rx="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            <span data-i18n="markdown-viewer.btn_copy">Copy</span>
-          </button>
-          <button id="downloadBtn" class="btn btn-secondary" type="button">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <path d="M7 10l5 5 5-5"/>
-              <path d="M12 15V3"/>
-            </svg>
-            <span data-i18n="markdown-viewer.btn_download_md">Download .md</span>
-          </button>
-          <button id="downloadPdfBtn" class="btn btn-primary" type="button">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M7 4h6l4 4v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>
-              <path d="M9 12h6M9 15h6M9 9h2"/>
-            </svg>
-            <span id="downloadPdfLabel" data-i18n="markdown-viewer.btn_save_pdf">Save as PDF</span>
-          </button>
-          <button id="clearBtn" class="btn btn-ghost" type="button" data-i18n="markdown-viewer.btn_clear">Clear</button>
-          <button id="fullscreenBtn" class="btn btn-ghost btn-icon" type="button" data-i18n-aria="markdown-viewer.btn_fullscreen_aria" aria-label="Toggle fullscreen">
-            <svg class="icon-expand" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
-              <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
-              <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
-              <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
-            </svg>
-            <svg class="icon-collapse" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M8 3v4a1 1 0 0 1-1 1H3"/>
-              <path d="M21 8h-4a1 1 0 0 1-1-1V3"/>
-              <path d="M3 16h4a1 1 0 0 1 1 1v4"/>
-              <path d="M16 21v-4a1 1 0 0 1 1-1h4"/>
-            </svg>
-          </button>
-        </div>
+    <section id="documentWorkspace" class="document-workspace" data-phase="empty" aria-labelledby="documentWorkspaceHeading">
+      <h2 id="documentWorkspaceHeading">Review and correct your document</h2>
+      <p>Choose a section to correct, then review the saved file before Download or Use. Your original stays available.</p>
+      <details class="document-advanced"><summary>Format support and limits</summary>
+<p class="document-limits">Supported text, lists, tables and owned images reflow onto Letter or A4 pages. PDF output uses verified Latin, Turkish, Greek and Cyrillic runs; unproved scripts, combining marks and RTL remain editable with a precise PDF support message. Word page layout, fonts, headers and other Office features may differ.</p>
+      <p class="document-limits">Private correction history and local image inputs stay in this page; the chosen PDF contains the rendered output.</p>
+      </details>
+      <div class="document-toolbar">
+        <button id="downloadOriginalBtn" class="btn btn-secondary" type="button" disabled>Download original</button>
+        <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
       </div>
-      <div class="result-panes resizable-panes" id="resultPanes">
-        <div id="paneSource" class="pane pane-source">
-          <textarea id="mdSource" spellcheck="false" data-i18n-aria="markdown-viewer.editor_aria" aria-label="Markdown source" data-i18n-placeholder="markdown-viewer.editor_placeholder" placeholder="Type or paste Markdown here…"></textarea>
+      <section id="sourceDraftRegion" aria-labelledby="sourceDraftHeading">
+        <h2 id="sourceDraftHeading">Markdown source</h2>
+        <p>Type Markdown or choose a file, then Apply source to read and correct it.</p>
+        <textarea id="mdSource" spellcheck="false" maxlength="8388608" aria-label="Markdown source" placeholder="Type or paste Markdown, then Apply source."></textarea>
+        <div class="document-source-actions">
+          <button id="applyMarkdownBtn" class="btn btn-primary" type="button">Apply source</button>
+          <button id="loadExampleBtn" class="btn btn-secondary" type="button">Load example</button>
+          <button id="updateMarkdownBtn" class="btn btn-secondary" type="button" disabled>Update Markdown from edits</button>
+          <button id="prepareMarkdownBtn" class="btn btn-secondary" type="button">Review Markdown download</button>
+          <button id="copyBtn" class="btn btn-secondary" type="button">Copy visible source</button>
         </div>
-        <div id="paneGutter" class="pane-gutter" role="separator" aria-orientation="vertical" data-i18n-aria="markdown-viewer.gutter_aria" aria-label="Resize the markdown and preview panes" tabindex="0"></div>
-        <div id="panePreview" class="pane pane-preview" hidden>
-          <div id="previewContent" class="preview-content"></div>
-        </div>
+        <details class="document-advanced"><summary>Local images and source formatting</summary>
+        <p class="document-limits">Choose one Markdown file with optional local PNG/JPEG images in the same selection. Local names must match the source exactly; remote image URLs are never fetched. The source control displays line endings as LF. Original download retains the original bytes. For Markdown with local images, download the complete ZIP or use an authored PDF to continue; standalone .md Use is disabled.</p>
+        <p class="document-limits">Apply source to parse the supported subset. Block edits stay separate until you choose Update source from blocks. Local image references never fetch a URL.</p>
+        </details>
+      </section>
+      <p id="workspaceStatus" class="document-status" role="status">Apply Markdown or choose a local .md file to begin.</p>
+      <div id="workspaceFidelity" class="document-fidelity" hidden></div>
+      <div id="workspaceEditor" hidden></div>
+      <div id="workspaceReviewActions" class="document-toolbar" hidden>
+        <button id="useDocumentResultBtn" class="btn btn-primary" type="button" disabled>Use this result</button>
+        <button id="retryDocumentPreviewBtn" class="btn btn-secondary" type="button" hidden>Retry saved-file preview</button>
+        <button id="retryDocumentCleanupBtn" class="btn btn-secondary" type="button" hidden>Retry preview cleanup</button>
+        <p class="document-limits">Download saves a copy. Use makes the reviewed file current for Reader or the editor.</p>
       </div>
+      <div id="documentResultHost"><section id="documentResult" class="document-result" hidden inert></section></div>
+      <div id="chainRow" class="chain-row" hidden></div>
     </section>
 
     <section class="about">
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
-        <li><strong data-i18n="markdown-viewer.about_1_title">Live preview</strong> <span data-i18n="markdown-viewer.about_1_body">updates as you type, rendered by building safe DOM nodes rather than injecting HTML, so pasted text can never execute as a script.</span></li>
-        <li><strong data-i18n="markdown-viewer.about_2_title">Supported syntax:</strong> <span data-i18n="markdown-viewer.about_2_body">headings, bold/italic/bold-italic, inline code, bullet and numbered lists, horizontal rules, and paragraphs. Tables and images aren't parsed yet.</span></li>
-        <li><strong data-i18n="markdown-viewer.about_3_title">Save as PDF</strong> <span data-i18n="markdown-viewer.about_3_body">lays your Markdown out onto paginated US Letter pages using the same engine as the</span> <a href="markdown-to-pdf" data-i18n="markdown-viewer.about_3_link">Markdown to PDF</a> <span data-i18n="markdown-viewer.about_3_after">tool. The pdf-lib library is only fetched (and hash-verified) when you actually export.</span></li>
-        <li><strong data-i18n="markdown-viewer.about_4_title">No file-upload endpoint.</strong> <span data-i18n="markdown-viewer.about_4_body">Text processing happens in this browser tab; BrowserPDF has no file-processing backend or file-upload endpoint.</span></li>
+        <li><strong>Read and correct.</strong> Literal blocks, run styles and directions, list starts, table cells, image size and reading order have bounded editing controls. The original stays separately available.</li>
+        <li><strong>Review the actual file.</strong> Build PDF creates saved bytes and a selected-page preview. Download and Use are separate deliberate actions. Unsupported PDF text stays editable rather than losing characters.</li>
+        <li><strong>Finite local processing.</strong> Files are processed in this tab. DOCX is limited to 32 MiB, Markdown to 8 MiB source, logical text to one million units, and retained images to 48 IDs / 16 MiB. Existing task and temporary work share the session limits.</li>
       </ul>
     </section>
 
     <section class="about faq">
       <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
-      <div class="faq-list">
-        <div class="faq-item">
-          <h3 data-i18n="markdown-viewer.faq_1_q">Can I export the preview as a PDF?</h3>
-          <p data-i18n="markdown-viewer.faq_1_a">Yes. Save as PDF lays your Markdown out onto paginated US Letter pages using the same engine as the Markdown to PDF tool.</p>
-        </div>
-        <div class="faq-item">
-          <h3 data-i18n="markdown-viewer.faq_2_q">Which Markdown syntax is supported?</h3>
-          <p data-i18n="markdown-viewer.faq_2_a">Headings, bold, italic, bold-italic, inline code, bullet and numbered lists, and horizontal rules. Tables and images aren't parsed yet.</p>
-        </div>
-        <div class="faq-item">
-          <h3 data-i18n="markdown-viewer.faq_3_q">Can I make the editor bigger?</h3>
-          <p data-i18n="markdown-viewer.faq_3_a">Yes. Drag the divider between the panes to resize them, or use the fullscreen button to take over the whole screen.</p>
-        </div>
-      </div>
+      <div class="faq-list"><div class="faq-item"><h3>Which Markdown is supported?</h3><p>The supported subset includes headings, emphasis, code, numbered and bullet lists, pipe tables and owned local image references. Apply source shows the parsed model. It is not a general CommonMark claim.</p></div><div class="faq-item"><h3>When does a download start?</h3><p>Only when you press Download result after preparing and reviewing a saved file. Building, importing and retrying never start a download.</p></div><div class="faq-item"><h3>Can I export Arabic or Hebrew as PDF?</h3><p>The exact text remains editable. RTL and other unproved script or positioning cases show a precise unsupported PDF state before font loading; there is no silent character substitution.</p></div></div>
     </section>
     <section class="about related-tools">
       <h2 data-i18n="common.related_tools">Related tools</h2>

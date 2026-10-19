@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="index, follow">
-<title>Word to PDF for Free: Runs in Your Browser | BrowserPDF</title>
-<meta name="description" content="Convert Word .docx to PDF for free in your browser. No signup; BrowserPDF has no file-upload endpoint.">
+<title>Word to PDF: Edit Content and Review Saved Pages | BrowserPDF</title>
+<meta name="description" content="Review supported Word runs, lists, tables and embedded images, correct literal content, then build and review saved PDF pages. Download and Use are explicit actions.">
 <link rel="canonical" href="https://browserpdf.app/word-to-pdf">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrowserPDF">
-<meta property="og:title" content="Word to PDF for Free: Runs in Your Browser | BrowserPDF">
-<meta property="og:description" content="Convert Word .docx to PDF for free in your browser. No signup; BrowserPDF has no file-upload endpoint.">
+<meta property="og:title" content="Word to PDF: Edit Content and Review Saved Pages | BrowserPDF">
+<meta property="og:description" content="Review supported Word runs, lists, tables and embedded images, correct literal content, then build and review saved PDF pages. Download and Use are explicit actions.">
 <meta property="og:url" content="https://browserpdf.app/word-to-pdf">
 <meta property="og:image" content="https://browserpdf.app/og/word-to-pdf.png">
 <meta property="og:image:width" content="1200">
@@ -20,8 +20,8 @@
 <meta property="og:image:alt" content="Preview of the Word to PDF tool: a .docx file converting into a paginated PDF.">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Word to PDF for Free: Runs in Your Browser | BrowserPDF">
-<meta name="twitter:description" content="Convert Word .docx to PDF for free in your browser. No signup; BrowserPDF has no file-upload endpoint.">
+<meta name="twitter:title" content="Word to PDF: Edit Content and Review Saved Pages | BrowserPDF">
+<meta name="twitter:description" content="Review supported Word runs, lists, tables and embedded images, correct literal content, then build and review saved PDF pages. Download and Use are explicit actions.">
 <meta name="twitter:image" content="https://browserpdf.app/og/word-to-pdf.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b5bd6'/%3E%3Cpath d='M18 6H10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M18 6v6h6' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -29,7 +29,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Word to PDF - BrowserPDF","description":"Convert Word .docx to PDF for free in your browser. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/word-to-pdf","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Word to PDF","item":"https://browserpdf.app/word-to-pdf"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does this support .doc (old Word format)?","acceptedAnswer":{"@type":"Answer","text":"This tool accepts modern .docx files. Older .doc files should be re-saved as .docx in Word first."}},{"@type":"Question","name":"Are my documents uploaded?","acceptedAnswer":{"@type":"Answer","text":"No. The Word file is read and converted in your browser tab. BrowserPDF has no file-upload endpoint."}},{"@type":"Question","name":"Will complex layouts match Word pixel-perfect?","acceptedAnswer":{"@type":"Answer","text":"Headings, lists, and emphasis are preserved. Complex layout (tables, multi-column) may need cleanup."}}]}]}</script>
+<link rel="stylesheet" href="css/document-model-workspace.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Word to PDF - BrowserPDF","description":"Review supported Word runs, lists, tables and embedded images, correct literal content, then build and review saved PDF pages. Download and Use are explicit actions.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/word-to-pdf","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Local bounded document processing","Editable literal blocks, lists, tables and owned images","Actual saved PDF review with manual Download and explicit Use"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Word to PDF","item":"https://browserpdf.app/word-to-pdf"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Will the PDF match Word exactly?","acceptedAnswer":{"@type":"Answer","text":"The bounded DOCX subset keeps actual literal runs, list starts, table cells and embedded PNG/JPEG images. Word layout, headers, fields and other Office features may require correction or be rejected."}},{"@type":"Question","name":"When does a download start?","acceptedAnswer":{"@type":"Answer","text":"Only when you press Download result after preparing and reviewing a saved file. Building, importing and retrying never start a download."}},{"@type":"Question","name":"Can I export Arabic or Hebrew as PDF?","acceptedAnswer":{"@type":"Answer","text":"The exact text remains editable. RTL and other unproved script or positioning cases show a precise unsupported PDF state before font loading; there is no silent character substitution."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -74,7 +75,7 @@
     <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
     <section class="intro">
       <h1 data-i18n="word-to-pdf.h1">Word to PDF</h1>
-      <p data-i18n="word-to-pdf.intro">Turn a .docx into a clean PDF. Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint.</p>
+      <p data-i18n="document_workspace.word_to_pdf_intro">Review supported Word runs, lists, tables and embedded images, correct literal content, then build and review saved PDF pages. Download and Use are explicit actions.</p>
     </section>
     <div class="callout" data-i18n="word-to-pdf.no_see">Document processing happens in this browser tab. BrowserPDF has no file-processing backend or file-upload endpoint, so the selected documents are not sent to us.</div>
     <section class="dropzone-section">
@@ -83,13 +84,6 @@
         <p class="dropzone-subtitle"><span data-i18n="common.dropzone_or">or</span> <span class="link-like" data-i18n="common.dropzone_link">choose from your computer</span></p>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
       </div>
-      <div id="optionsSection" class="options-panel" hidden>
-        <div class="option-block"><span id="fileSummary" class="file-list-count"></span>
-          <button id="convertBtn" class="btn btn-primary" type="button" data-i18n="word-to-pdf.btn">Convert to PDF & download</button>
-        </div>
-        <pre id="previewText" class="text-input" style="white-space:pre-wrap;max-height:220px;overflow:auto"></pre>
-      </div>
-      <div id="chainRow" class="chain-row" hidden></div>
     </section>
     <section id="progressSection" class="progress-section" hidden>
       <div class="progress-header"><span id="progressStatus" data-i18n="common.preparing">Preparing…</span></div>
@@ -98,19 +92,41 @@
     <section id="errorSection" class="error-banner" hidden role="alert">
       <span id="errorText"></span>
     </section>
+    <section id="documentWorkspace" class="document-workspace" data-phase="empty" aria-labelledby="documentWorkspaceHeading">
+      <h2 id="documentWorkspaceHeading">Review and correct your document</h2>
+      <p>Choose a section to correct, then review the saved file before Download or Use. Your original stays available.</p>
+      <details class="document-advanced"><summary>Format support and limits</summary>
+<p class="document-limits">Supported text, lists, tables and owned images reflow onto Letter or A4 pages. PDF output uses verified Latin, Turkish, Greek and Cyrillic runs; unproved scripts, combining marks and RTL remain editable with a precise PDF support message. Word page layout, fonts, headers and other Office features may differ.</p>
+      <p class="document-limits">Private correction history and local image inputs stay in this page; the chosen PDF contains the rendered output.</p>
+      </details>
+      <div class="document-toolbar">
+        <button id="downloadOriginalBtn" class="btn btn-secondary" type="button" disabled>Download original</button>
+        <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+      <p id="workspaceStatus" class="document-status" role="status">Choose a .docx file to begin.</p>
+      <div id="workspaceFidelity" class="document-fidelity" hidden></div>
+      <div id="workspaceEditor" hidden></div>
+      <div id="workspaceReviewActions" class="document-toolbar" hidden>
+        <button id="useDocumentResultBtn" class="btn btn-primary" type="button" disabled>Use this result</button>
+        <button id="retryDocumentPreviewBtn" class="btn btn-secondary" type="button" hidden>Retry saved-file preview</button>
+        <button id="retryDocumentCleanupBtn" class="btn btn-secondary" type="button" hidden>Retry preview cleanup</button>
+        <p class="document-limits">Download saves a copy. Use makes the reviewed file current for Reader or the editor.</p>
+      </div>
+      <div id="documentResultHost"><section id="documentResult" class="document-result" hidden inert></section></div>
+      <div id="chainRow" class="chain-row" hidden></div>
+    </section>
+
     <section class="about">
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
-        <li><strong data-i18n="word-to-pdf.about_1_title">Processing in this browser tab.</strong> <span data-i18n="word-to-pdf.about_1_body">Your file is read locally with JavaScript. BrowserPDF has no file-upload endpoint, so the selected document is not sent to us.</span></li>
-        <li><strong data-i18n="word-to-pdf.about_2_title">No file-upload endpoint.</strong> <span data-i18n="word-to-pdf.about_2_body">Document processing happens locally, and BrowserPDF has no file-upload endpoint through which it could receive a copy.</span></li>
-        <li><strong data-i18n="word-to-pdf.about_3_title">Free, no account.</strong> <span data-i18n="word-to-pdf.about_3_body">No signup, no watermarks on your output, no usage tier.</span></li>
+        <li><strong>Read and correct.</strong> Literal blocks, run styles and directions, list starts, table cells, image size and reading order have bounded editing controls. The original stays separately available.</li>
+        <li><strong>Review the actual file.</strong> Build PDF creates saved bytes and a selected-page preview. Download and Use are separate deliberate actions. Unsupported PDF text stays editable rather than losing characters.</li>
+        <li><strong>Finite local processing.</strong> Files are processed in this tab. DOCX is limited to 32 MiB, Markdown to 8 MiB source, logical text to one million units, and retained images to 48 IDs / 16 MiB. Existing task and temporary work share the session limits.</li>
       </ul>
     </section>
     <section class="about faq">
       <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
-      <div class="faq-list">
-        <div class="faq-item"><h3 data-i18n="word-to-pdf.faq_1_q">Does this support .doc (old Word format)?</h3><p data-i18n="word-to-pdf.faq_1_a">This tool accepts modern .docx files. Older .doc files should be re-saved as .docx in Word first.</p></div><div class="faq-item"><h3 data-i18n="word-to-pdf.faq_2_q">Are my documents uploaded?</h3><p data-i18n="word-to-pdf.faq_2_a">No. The Word file is read and converted in your browser tab. BrowserPDF has no file-upload endpoint.</p></div><div class="faq-item"><h3 data-i18n="word-to-pdf.faq_3_q">Will complex layouts match Word pixel-perfect?</h3><p data-i18n="word-to-pdf.faq_3_a">Headings, lists, and emphasis are preserved. Complex layout (tables, multi-column) may need cleanup.</p></div>
-      </div>
+      <div class="faq-list"><div class="faq-item"><h3>Will the PDF match Word exactly?</h3><p>The bounded DOCX subset keeps actual literal runs, list starts, table cells and embedded PNG/JPEG images. Word layout, headers, fields and other Office features may require correction or be rejected.</p></div><div class="faq-item"><h3>When does a download start?</h3><p>Only when you press Download result after preparing and reviewing a saved file. Building, importing and retrying never start a download.</p></div><div class="faq-item"><h3>Can I export Arabic or Hebrew as PDF?</h3><p>The exact text remains editable. RTL and other unproved script or positioning cases show a precise unsupported PDF state before font loading; there is no silent character substitution.</p></div></div>
     </section>
     <section class="about related-tools">
       <h2 data-i18n="common.related_tools">Related tools</h2>

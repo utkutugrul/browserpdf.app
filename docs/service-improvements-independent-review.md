@@ -1728,3 +1728,39 @@ Privacy UI fresh review separately finds restored-page selection, inherited alia
 entry-count admission and original-alias/Redo history-copy reservation P2s.
 The same six-path author is correcting those; the accepted Privacy core remains
 frozen. No Privacy UI native or service acceptance is claimed.
+
+### Document workspace disclosure acceptance
+
+The twelve-path presentation refinement replaces the dense default editing form
+with native collapsed details for page, table, paragraph, text-part and history
+settings. Literal text, style, Save, correction Undo/Redo and review actions stay
+directly available. Section headings use readable names. Opening state survives
+editor rerenders; all existing operations and bounded windows remain available.
+Seven ownership, source, export, readiness and cleanup regions remain byte exact.
+Fresh scoped source review passes without a product finding:
+`/tmp/browserpdf-document-ui-disclosure-review-20261019.md`, SHA-256
+`eed98563f4dbe5945c6fa03d649b25dafa8bf941e6ec9cd5450f43b050c31927`.
+
+The evidence-only corrected freeze records the actual eight changed presentation
+paths and four unchanged entry/routes; inherited historical scope fields were
+removed. All twelve owned and 54 protected pins remain exact. Manifest:
+`/tmp/browserpdf-document-workspace-disclosure-20261019/final-twelve-manifest-metadata-corrected.json`,
+SHA-256 `16d05cffe26d962190226a0ff03680aad8c1ababa3c148f601ba0530f89b943f`.
+
+Root's new affected invocation passes all 13 cases in 18457.674 ms, with zero
+skipped, flaky or retried cases. These are the eleven author journeys plus two
+independent Root cases, strengthened to prove initially closed editor groups,
+primary actions outside details and real focused Enter open/close on all three
+mobile shells. Exact plain-Markdown current/original bytes and task survive Use
+and the next converter. The 320-pixel light Word, 320-pixel dark RTL Viewer and
+390-pixel dark converter have no horizontal overflow and keep ready Download/Use
+inside the viewport. Root visually inspects the actual updated mobile screenshot.
+
+Report: `/tmp/browserpdf-root-document-disclosure-native-first-20261019/report.json`,
+SHA-256 `970b83b541880c8580dd42406c50efe195c0ad890fedbc673ccbae282674c280`.
+All 453 included source hashes and paths, 22 generated fixtures and private harness
+files stay exact. The 47 explicit concurrent Privacy/OCR paths are never imported.
+Every actual request is GET; there are no page errors. Chromium is 151.0.7922.34.
+Earlier failures and independent saved PDF/ZIP/BOM/idle proofs remain retained.
+This accepts the common three-service UI checkpoint. Full locale coverage and
+final service acceptance for 22, 25 and 29 remain open.
