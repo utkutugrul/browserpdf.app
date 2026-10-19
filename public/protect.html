@@ -30,7 +30,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Protect PDF - BrowserPDF","description":"Add password protection to a PDF, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/protect","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Protect PDF","item":"https://browserpdf.app/protect"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does protecting a PDF do?","acceptedAnswer":{"@type":"Answer","text":"It adds password encryption so the PDF can only be opened by someone who has the password you set. You can also restrict printing, copying, and editing."}},{"@type":"Question","name":"Is my password sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. The password is used inside your browser tab to encrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document."}},{"@type":"Question","name":"Can I set different permissions?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can allow or restrict printing (high or low resolution), copying text and images, modifying, annotating, filling forms, and document assembly."}}]}]}</script>
+<link rel="stylesheet" href="css/protection-workspace.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Protect PDF - BrowserPDF","description":"Add password protection to a PDF, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/protect","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks","PDF inputs up to 32 MiB and 1,000 pages","Explicit result review, Use and manual Download"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Protect PDF","item":"https://browserpdf.app/protect"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does protecting a PDF do?","acceptedAnswer":{"@type":"Answer","text":"It adds opening-password encryption using AES-256 by default or the optional AES-128 policy. Review the encrypted result, then choose Use or manual Download. The original remains available in the task."}},{"@type":"Question","name":"Is my password sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. The password is used inside your browser tab to encrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document."}},{"@type":"Question","name":"Can I set different permissions?","acceptedAnswer":{"@type":"Answer","text":"Choose full-resolution, low-resolution or no printing; copying on or off; and one editing level: all changes, annotations and forms, form filling, assembly or none. Accessibility extraction remains allowed. Reader enforcement varies."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -96,74 +97,8 @@
         <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
       </div>
 
-      <div id="optionsSection" class="options-panel" hidden>
-        <div class="option-block">
-          <div class="option-title"><span data-i18n="protect.password_label">Password</span></div>
-          <input type="password" id="passwordInput" class="text-input" data-i18n-placeholder="protect.password_placeholder" placeholder="Set a password" autocomplete="new-password">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title"><span data-i18n="protect.confirm_label">Confirm password</span></div>
-          <input type="password" id="confirmInput" class="text-input" data-i18n-placeholder="protect.confirm_placeholder" placeholder="Re-enter the password" autocomplete="new-password">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title"><span data-i18n="protect.owner_password_label">Owner password (optional)</span></div>
-          <input type="password" id="ownerInput" class="text-input" data-i18n-placeholder="protect.owner_password_placeholder" placeholder="Leave empty to use the same as the password" autocomplete="off">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block">
-          <div class="option-title"><span data-i18n="protect.permissions_label">Permissions (optional)</span></div>
-          <div class="switch-row">
-            <label class="switch">
-              <input type="checkbox" id="copyingChk" checked>
-              <span class="switch-track"><span class="switch-thumb"></span></span>
-            </label>
-            <span data-i18n="protect.perm_copying">Allow copying text and images</span>
-          </div>
-          <div class="switch-row">
-            <label class="switch">
-              <input type="checkbox" id="modifyingChk" checked>
-              <span class="switch-track"><span class="switch-thumb"></span></span>
-            </label>
-            <span data-i18n="protect.perm_modifying">Allow modifying the document</span>
-          </div>
-          <div class="switch-row">
-            <label class="switch">
-              <input type="checkbox" id="annotatingChk" checked>
-              <span class="switch-track"><span class="switch-thumb"></span></span>
-            </label>
-            <span data-i18n="protect.perm_annotating">Allow annotating or commenting</span>
-          </div>
-          <div class="switch-row">
-            <label class="switch">
-              <input type="checkbox" id="fillingFormsChk" checked>
-              <span class="switch-track"><span class="switch-thumb"></span></span>
-            </label>
-            <span data-i18n="protect.perm_filling">Allow filling form fields</span>
-          </div>
-          <div class="switch-row">
-            <label class="switch">
-              <input type="checkbox" id="assemblyChk" checked>
-              <span class="switch-track"><span class="switch-thumb"></span></span>
-            </label>
-            <span data-i18n="protect.perm_assembly">Allow document assembly</span>
-          </div>
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block option-block-row">
-          <div class="option-title"><span data-i18n="protect.printing_label">Printing</span></div>
-          <select id="printingSelect" class="select-input">
-            <option value="high" selected data-i18n="protect.printing_high">Allowed (high resolution)</option>
-            <option value="low" data-i18n="protect.printing_low">Low resolution only</option>
-            <option value="none" data-i18n="protect.printing_none">Not allowed</option>
-          </select>
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block option-block-row">
-          <button id="protectBtn" class="btn btn-primary" type="button" data-i18n="protect.protect_btn">Protect &amp; download</button>
-        </div>
-      </div>
+      <p class="option-hint" data-i18n="protection.file_limit">Choose a PDF up to 32 MiB and 1,000 pages. Review the result before using or downloading it.</p>
+      <section id="protectionWorkspace" class="protection-workspace" aria-label="Protect PDF workspace" hidden></section>
 
       <div id="chainRow" class="chain-row" hidden></div>
     </section>
@@ -189,9 +124,9 @@
     <section class="about">
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
-        <li><strong data-i18n="protect.about_1_title">The password stays in your browser.</strong> <span data-i18n="protect.about_1_body">When you set a password, it is used locally to encrypt the PDF. BrowserPDF has no file-upload endpoint, so neither the password nor the file can leave your device.</span></li>
-        <li><strong data-i18n="protect.about_2_title">Standard PDF encryption.</strong> <span data-i18n="protect.about_2_body">The PDF is encrypted with 128-bit RC4 encryption, the most widely supported standard. Any PDF reader will prompt for the password when opening the file.</span></li>
-        <li><strong data-i18n="protect.about_3_title">Permissions are advisory.</strong> <span data-i18n="protect.about_3_body">Permission restrictions (printing, copying, etc.) are enforced by most PDF readers, but a determined user with the right tools can bypass them. The password itself is the real protection.</span></li>
+        <li><strong data-i18n="protect.about_1_title">The password stays in your browser.</strong> <span data-i18n="protect.workspace_about_1">The password is used in this tab to encrypt the PDF. BrowserPDF has no file-upload endpoint for the selected document or password.</span></li>
+        <li><strong data-i18n="protect.about_2_title">Standard PDF encryption.</strong> <span data-i18n="protect.workspace_about_2">AES-256 is the default, with an explicit AES-128 compatibility option. Reader support varies. Review the actual encrypted result before using it or downloading it.</span></li>
+        <li><strong data-i18n="protect.about_3_title">Permissions are advisory.</strong> <span data-i18n="protect.workspace_about_3">Choose printing, copying and one supported editing level. Readers may handle permissions differently. The opening password is separate from these advisory permissions.</span></li>
       </ul>
     </section>
 
@@ -200,7 +135,7 @@
       <div class="faq-list">
         <div class="faq-item">
           <h3 data-i18n="protect.faq_1_q">What does protecting a PDF do?</h3>
-          <p data-i18n="protect.faq_1_a">It adds password encryption so the PDF can only be opened by someone who has the password you set. You can also restrict printing, copying, and editing.</p>
+          <p data-i18n="protect.workspace_faq_1">It adds opening-password encryption using AES-256 by default or the optional AES-128 policy. Review the encrypted result, then choose Use or manual Download. The original remains available in the task.</p>
         </div>
         <div class="faq-item">
           <h3 data-i18n="protect.faq_2_q">Is my password sent anywhere?</h3>
@@ -208,7 +143,7 @@
         </div>
         <div class="faq-item">
           <h3 data-i18n="protect.faq_3_q">Can I set different permissions?</h3>
-          <p data-i18n="protect.faq_3_a">Yes. You can allow or restrict printing (high or low resolution), copying text and images, modifying, annotating, filling forms, and document assembly.</p>
+          <p data-i18n="protect.workspace_faq_3">Choose full-resolution, low-resolution or no printing; copying on or off; and one editing level: all changes, annotations and forms, form filling, assembly or none. Accessibility extraction remains allowed. Reader enforcement varies.</p>
         </div>
       </div>
     </section>
@@ -232,7 +167,7 @@
       <span><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="common.privacy_note">document processing happens in this browser tab. BrowserPDF has no file-processing backend or file-upload endpoint, so the selected document is not sent to us.</span></span>
     </p>
     <p class="site-footer-credits">
-      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="common.verified_hash">library, verified with a cryptographic hash before being loaded.</span>
+      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://qpdf.readthedocs.io/" target="_blank" rel="noopener noreferrer">QPDF</a>, <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="protection.verified_libraries">and PDF.js libraries, verified with cryptographic hashes before use.</span>
       &middot;
       <a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot;
       <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot;

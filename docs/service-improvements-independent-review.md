@@ -901,3 +901,129 @@ This accepts the pure builder, finite layout/source model and owned checks.
 Document routes, editable correction, shared font loading, joint retained
 resources, actual workspace previews/manual downloads, complete scripts,
 locales and all final thirty-two service acceptance rows remain open.
+
+
+### Protect and Unlock workspace first native gates
+
+The thirteen-path standalone workspace is frozen with ten portable checks
+passing. Engine24, shared12 and audit40 remain exact. New English help and
+JSON-LD describe actual AES-256/AES-128 behavior through new fallback keys;
+the complete translated dictionary migration remains open.
+
+Root's independent actual rich-source journey is **FIRST PASS**:
+Protect review, explicit encrypted download/Use, typed Unlock handoff,
+rejected wrong credential over an empty canonical task, correct-credential
+plaintext review while canonical current stays encrypted, explicit plaintext
+download/Use, and Reader continuation with the exact chosen bytes. One task,
+original and history remain intact. Actual saved plaintext preserves standard
+Info, language, forms, attachment MIME/payload and page geometry. Secret
+metadata checks pass for session, workflow, browser storage and URL. There are
+zero page errors/non-GET requests and exactly two deliberate downloads.
+The actual artifacts are 11,123 encrypted bytes, SHA256
+`c5733000ec2f2c2b46cc83618af8068fd287881fa74acb51d7985b2d47d4ad05`,
+and 8,776 plaintext bytes, SHA256
+`4025d0393885873457d0853d94682f8d7d22a3339e5cd573d40be54bf47f3b53`.
+All 318 included hashes, path inventory and source stay exact; the browser
+closes. The two disjoint document PDF core/test paths are excluded from this
+window. Evidence:
+`/tmp/browserpdf-root-protection-workspace-journey-first-20261019/report.json`.
+
+Root's separately allocated eleven native cases finish **10 PASS, 1 FAIL**,
+25,187.885 ms, zero skipped/flaky/top-level errors. All 358 included hashes,
+path inventory, configuration, frozen manifest and audit40 remain exact.
+No globalSetup, shared fixture generation or server lifecycle occurs. The
+browser closes. Evidence:
+`/tmp/browserpdf-protection-workspaces-native-first-20261019/final.json`.
+The single failure is an authored test expectation: canonical selection is
+page 2, private Previous navigation visits page 1, and Undo correctly restores
+the canonical selected-page preview to page 2. The helper incorrectly requires
+page 1. All preceding encrypted pixels, explicit download/Use, Unlock-only
+rail and private page navigation assertions pass. A test-only expected-page
+parameter correction is approved; product selection behavior stays intact.
+
+Fresh independent review also finds a separate P2 product issue: the custom
+result passes boundary losses without the required kind, so Use and handoff
+drop baking/prior rewrite disclosures, and the private review displays no
+losses. Original/history still retain their own boundary. A route-local valid
+finite boundary and visible disclosures, including an actual scene-bake and
+handoff regression, are approved within the same thirteen paths. Evidence:
+`/tmp/browserpdf-protection-workspaces-fresh-review-20261019.md`. All thirteen
+hashes stay exact through review. The original ten-pass/one-fail gate and Root
+journey remain retained; both service rows, correction acceptance, finite
+return intent, full locales and final service checks remain open.
+
+### Protect and Unlock: boundary and responsive corrections accepted
+
+Both boundary findings close in the same thirteen owned paths. The route
+passes the required finite `pdf-rewrite` boundary, retains prior and actual
+baking disclosures, shows them before Use and preserves an exact no-op
+boundary. A union exceeding the supported limit rejects before adoption.
+The authored Undo expectation now follows canonical page 2. Five focused
+portable checks and six syntax checks pass. Fresh focused review passes at
+`/tmp/browserpdf-protection-workspaces-corrected-review-20261019.md`.
+
+Root's three affected actual native cases pass **3/3**, 6,089.103 ms, with no
+skips, flakes or top-level errors. They prove the original Undo tail, actual
+form-scene baking plus prior boundary through Protect/Unlock Use, history
+and Reader continuation, and exact no-op disclosures with a newer-owner
+fence. All 424 included source hashes, path inventory, configurations,
+manifest and audit40 remain exact; the browser closes. Evidence:
+`/tmp/browserpdf-protection-workspaces-corrected3-native-20261019/final.json`.
+This is a focused correction gate, not a new single-run thirteen-case result.
+
+Root's independent mobile check then finds a real 320-pixel overflow: the
+algorithm SELECT extends to pixel 353. The first preview begins at
+2,085.98 pixels below repeated long identities and settings. The original
+failed report and diagnostic screenshot are retained in
+`/tmp/browserpdf-root-protection-layout-idle-first-20261019/report.json` and
+`/tmp/browserpdf-root-protection-320-diagnostic-20261019/`.
+
+The owned correction bounds controls and grid columns, puts preview and
+review before settings, and uses keyboard-accessible native document
+details. Separate Current and Pending labels retain full accessible names.
+Use, history and original recovery refresh the identity; Cancel removes
+the pending label while retaining A; Clear resets old labels before a
+successor. Only workspace JS/CSS, two affected specs and the checkpoint
+document change. The other eight owned paths remain exact. Fresh focused
+review passes eleven finite source probes with all thirteen owned and
+three shared hashes exact:
+`/tmp/browserpdf-protection-responsive-fresh-review-20261019.md`.
+
+Root's actual two affected native cases pass **2/2**, 2,170.419 ms. They
+cover exact 260-unit labels, native keyboard expansion, canonical selected
+page through history, Clear and a positive successor, and pending encrypted
+B over accepted A through wrong credential and Cancel. All 423 included
+source hashes, path inventory, configuration, manifest and audit40 remain
+exact. The disjoint active document pure modules and Metadata six-path
+work are explicitly excluded. Evidence:
+`/tmp/browserpdf-root-protection-responsive2-native-first-20261019/final.json`.
+
+Actual idle delivery measures **76,241 first-party JS bytes and eleven
+requests** for Protect, and **76,240 bytes and eleven requests** for Unlock.
+Both remain below unchanged 100,000-byte and sixteen-request limits; optional
+intake, preview, engine and library loader modules are absent. The subsequent
+readiness assertion times out at five seconds; a separate fifteen-second
+prefix also times out before geometry. Both failed reports remain retained.
+A focused 320-pixel diagnostic subsequently loads the actual PDF, records
+zero failed network requests and confirms no overflow. These outcomes are
+not relabeled as product success or a proven network failure.
+
+The final four-layout gate waits for the actual page canvas and then also
+requires the operation button to be ready. It passes Protect at 320-pixel
+English/light and 768-pixel Turkish/dark, and Unlock at 390-pixel
+Turkish/dark and 1,440-pixel Arabic/light. Body widths match each viewport,
+controls do not overflow, actual canvas backing stays within 900 pixels
+and one million pixels, and theme/RTL checks pass. Protect's 320-pixel
+canvas begins at 1,006.25 pixels; Root visually inspects the saved screenshot.
+All included source hashes, path inventory and input corpus remain exact;
+page errors and non-GET requests are zero; the browser closes. Evidence:
+`/tmp/browserpdf-root-protection-layout-idle-responsive-canvasready-first-20261019/report.json`.
+
+The author's first global closure failure is retained separately. Its two
+shared deltas and new test are Root-approved document-workspace work:
+readonly `resourceCount` in the actual and empty snapshots, plus a focused
+four-case unit. The original failure is not overwritten. Native gates
+include the frozen shared changes and exclude only explicitly owned
+unrelated active paths. This accepts the standalone workspace and focused
+corrections for checkpointing. Finite Unlock return intent, complete
+twenty-two-locale semantics and both final service rows remain open.

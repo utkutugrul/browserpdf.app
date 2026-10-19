@@ -30,7 +30,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Unlock PDF - BrowserPDF","description":"Remove a password from a protected PDF, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/unlock","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Unlock PDF","item":"https://browserpdf.app/unlock"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does unlocking a PDF do?","acceptedAnswer":{"@type":"Answer","text":"It removes the password protection so the PDF opens without asking for one. You need the correct password to unlock it."}},{"@type":"Question","name":"Is my password sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. The password is used only inside your browser tab to decrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document."}},{"@type":"Question","name":"Can I unlock a PDF without the password?","acceptedAnswer":{"@type":"Answer","text":"No. You need the correct password to remove protection. This tool cannot crack or bypass PDF passwords."}}]}]}</script>
+<link rel="stylesheet" href="css/protection-workspace.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Unlock PDF - BrowserPDF","description":"Remove a password from a protected PDF, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/unlock","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks","PDF inputs up to 32 MiB and 1,000 pages","Explicit result review, Use and manual Download"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Unlock PDF","item":"https://browserpdf.app/unlock"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does unlocking a PDF do?","acceptedAnswer":{"@type":"Answer","text":"It removes encryption from supported PDFs using a valid opening or owner password, including an empty opening password when applicable. Review the output before choosing Use or manual Download."}},{"@type":"Question","name":"Is my password sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. The password is used only inside your browser tab to decrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document."}},{"@type":"Question","name":"Can I unlock without typing a password?","acceptedAnswer":{"@type":"Answer","text":"Only when the PDF has an empty opening password. Otherwise enter a valid opening or owner password. The tool does not crack passwords. Credentials are limited to 127 UTF-8 bytes without control characters."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -96,24 +97,8 @@
         <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
       </div>
 
-      <div id="notEncryptedSection" class="callout" hidden>
-        <span data-i18n="unlock.not_encrypted">This PDF is not password-protected.</span>
-        <button id="downloadUnlockedBtn" class="btn btn-secondary btn-small" type="button" style="margin-left:12px" data-i18n="unlock.download_as_is">Download</button>
-      </div>
-
-      <div id="passwordSection" class="options-panel" hidden>
-        <div class="option-block">
-          <div class="option-title">
-            <span data-i18n="unlock.password_label">PDF password</span>
-          </div>
-          <input type="password" id="passwordInput" class="text-input" data-i18n-placeholder="unlock.password_placeholder" placeholder="Enter the PDF password" autocomplete="off">
-        </div>
-        <div class="option-divider"></div>
-        <div class="option-block option-block-row">
-          <span id="fileSummary" class="file-list-count"></span>
-          <button id="unlockBtn" class="btn btn-primary" type="button" data-i18n="unlock.unlock_btn">Unlock &amp; download</button>
-        </div>
-      </div>
+      <p class="option-hint" data-i18n="protection.file_limit">Choose a PDF up to 32 MiB and 1,000 pages. Review the result before using or downloading it.</p>
+      <section id="protectionWorkspace" class="protection-workspace" aria-label="Unlock PDF workspace" hidden></section>
 
       <div id="chainRow" class="chain-row" hidden></div>
     </section>
@@ -140,8 +125,8 @@
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
         <li><strong data-i18n="unlock.about_1_title">The password stays in your browser.</strong> <span data-i18n="unlock.about_1_body">The password is used locally to decrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document.</span></li>
-        <li><strong data-i18n="unlock.about_2_title">The output is a clean, unprotected PDF.</strong> <span data-i18n="unlock.about_2_body">After unlocking, the downloaded file opens without asking for a password and has no restrictions on printing, copying, or editing.</span></li>
-        <li><strong data-i18n="unlock.about_3_title">You need the correct password.</strong> <span data-i18n="unlock.about_3_body">This tool removes protection; it does not crack or bypass passwords. If you do not have the password, the file cannot be unlocked.</span></li>
+        <li><strong data-i18n="unlock.workspace_about_2_title">Review the unprotected output.</strong> <span data-i18n="unlock.workspace_about_2">Supported PDFs are decrypted without rebuilding their pages. Review the actual output, then choose Use or manual Download. Existing content and reader capabilities still determine what you can edit or copy.</span></li>
+        <li><strong data-i18n="unlock.workspace_about_3_title">Use a valid opening or owner password.</strong> <span data-i18n="unlock.workspace_about_3">An empty opening password is allowed when the PDF uses one. Otherwise supply a valid opening or owner password. This tool does not crack passwords.</span></li>
       </ul>
     </section>
 
@@ -150,15 +135,15 @@
       <div class="faq-list">
         <div class="faq-item">
           <h3 data-i18n="unlock.faq_1_q">What does unlocking a PDF do?</h3>
-          <p data-i18n="unlock.faq_1_a">It removes the password protection so the PDF opens without asking for one. You need the correct password to unlock it.</p>
+          <p data-i18n="unlock.workspace_faq_1">It removes encryption from supported PDFs using a valid opening or owner password, including an empty opening password when applicable. Review the output before choosing Use or manual Download.</p>
         </div>
         <div class="faq-item">
           <h3 data-i18n="unlock.faq_2_q">Is my password sent anywhere?</h3>
           <p data-i18n="unlock.faq_2_a">No. The password is used only inside your browser tab to decrypt the PDF. BrowserPDF has no file-upload endpoint for the password or document.</p>
         </div>
         <div class="faq-item">
-          <h3 data-i18n="unlock.faq_3_q">Can I unlock a PDF without the password?</h3>
-          <p data-i18n="unlock.faq_3_a">No. You need the correct password to remove protection. This tool cannot crack or bypass PDF passwords.</p>
+          <h3 data-i18n="unlock.workspace_faq_3_q">Can I unlock without typing a password?</h3>
+          <p data-i18n="unlock.workspace_faq_3">Only when the PDF has an empty opening password. Otherwise enter a valid opening or owner password. The tool does not crack passwords. Credentials are limited to 127 UTF-8 bytes without control characters.</p>
         </div>
       </div>
     </section>
@@ -182,7 +167,7 @@
       <span><strong data-i18n="common.privacy_label">Privacy:</strong> <span data-i18n="common.privacy_note">document processing happens in this browser tab. BrowserPDF has no file-processing backend or file-upload endpoint, so the selected document is not sent to us.</span></span>
     </p>
     <p class="site-footer-credits">
-      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="common.verified_hash">library, verified with a cryptographic hash before being loaded.</span>
+      <span data-i18n="common.built_with">Built with the open-source</span> <a href="https://qpdf.readthedocs.io/" target="_blank" rel="noopener noreferrer">QPDF</a>, <a href="https://pdf-lib.js.org/" target="_blank" rel="noopener noreferrer">pdf-lib</a> <span data-i18n="protection.verified_libraries">and PDF.js libraries, verified with cryptographic hashes before use.</span>
       &middot;
       <a href="privacy" data-i18n="common.footer_privacy">Privacy</a> &middot;
       <a href="terms" data-i18n="common.footer_terms">Terms</a> &middot;

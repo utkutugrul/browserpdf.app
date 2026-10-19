@@ -1,0 +1,24 @@
+.protection-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; margin-block: 1.25rem; min-width: 0; max-width: 100%; }
+.protection-workspace > * { min-width: 0; max-width: 100%; }
+.protection-workspace[hidden], .protection-workspace [hidden] { display: none; }
+.protection-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; min-width: 0; }
+.protection-toolbar > button { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.protection-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem; min-width: 0; max-width: 100%; border: 1px solid var(--border-color, #64748b); border-radius: 12px; }
+.protection-field { display: grid; gap: .4rem; min-width: 0; font-weight: 500; }
+.protection-field input, .protection-field select { min-width: 0; width: 100%; max-width: 100%; box-sizing: border-box; }
+.protection-secret { display: flex; gap: .5rem; min-width: 0; }
+.protection-secret input { flex: 1; min-width: 0; }
+.protection-secret button { flex: 0 0 auto; }
+.protection-preview { display: grid; place-items: center; min-width: 0; overflow: auto; max-height: 75vh; border-radius: 8px; }
+.protection-preview canvas { display: block; max-width: 100%; height: auto; background: white; box-shadow: 0 1px 8px #0003; }
+.protection-identity { overflow-wrap: anywhere; }
+.protection-document-details { min-width: 0; max-width: 100%; }
+.protection-document-details > summary { padding: .5rem .75rem; border: 1px solid var(--border-color, #64748b); border-radius: 8px; cursor: pointer; list-style-position: inside; }
+.protection-summary-row { display: flex; gap: .35rem; min-width: 0; max-width: 100%; }
+.protection-summary-row > :first-child { flex: 0 0 auto; }
+.protection-summary-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.protection-document-details .document-identity { margin-block: .75rem 0; overflow-wrap: anywhere; }
+.protection-document-details .document-identity-item { display: block; }
+#protectionCredentialError { color: var(--danger-color, #b42318); margin: 0; }
+@media (min-width: 760px) { .protection-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } .protection-fields > .option-hint, #protectionCredentialError { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .protection-toolbar > button { flex: 1 1 auto; } .protection-secret { flex-wrap: wrap; } .protection-secret input { flex-basis: 65%; } }
