@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Organize PDF - BrowserPDF","description":"Reorder, rotate, and delete PDF pages in one place, for free, in your browser tab. No signup or added watermark; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/organize","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Organize PDF","item":"https://browserpdf.app/organize"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I reorder pages by dragging?","acceptedAnswer":{"@type":"Answer","text":"Yes. Drag page thumbnails into position, or use the arrow buttons on each page."}},{"@type":"Question","name":"Can I delete pages?","acceptedAnswer":{"@type":"Answer","text":"Yes. Mark any page for removal (and click again to restore it before applying); the output contains only the pages you kept, in the order you arranged."}},{"@type":"Question","name":"Is my original file changed?","acceptedAnswer":{"@type":"Answer","text":"No. Your original PDF stays as it is; the tool builds a brand-new document and downloads it."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Organize PDF - BrowserPDF","description":"Reorder, rotate, and delete PDF pages in one place, for free, in your browser tab. No signup or added watermark; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/organize","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Organize PDF","item":"https://browserpdf.app/organize"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I reorder a page group?","acceptedAnswer":{"@type":"Answer","text":"Select a page group, choose its destination, and use Move selected group. Native controls also support keyboard operation."}},{"@type":"Question","name":"Can I delete pages?","acceptedAnswer":{"@type":"Answer","text":"Yes. Delete a selected group or keep only selected pages. Keep at least one page and review the remaining page order before use."}},{"@type":"Question","name":"Is my original file changed?","acceptedAnswer":{"@type":"Answer","text":"Your original stays available. Review the generated PDF, then choose Use this result or an explicit final download."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -135,7 +135,7 @@
     <section class="about">
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
-        <li><strong data-i18n="organize.about_1_title">Each page has four controls:</strong> <span data-i18n="organize.about_1_body">move it earlier or later in the document, rotate it 90&deg; at a time, or remove it (click again to restore).</span></li>
+        <li><strong>Select pages for a shared action:</strong> <span>move, duplicate, rotate, delete or keep the selected group. Undo page edit restores the preceding pending plan.</span></li>
         <li><strong data-i18n="organize.about_2_title">The output is rebuilt page by page</strong> <span data-i18n="organize.about_2_body">with pdf-lib, copying only the pages you kept, in the order you arranged.</span></li>
         <li><strong data-i18n="organize.about_3_title">No file-upload endpoint.</strong> <span data-i18n="organize.about_3_body">Document processing happens in this browser tab.</span></li>
       </ul>
@@ -145,16 +145,16 @@
       <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
       <div class="faq-list">
         <div class="faq-item">
-          <h3 data-i18n="organize.faq_1_q">Can I reorder pages by dragging?</h3>
-          <p data-i18n="organize.faq_1_a">Yes. Drag page thumbnails into position, or use the arrow buttons on each page.</p>
+          <h3>How do I reorder a page group?</h3>
+          <p>Select a page group, choose its destination, and use Move selected group. Native controls also support keyboard operation.</p>
         </div>
         <div class="faq-item">
           <h3 data-i18n="organize.faq_2_q">Can I delete pages?</h3>
-          <p data-i18n="organize.faq_2_a">Yes. Mark any page for removal (and click again to restore it before applying); the output contains only the pages you kept, in the order you arranged.</p>
+          <p>Yes. Delete a selected group or keep only selected pages. Keep at least one page and review the remaining page order before use.</p>
         </div>
         <div class="faq-item">
           <h3 data-i18n="organize.faq_3_q">Is my original file changed?</h3>
-          <p data-i18n="organize.faq_3_a">No. Your original PDF stays as it is; the tool builds a brand-new document and downloads it.</p>
+          <p>Your original stays available. Review the generated PDF, then choose Use this result or an explicit final download.</p>
         </div>
       </div>
     </section>

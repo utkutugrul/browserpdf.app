@@ -122,10 +122,11 @@ export function createDocumentSession() {
     },
     adopt(bytes, name, options = {}) {
       const next = createArtifact(bytes, name, { ...options, capabilities: options.capabilities || current?.capabilities });
-      if (current && current.type === next.type && JSON.stringify(current.capabilities) === JSON.stringify(next.capabilities) && current.bytes.length === next.bytes.length && current.bytes.every((byte, index) => byte === next.bytes[index])) { current = { ...current, name: next.name }; return this.snapshot(); }
+      const adoptedTaskId = taskId || crypto.randomUUID();
+      if (current && current.type === next.type && JSON.stringify(current.capabilities) === JSON.stringify(next.capabilities) && current.bytes.length === next.bytes.length && current.bytes.every((byte, index) => byte === next.bytes[index])) { taskId = adoptedTaskId; current = { ...current, name: next.name }; return this.snapshot(); }
       if (!original) original = copy(next);
       if (current) history.push(entry());
-      current = next; scene = null; future = []; revision++; generation++; bound();
+      taskId = adoptedTaskId; current = next; scene = null; future = []; revision++; generation++; bound();
       return this.snapshot();
     },
     historyTarget(kind) { const value = (kind === 'redo' ? future : history).at(-1); return value ? { artifact: copy(value), scene: cloneScene(value.scene), revision, generation } : null; },

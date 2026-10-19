@@ -83,19 +83,19 @@ State begins **open**. Each row requires its specific behavior and compatible se
 
 | # | Service | Specific completion criteria | State / evidence |
 |---|---|---|---|
-| 1 | Add Text | Multiple selectable/movable text objects; real glyph preview; Unicode; exact rotated/CropBox transform; accumulation; undo/redo; idempotent export | open |
-| 2 | Add Image | Correct selected-page preview; multiple images; drag/resize/keyboard; exact saved placement | open |
-| 3 | Fill & Sign | Priority: page-linked field placement; field/flatten errors block false success; drawn/typed/uploaded proportional movable/resizable keyboard signatures; non-form text mode; preview/export parity and no duplicate reapply | open |
+| 1 | Add Text | Multiple selectable/movable text objects; real glyph preview; Unicode; exact rotated/CropBox transform; accumulation; undo/redo; idempotent export | open — [scene, preparation, keyboard and independent artifact evidence](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
+| 2 | Add Image | Correct selected-page preview; multiple images; drag/resize/keyboard; exact saved placement | open — [saved intake page/asset/order and independent scene journey](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
+| 3 | Fill & Sign | Priority: page-linked field placement; field/flatten errors block false success; drawn/typed/uploaded proportional movable/resizable keyboard signatures; non-form text mode; preview/export parity and no duplicate reapply | open — [form/signature, preparation, independent touch/bitmap and keyboard evidence](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
 | 4 | Highlight | Text selection, editable per-object color/note/delete/undo; readable result with persistent highlights | open |
 | 5 | Redact | Exact coordinates; explicit lossy/page scope; verified removed text and metadata; direct post-redaction inspection; documented structural engine feasibility/evidence | open |
 | 6 | View PDF | Select/search text, outline/thumbnails/zoom, shared current document and page-linked forms without scripting surfaces | open |
 | 7 | Edit Metadata | Before/after properties, controlled standard cleanup, same-document Privacy handoff | open |
-| 8 | Merge | Source thumbnails and page ranges, keyboard order, review combined current result | open |
+| 8 | Merge | Source thumbnails and page ranges, keyboard order, review combined current result | open — [actual range/order, intake/clear and adoption evidence](../docs/page-routes-checkpoint.md); narrow regression-gate/locale acceptance pending |
 | 9 | Split | Ranges/odd-even/Shift selection; named per-result list/group; chosen PDF continues | open |
-| 10 | Organize | Shared panel, selected-group moves, insert/duplicate, history, review saved page order | open |
-| 11 | Rotate | Shared page selection, group rotate/reset, changed-page summary, OCR-ready current result | open |
-| 12 | Delete Pages | Range/group/keep-selected, undo, remaining-page preview, cannot delete every page | open |
-| 13 | Crop | Correct claim and box geometry; selected scope; drag crop; navigation and hidden-content warning | open |
+| 10 | Organize | Shared panel, selected-group moves, insert/duplicate, history, review saved page order | open — [group/insert/duplicate, adoption and independent scene Undo artifact evidence](../docs/page-routes-checkpoint.md); final route/locale acceptance pending |
+| 11 | Rotate | Shared page selection, group rotate/reset, changed-page summary, OCR-ready current result | open — [selected/reset, form/catalog, independent journey and OCR continuation evidence](../docs/page-routes-checkpoint.md); final route/locale acceptance pending |
+| 12 | Delete Pages | Range/group/keep-selected, undo, remaining-page preview, cannot delete every page | open — [keep/delete/all-page guard and saved-order evidence](../docs/page-routes-checkpoint.md); final route/locale acceptance pending |
+| 13 | Crop | Correct claim and box geometry; selected scope; drag crop; navigation and hidden-content warning | open — [four rotations, CropBox/UserUnit, drag and recoverable-content evidence](../docs/page-routes-checkpoint.md); narrow readiness/artifact regression and locale acceptance pending |
 | 14 | Page Numbers | Range/start page/start number/font/margin; true selected-page preview and exported numbering | open |
 | 15 | Watermark | Unicode; scope/navigation; logo/tile/custom placement; actual preview and export | open |
 | 16 | Compress | Real structural optimization and explicitly lossy path; preserve text/forms/links where promised; size/quality review; no larger auto-export | open |

@@ -106,7 +106,7 @@ export async function createPageWorkspace({ container, plan: initialPlan, source
     windowStatus.textContent = t('pages.window_count', 'Pages {first}-{last} of {total}', { first: windowStart + 1, last: end, total: plan.pages.length });
     const pending = [];
     for (let index = windowStart; index < end; index++) {
-      const entry = plan.pages[index], tile = element('button', 'page-workspace-tile'); tile.type = 'button'; tile.dataset.pageIndex = String(index); tile.dataset.pageId = entry.id;
+      const entry = plan.pages[index], tile = element('button', 'page-workspace-tile page-tile'); tile.type = 'button'; tile.dataset.pageIndex = String(index); tile.dataset.pageId = entry.id;
       tile.setAttribute('aria-label', t('pages.select_page', 'Select page {n}', { n: index + 1 }));
       const canvas = element('canvas'); canvas.setAttribute('aria-hidden', 'true');
       const label = element('span', 'page-workspace-page-label', t('pages.page_label', 'Page {n}', { n: index + 1 }));

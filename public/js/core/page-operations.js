@@ -111,12 +111,17 @@ export async function applyPagePlan(inputs, inputPlan, { pdfLib, signal, onProgr
   const verified = await pdfLib.PDFDocument.load(bytes.slice(), { ignoreEncryption: false, updateMetadata: false, throwOnInvalidObject: true });
   abort(signal);
   if (verified.getPageCount() !== plan.pages.length) throw new Error('The output page count could not be verified.');
+  // An empty AcroForm dictionary can remain after flattening. Capabilities refer
+  // to real output fields, while structure-loss detection still records catalogs.
+  const capabilities = { encrypted: false };
+  try { capabilities.forms = verified.getForm().getFields().length > 0; }
+  catch { /* Unknown/malformed fields have no verified interactive capability. */ }
   const boundary = boundaryFor(kind, structures);
   const losses = [...boundary.losses];
   if (plan.pages.some((entry) => entry.crop)) losses.push('crop-hidden-content');
   onProgress?.({ phase: 'done', percent: 100 }); abort(signal);
   return {
-    bytes, boundary: { kind, losses }, structures,
+    bytes, boundary: { kind, losses }, structures, capabilities,
     pageMap: plan.pages.map((entry, outputIndex) => ({ id: entry.id, sourceId: entry.sourceId, pageIndex: entry.pageIndex, outputIndex })),
     summary: { pageCount: plan.pages.length, sourceCount: usedIds.length, rotatedPages: plan.pages.filter((entry) => entry.rotation).length, croppedPages: plan.pages.filter((entry) => entry.crop).length },
   };

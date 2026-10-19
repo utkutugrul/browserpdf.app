@@ -1,5 +1,9 @@
 # Shared page workspace checkpoint
 
+Historical core/panel checkpoint. The subsequent five-route implementation and
+its current evidence are recorded in [page-routes-checkpoint.md](page-routes-checkpoint.md).
+The original evidence below is preserved.
+
 This is the first Phase 2 Pages checkpoint, before route migration. Existing
 routes have not been changed. The focused suite is `tests/page-workspace.spec.mjs`.
 

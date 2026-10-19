@@ -385,16 +385,17 @@ test('add-image: the image is embedded into the output PDF', async ({ page }) =>
   expect(image.dict.get(PDFName.of('Height')).asNumber()).toBe(fixtureImage.readUInt32BE(20));
 });
 
-test('crop: the output page size shrinks by the chosen insets', async ({ page }) => {
+test('crop: visible CropBox shrinks by chosen insets while MediaBox is retained', async ({ page }) => {
   await open(page, 'crop');
   await page.setInputFiles('#fileInput', fx('report.pdf'));
   await page.locator('#cropTop').fill('100');
   await page.locator('#cropLeft').fill('50');
   const download = await grabDownload(page, () => page.click('#applyBtn'), /\.pdf$/);
   const doc = await PDFDocument.load(readFileSync(await download.path()));
-  const { width, height } = doc.getPage(0).getSize();
+  const { width, height } = doc.getPage(0).getCropBox();
   expect(Math.round(width)).toBe(562); // 612 - 50
   expect(Math.round(height)).toBe(692); // 792 - 100
+  expect(doc.getPage(0).getMediaBox()).toEqual({ x: 0, y: 0, width: 612, height: 792 });
 });
 
 test('excel-to-pdf: cell values survive into the PDF text', async ({ page }) => {

@@ -1,7 +1,6 @@
 'use strict';
 
 import { ensurePdfLib } from './lib-loader.js';
-import { configureMergePdf, mergePdfFiles } from './core/merge-pdf.js';
 import { setupMergeWebMcp } from './webmcp.js';
 import {
   createTaskState,
@@ -13,6 +12,7 @@ import {
   offerChain,
   takeChainedFile,
   wireDropzone,
+  readPdfFile, readExternalPdfFile, documentSession, reviewResult,
 } from './tool-ui.js';
 import { t } from './i18n.js';
 
@@ -48,6 +48,7 @@ let activeMerge = null;
 let pendingImports = 0;
 let importEpoch = 0;
 const activeImportBatches = new Set();
+let pagesAdapter = null, importQueue = Promise.resolve(), reservedBytes = 0, reservedFiles = 0;
 
 const taskState = createTaskState({
   errorSection,
@@ -84,14 +85,15 @@ function selectionWillChange() {
 }
 
 function renderList(focusTarget = null) {
+  pagesAdapter?.disposeMergeThumbnails(fileListEl);
   fileListEl.textContent = '';
   fileListSection.hidden = items.length === 0;
   fileListCount.textContent = items.length === 1
     ? t('merge.js_file_count_one', '{n} file', { n: items.length })
     : t('merge.js_file_count_other', '{n} files', { n: items.length });
-  mergeBtn.disabled = items.length < 2 || mergeInProgress || pendingImports > 0;
+  mergeBtn.disabled = items.length < 2 || mergeInProgress || pendingImports > 0 || (pagesAdapter && !pagesAdapter.validMergeRanges(items));
   mergeWorkspace.setAttribute('aria-busy', String(pendingImports > 0));
-  clearBtn.disabled = items.length === 0;
+  clearBtn.disabled = items.length === 0 && pendingImports === 0;
   mergeActionHint.hidden = items.length >= 2;
 
   items.forEach((item, index) => {
@@ -181,7 +183,14 @@ function renderList(focusTarget = null) {
     li.appendChild(actions);
 
     fileListEl.appendChild(li);
+    pagesAdapter?.appendMergeRange(item, li, () => {
+      selectionWillChange();
+      mergeBtn.disabled = items.length < 2 || mergeInProgress || pendingImports > 0 || !pagesAdapter.validMergeRanges(items);
+      pagesAdapter.renderMergeThumbnails(items, fileListEl);
+      mergeWebMcp.refresh();
+    });
   });
+  pagesAdapter?.renderMergeThumbnails(items, fileListEl);
 
   if (focusTarget) {
     const row = fileListEl.querySelector(`[data-file-id="${focusTarget.id}"]`);
@@ -225,7 +234,7 @@ function selectedFilesForWebMcp() {
 }
 
 function selectionIsStable() {
-  return pendingImports === 0 && !mergeInProgress;
+  return pendingImports === 0 && !mergeInProgress && (!pagesAdapter || pagesAdapter.validMergeRanges(items));
 }
 
 function importBatchIsCurrent(batch) {
@@ -234,8 +243,10 @@ function importBatchIsCurrent(batch) {
 
 function invalidatePendingImports() {
   importEpoch += 1;
-  activeImportBatches.forEach((batch) => batch.controller.abort());
+  activeImportBatches.forEach((batch) => { batch.controller.abort(); releaseImportReservation(batch); });
+  activeImportBatches.clear(); pendingImports = 0; importQueue = Promise.resolve();
 }
+function releaseImportReservation(batch) { if (batch.released) return; batch.released = true; reservedBytes -= batch.bytes; reservedFiles -= batch.files; }
 
 function setFileOrder(order) {
   const byId = new Map(items.map((item) => [item.id, item]));
@@ -259,13 +270,21 @@ async function addFiles(fileArray) {
     showError(t('merge.js_err_skipped_non_pdf', 'Some selected files were skipped because they are not PDFs.'));
   }
   if (!pdfFiles.length) return;
-  const batch = { epoch: importEpoch, controller: new AbortController() };
+  const incomingBytes = pdfFiles.reduce((n, file) => n + file.size, 0);
+  if (items.length + reservedFiles + pdfFiles.length > 20 || items.reduce((n, item) => n + item.bytes.length, 0) + reservedBytes + incomingBytes > 250 * 1024 * 1024) {
+    showError(t('pages.source_budget', 'Use at most 20 PDF sources and 250 MB combined.')); return;
+  }
+  reservedBytes += incomingBytes; reservedFiles += pdfFiles.length;
+  const batch = { epoch: importEpoch, controller: new AbortController(), bytes: incomingBytes, files: pdfFiles.length, released: false };
   activeImportBatches.add(batch);
   pendingImports = activeImportBatches.size;
   selectionWillChange();
   renderList();
-
+  const preceding = importQueue; let release; importQueue = new Promise((resolve) => { release = resolve; });
   try {
+    await preceding;
+    if (!importBatchIsCurrent(batch)) return;
+    pagesAdapter ||= await import('./merge-page-adapter.js');
     progressSection.hidden = false;
     const pdfLib = await ensurePdfLib((text) => {
       if (importBatchIsCurrent(batch)) setProgress(0, text);
@@ -277,22 +296,24 @@ async function addFiles(fileArray) {
       const file = pdfFiles[i];
       setProgress(Math.round(((i + 1) / pdfFiles.length) * 100), t('merge.js_reading', 'Reading {name} ({i}/{n})', { name: file.name, i: i + 1, n: pdfFiles.length }));
       try {
-        const bytes = new Uint8Array(await file.arrayBuffer());
+        const parsed = await readExternalPdfFile(file, { maxBytes: 250 * 1024 * 1024, maxPages: 10000, signal: batch.controller.signal });
+        const bytes = parsed.bytes;
         if (!importBatchIsCurrent(batch)) break;
         if (!checkPdfMagicBytes(bytes)) {
           showError(t('merge.js_err_skipped_invalid', 'Skipped "{name}": doesn\'t look like a valid PDF.', { name: file.name }));
           continue;
         }
-        const doc = await pdfLib.PDFDocument.load(bytes, { ignoreEncryption: true });
         if (!importBatchIsCurrent(batch)) break;
+        if (items.reduce((n, item) => n + item.pageCount, parsed.pageCount) > 10000) throw new RangeError('Keep between 1 and 10,000 source pages.');
         selectionWillChange();
-        items.push({ id: nextId++, file, bytes, pageCount: doc.getPageCount() });
+        items.push({ id: nextId++, file, bytes, pageCount: parsed.pageCount });
       } catch (err) {
         if (!importBatchIsCurrent(batch)) break;
         showError(t('merge.js_err_read_file', 'Couldn\'t read "{name}": {message}.', { name: file.name, message: err?.message || t('merge.js_err_unknown', 'unknown error') }));
       }
     }
   } finally {
+    releaseImportReservation(batch); release();
     activeImportBatches.delete(batch);
     pendingImports = activeImportBatches.size;
     if (pendingImports === 0) progressSection.hidden = true;
@@ -317,13 +338,15 @@ async function mergeSelectedFiles({ signal } = {}) {
   if (mergeInProgress) throw new Error('A merge is already in progress.');
   mergeInProgress = true;
   const operationController = new AbortController();
+  let published = false;
   const generation = selectionGeneration;
   const snapshot = items.map((item) => ({
     bytes: item.bytes,
     name: item.file.name,
     pageCount: item.pageCount,
+    ranges: item.ranges,
   }));
-  const snapshotPageCount = snapshot.reduce((total, item) => total + item.pageCount, 0);
+  const snapshotPageCount = snapshot.reduce((total, item) => total + pagesAdapter.mergePageIndices(item).length, 0);
   const forwardAbort = () => operationController.abort(signal?.reason);
   if (signal?.aborted) forwardAbort();
   else signal?.addEventListener('abort', forwardAbort, { once: true });
@@ -337,22 +360,19 @@ async function mergeSelectedFiles({ signal } = {}) {
     operationController.signal.throwIfAborted();
     setProgress(0, t('common.js_loading_pdflib', 'Loading pdf-lib…'));
     const pdfLib = await ensurePdfLib((text) => setProgress(2, text));
-    configureMergePdf(pdfLib);
     operationController.signal.throwIfAborted();
-    const mergedBytes = await mergePdfFiles(snapshot, {
+    const merged = await pagesAdapter.executeMergePlan(snapshot, {
+      pdfLib,
       signal: operationController.signal,
       onProgress(event) {
-        if (event.phase === 'adding') {
-          setProgress(event.percent, t('merge.js_adding', 'Adding {name} ({i}/{n})', {
-            name: event.fileName,
-            i: event.fileIndex + 1,
-            n: event.fileCount,
-          }));
+        if (event.phase === 'page' || event.phase === 'loading') {
+          setProgress(event.percent, t('pages.building', 'Building the selected page result…'));
         } else if (event.phase === 'saving') {
           setProgress(event.percent, t('common.js_saving', 'Saving…'));
         }
       },
     });
+    const mergedBytes = merged.bytes;
     operationController.signal.throwIfAborted();
     if (selectionGeneration !== generation || activeMerge?.controller !== operationController) {
       const staleError = new Error('Selected files changed during merge.');
@@ -362,8 +382,12 @@ async function mergeSelectedFiles({ signal } = {}) {
     lastMergedBytes = mergedBytes;
     // The former autoDownload option remains harmless when supplied by older
     // callers: building a result always opens review; final downloads are UI actions.
-    await downloadBytes(mergedBytes, 'merged.pdf', 'application/pdf', {
-      operation: { isCurrent: () => !operationController.signal.aborted && selectionGeneration === generation && activeMerge?.controller === operationController },
+    const scene = documentSession.scene();
+    const pendingSceneEdits = scene && (scene.objects.length || Object.keys(scene.fields || {}).length || scene.flatten);
+    await reviewResult(mergedBytes, 'merged.pdf', {
+      boundary: { ...merged.boundary, losses: [...new Set([...merged.boundary.losses, ...(pendingSceneEdits ? ['scene-baked'] : [])])] },
+      capabilities: { ...documentSession.snapshot().current?.capabilities, forms: false },
+      operation: { isCurrent: () => !operationController.signal.aborted && selectionGeneration === generation && (published || activeMerge?.controller === operationController) },
     });
     operationController.signal.throwIfAborted();
     if (selectionGeneration !== generation || activeMerge?.controller !== operationController) throw new DOMException('Selected files changed during review.', 'AbortError');
@@ -378,6 +402,7 @@ async function mergeSelectedFiles({ signal } = {}) {
     taskState.hideProgress();
     successText.textContent = t('merge.result_title', 'Your merged PDF is ready');
     taskState.showSuccess();
+    published = true;
     return {
       ready: true,
       fileName: 'merged.pdf',
@@ -417,5 +442,5 @@ mergeWebMcp = setupMergeWebMcp({
 });
 
 takeChainedFile().then((file) => {
-  if (file) addFiles([file]);
+  if (file) readPdfFile(file, { validate: true }).then((parsed) => { if (parsed) void addFiles([file]); });
 });

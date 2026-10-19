@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Crop PDF - BrowserPDF","description":"Crop PDF margins free in your browser. Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/crop","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Crop PDF","item":"https://browserpdf.app/crop"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does crop permanently remove margins?","acceptedAnswer":{"@type":"Answer","text":"Yes. The crop and media boxes are rewritten so viewers show the trimmed page."}},{"@type":"Question","name":"Can I crop page-by-page differently?","acceptedAnswer":{"@type":"Answer","text":"This tool applies the same inset to every page. For per-page edits, use Organize first."}},{"@type":"Question","name":"Are files uploaded?","acceptedAnswer":{"@type":"Answer","text":"No. Cropping runs locally with pdf-lib in your tab."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Crop PDF - BrowserPDF","description":"Crop PDF margins free in your browser. Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/crop","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Crop PDF","item":"https://browserpdf.app/crop"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does crop securely remove hidden content?","acceptedAnswer":{"@type":"Answer","text":"No. Crop changes the visible CropBox and retains the original MediaBox and content. Hidden content remains recoverable; use Redact for sensitive content."}},{"@type":"Question","name":"Can I crop page-by-page differently?","acceptedAnswer":{"@type":"Answer","text":"Select a page range or group, adjust its crop, and review the actual result. Other pages keep their visible boxes."}},{"@type":"Question","name":"Are files uploaded?","acceptedAnswer":{"@type":"Answer","text":"No. Cropping runs locally with pdf-lib in your tab."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -74,7 +74,7 @@
     <a class="nav-back" href="/" data-i18n="common.nav_back">&larr; All tools</a>
     <section class="intro">
       <h1 data-i18n="crop.h1">Crop PDF</h1>
-      <p data-i18n="crop.intro">Trim margins from every page with live preview. Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint.</p>
+      <p>Trim margins from selected pages with a navigable preview. Document processing happens in this browser tab; BrowserPDF has no file-upload endpoint.</p>
     </section>
     <div class="callout" data-i18n="crop.no_see">Document processing happens in this browser tab. BrowserPDF has no file-processing backend or file-upload endpoint, so the selected documents are not sent to us.</div>
     <section class="dropzone-section">
@@ -104,9 +104,9 @@
           <input type="range" id="cropRight" class="quality-slider" min="0" max="200" value="0">
         </div>
         <div class="option-divider"></div>
-        <button id="applyBtn" class="btn btn-primary" type="button" data-i18n="crop.btn">Crop & download</button>
+        <button id="applyBtn" class="btn btn-primary" type="button">Review cropped PDF</button>
         <div class="preview-panel" style="margin-top:12px">
-          <span class="preview-panel-title" data-i18n="crop.preview">Live preview (first page)</span>
+          <span class="preview-panel-title">Selected page preview</span>
           <div class="preview-canvas-wrap"><canvas id="previewCanvas"></canvas></div>
         </div>
       </div>
@@ -130,7 +130,7 @@
     <section class="about faq">
       <h2 data-i18n="common.faq_title">Frequently asked questions</h2>
       <div class="faq-list">
-        <div class="faq-item"><h3 data-i18n="crop.faq_1_q">Does crop permanently remove margins?</h3><p data-i18n="crop.faq_1_a">Yes. The crop and media boxes are rewritten so viewers show the trimmed page.</p></div><div class="faq-item"><h3 data-i18n="crop.faq_2_q">Can I crop page-by-page differently?</h3><p data-i18n="crop.faq_2_a">This tool applies the same inset to every page. For per-page edits, use Organize first.</p></div><div class="faq-item"><h3 data-i18n="crop.faq_3_q">Are files uploaded?</h3><p data-i18n="crop.faq_3_a">No. Cropping runs locally with pdf-lib in your tab.</p></div>
+        <div class="faq-item"><h3>Does crop securely remove hidden content?</h3><p>No. Crop changes the visible CropBox and retains the original MediaBox and content. Hidden content remains recoverable; use Redact for sensitive content.</p></div><div class="faq-item"><h3 data-i18n="crop.faq_2_q">Can I crop page-by-page differently?</h3><p>Select a page range or group, adjust its crop, and review the actual result. Other pages keep their visible boxes.</p></div><div class="faq-item"><h3 data-i18n="crop.faq_3_q">Are files uploaded?</h3><p data-i18n="crop.faq_3_a">No. Cropping runs locally with pdf-lib in your tab.</p></div>
       </div>
     </section>
     <section class="about related-tools">

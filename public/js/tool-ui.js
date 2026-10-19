@@ -54,6 +54,10 @@ let resultGroupGeneration = 0;
 let intakeGeneration = 0;
 const loadResultModule = retryableModule('./document-result.js');
 const loadResultUi = () => (resultModule ||= loadResultModule().catch((error) => { resultModule = null; throw error; }));
+const loadWorkspaceSupport = retryableModule('./document-workspace-support.js');
+const loadHandoffSupport = retryableModule('./document-handoff.js');
+const workspaceEnvironment = { ensureDocumentSession, documentSession, t, looksLikePdfFile, checkPdfMagicBytes };
+const handoffEnvironment = { ensureDocumentSession, documentSession, getSessionCore: () => sessionCore, loadWorkflowStore };
 
 export function showDocumentIdentity() {
   const snapshot = documentSession.snapshot();
@@ -64,28 +68,20 @@ export function showDocumentIdentity() {
     const dropzone = document.getElementById('dropzone');
     if (dropzone) dropzone.after(identity); else document.querySelector('main')?.prepend(identity);
   }
-  identity.textContent = `${t('workspace.original', 'Original')}: ${snapshot.original.name} · ${t('workspace.current', 'Current')}: ${snapshot.current.name} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
+  identity.classList.add('document-identity'); identity.replaceChildren();
+  const description = `${t('workspace.original', 'Original')}: ${snapshot.original.name} · ${t('workspace.current', 'Current')}: ${snapshot.current.name} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
+  identity.title = description; identity.setAttribute('aria-label', description);
+  for (const [key, label, name] of [['original', t('workspace.original', 'Original'), snapshot.original.name], ['current', t('workspace.current', 'Current'), snapshot.current.name]]) {
+    const item = document.createElement('span'); item.className = 'document-identity-item';
+    const labelElement = document.createElement('span'); labelElement.className = 'document-identity-label'; labelElement.textContent = `${label}: `;
+    const nameElement = document.createElement('span'); nameElement.className = 'document-identity-name'; nameElement.title = name; nameElement.textContent = name;
+    item.append(labelElement, nameElement, document.createTextNode(' · ')); identity.append(item);
+  }
+  const revision = document.createElement('span'); revision.className = 'document-identity-revision'; revision.textContent = `${t('workspace.revision', 'Revision')} ${snapshot.revision}`; identity.append(revision);
 }
 
-// Page operations deliberately bake the current scene into their input. The
-// editable source and objects remain available until the chosen result is adopted.
-export async function getWorkspaceInput({ bakeScene = true, operation } = {}) {
-  await ensureDocumentSession();
-  operation?.signal?.throwIfAborted();
-  if (operation && !operation.isCurrent()) return null;
-  const snapshot = documentSession.snapshot();
-  if (!snapshot.current) throw new Error('Open a document first.');
-  const scene = documentSession.scene();
-  let bytes;
-  if (scene && bakeScene) {
-    const [{ renderScenePdf }, runtime] = await Promise.all([import('./core/object-scene.js'), import('./lib-loader.js')]);
-    const [pdfLib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
-    bytes = (await renderScenePdf({ scene, resource: documentSession.resource, pdfLib, pdfjs, pdfjsAssets: runtime.PDFJS_ASSET_URLS, signal: operation?.signal })).bytes;
-  }
-  if (!bytes) bytes = documentSession.current().bytes;
-  if (operation && !operation.isCurrent()) return null;
-  return { bytes, name: snapshot.current.name, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene,
-    losses: scene?.objects.length ? ['scene-baked'] : [] };
+export async function getWorkspaceInput(options = {}) {
+  return (await loadWorkspaceSupport()).getWorkspaceInput(options, workspaceEnvironment);
 }
 
 export async function reviewResult(bytes, name, options = {}) {
@@ -101,8 +97,14 @@ export async function reviewResult(bytes, name, options = {}) {
   showDocumentIdentity();
   return loadResultUi().then((ui) => generation !== resultGeneration || (options.operation && !options.operation.isCurrent()) ? null : ui.showDocumentResult(artifact, {
     session: { ...documentSession.snapshot(), original: documentSession.original() },
-    download: (value) => downloadBlob(new Blob([value.bytes], { type: value.type }), value.name, { download: true }),
-    adopt: (value) => { const snapshot = documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity(); return snapshot; },
+    download: (value) => { if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return; downloadBlob(new Blob([value.bytes], { type: value.type }), value.name, { download: true }); },
+    adopt: options.allowAdopt === false ? null : (value) => {
+      if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return null;
+      const snapshot = documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity();
+      // Synchronous notification. Consumers own cancellation/busy/errors for any
+      // subsequent asynchronous hydration; this callback does not delay adoption.
+      options.onAdopt?.(snapshot, documentSession.current()); return snapshot;
+    },
   }));
 }
 
@@ -110,6 +112,7 @@ export function clearResult() {
   pendingResult = null;
   resultGeneration++;
   resultGroupGeneration++;
+  const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
   if (resultModule) void resultModule.then((ui) => ui.clearDocumentResult()).catch(() => {});
   const row = document.getElementById('chainRow'); if (row) row.hidden = true;
   document.getElementById('documentResultGroup')?.remove();
@@ -300,8 +303,14 @@ export function wireDropzone(dropzone, fileInput, onFiles) {
 
 // Reads a dropped/selected file as PDF bytes with validation; returns
 // { bytes, baseName } or null after showing an error.
+// Extra Merge/Insert sources do not replace the current task or pending result.
+export async function readExternalPdfFile(file, options = {}) {
+  return (await loadWorkspaceSupport()).readExternalPdfFile(file, options, workspaceEnvironment);
+}
+
 export async function readPdfFile(file, options = {}) {
   const limit = options.maxBytes || 250 * 1024 * 1024;
+  if (options.maxPages !== undefined && (!Number.isSafeInteger(options.maxPages) || options.maxPages < 1 || options.maxPages > 10000)) { showError(t('workspace.invalid_page_limit', 'Invalid PDF page limit.')); return null; }
   if (options.maxBytes && file.size > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   const intake = ++intakeGeneration;
   documentOperations.cancel();
@@ -325,7 +334,7 @@ export async function readPdfFile(file, options = {}) {
       const [lib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
       await lib.PDFDocument.load(bytes.slice());
       const task = pdfjs.getDocument({ data: bytes.slice(), ...runtime.PDFJS_ASSET_URLS });
-      try { const doc = await task.promise; if (!doc.numPages) throw new Error('This PDF has no readable pages.'); }
+      try { const doc = await task.promise; if (!doc.numPages) throw new Error('This PDF has no readable pages.'); if (options.maxPages && doc.numPages > options.maxPages) throw new RangeError(t('workspace.page_limit', 'Choose a PDF with 1–{n} readable pages.', { n: options.maxPages })); }
       finally { await task.destroy(); }
     } catch (error) {
       if (intake === intakeGeneration) showError(t('workspace.parse_failed', 'Could not open this PDF: {message}', { message: error.message }));
@@ -369,95 +378,22 @@ export function getSelectedOcrLangs() {
   return langs.length ? langs : ['eng'];
 }
 
-// Renders one page of a PDF (given as bytes) into a canvas, scaled to
-// targetWidth CSS pixels. Used for live result previews.
 export async function renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, targetWidth, assetUrls) {
-  const loadingTask = pdfjs.getDocument({ data: bytes.slice(), ...assetUrls });
-  const doc = await loadingTask.promise;
-  try {
-    const page = await doc.getPage(Math.min(pageNumber, doc.numPages));
-    const baseViewport = page.getViewport({ scale: 1 });
-    const { renderBoundedPage } = await import('./core/bounded-renderer.js');
-    const viewport = await renderBoundedPage(page, canvas, { scale: (targetWidth / baseViewport.width) * (window.devicePixelRatio > 1 ? 1.6 : 1) });
-    canvas.dataset.pdfScale = String(viewport.scale); canvas.dataset.pdfPage = String(pageNumber);
-  } finally {
-    await loadingTask.destroy();
-  }
+  return (await loadWorkspaceSupport()).renderPdfPageToCanvas(pdfjs, bytes, pageNumber, canvas, targetWidth, assetUrls);
 }
-
-/* ---------- Cross-tool workflow handoff ----------
-Outputs are stored in BrowserPDF's versioned workflow database. References in
-the URL make each handoff page-local and resumable; expiry cleanup touches only
-records owned by that workflow, never another database or origin store. */
 
 export async function stashForChain(bytes, name, targetSlug, options = {}) {
-  await ensureDocumentSession();
-  const store = await loadWorkflowStore();
-  await store.cleanupExpired();
-  const artifact = sessionCore.createArtifact(bytes, name, { capabilities: documentSession.snapshot().current?.capabilities, ...options });
-  if (!sessionCore.acceptsArtifact(targetSlug, artifact)) throw new Error('This tool does not accept this result format.');
-  if (documentSession.snapshot().current) documentSession.adopt(artifact.bytes, artifact.name, artifact);
-  let snapshot = documentSession.transfer();
-  if (!snapshot.taskId) { documentSession.begin(artifact.bytes, artifact.name, artifact); snapshot = documentSession.transfer(); }
-  const workflowId = snapshot.taskId;
-  const descriptor = (value) => ({ name: value.name, type: value.type, capabilities: { ...value.capabilities }, boundary: value.boundary });
-  const files = [];
-  function addFile(value, role) {
-    const existing = files.find((file) => file.bytes === value.bytes || (file.bytes.length === value.bytes.length && file.bytes.every((byte, index) => byte === value.bytes[index])));
-    if (existing) return existing.id;
-    const file = { ...value, id: `${workflowId}:${role}` }; delete file.scene;
-    files.push(file); return file.id;
-  }
-  const file = { id: addFile(artifact, 'input') };
-  const originalRef = snapshot.original ? addFile(snapshot.original, 'original') : null;
-  const resourceEntries = (snapshot.resources || []).map((value, index) => ({ resourceId: value.id, fileRef: addFile(value, `resource:${index}`), ...descriptor(value) }));
-  const checkpoint = (value, role) => value.scene ? { name: value.name, type: value.type, capabilities: value.capabilities, boundary: value.boundary, sourceRef: value.sourceRef, scene: value.scene } : { fileRef: addFile(value, role), ...descriptor(value) };
-  const historyCheckpoints = snapshot.history.map((value, index) => checkpoint(value, `past:${index}`));
-  const futureCheckpoints = snapshot.future.map((value, index) => checkpoint(value, `future:${index}`));
-  await store.putWorkflowBundle({
-    id: workflowId, kind: 'handoff', orderedSteps: [{ id: `tool:${targetSlug}`, parameters: {} }], currentStep: 0,
-    fileRefs: files.map((value) => value.id), inputDescriptor: descriptor(artifact), originalRef, originalDescriptor: snapshot.original ? descriptor(snapshot.original) : null, revision: snapshot.revision, selection: snapshot.selection,
-    scene: snapshot.scene, resourceEntries, historyCheckpoints, futureCheckpoints,
-    historyRefs: historyCheckpoints.map((value) => value.fileRef).filter(Boolean), futureRefs: futureCheckpoints.map((value) => value.fileRef).filter(Boolean),
-    cleanup: { policy: 'expire', scope: workflowId },
-  }, files);
-  return { workflowId, fileId: file.id };
+  return (await loadHandoffSupport()).stashForChain(bytes, name, targetSlug, options, handoffEnvironment);
 }
 
-// Loads the URL-addressed handoff without deleting it, allowing reload or back
-// navigation until the workflow's bounded expiry.
+// Keep empty-page handoff checks ahead of the optional module request.
 export async function takeChainedFile() {
   try {
     const params = new URLSearchParams(window.location.search);
-    const workflowId = params.get('workflow');
-    const fileId = params.get('file');
+    const workflowId = params.get('workflow'), fileId = params.get('file');
     if (!workflowId || !fileId || !fileId.startsWith(`${workflowId}:`)) return null;
-    await ensureDocumentSession();
-    const store = await loadWorkflowStore();
-    await store.cleanupExpired();
-    const workflow = await store.getWorkflow(workflowId);
-    if (!workflow || !workflow.fileRefs.includes(fileId)) return null;
-    const owned = await store.getFiles(workflowId, workflow.fileRefs);
-    const refs = new Map(owned.filter((value) => workflow.fileRefs.includes(value.id)).map((value) => [value.id, value]));
-    const entry = refs.get(fileId);
-    if (!entry || entry.workflowId !== workflowId) return null;
-    const inputDescriptor = workflow.inputDescriptor || entry;
-    const file = new File([entry.bytes], inputDescriptor.name, { type: inputDescriptor.type || 'application/pdf' });
-    const original = workflow.originalRef && workflow.fileRefs.includes(workflow.originalRef) ? refs.get(workflow.originalRef) : null;
-    const restoreCheckpoints = (newEntries, oldRefs, oldScenes) => Array.isArray(newEntries)
-      ? newEntries.slice(-5).map((value) => value.scene ? value : refs.has(value.fileRef) ? { ...refs.get(value.fileRef), ...value } : null).filter(Boolean)
-      : (oldRefs || []).slice(-5).map((id, index) => refs.has(id) ? { ...refs.get(id), scene: oldScenes?.[index] } : null).filter(Boolean);
-    const resources = Array.isArray(workflow.resourceEntries)
-      ? workflow.resourceEntries.map((value) => refs.has(value.fileRef) ? { ...refs.get(value.fileRef), ...value, id: value.resourceId } : null).filter(Boolean)
-      : (workflow.resourceRefs || []).map((id) => refs.get(id)).filter(Boolean).map((a) => ({ ...a, id: a.resourceId }));
-    const inherited = { taskId: workflow.kind === 'handoff' ? workflowId : undefined, revision: workflow.revision, type: inputDescriptor.type, capabilities: inputDescriptor.capabilities, boundary: inputDescriptor.boundary, selection: workflow.selection,
-      history: restoreCheckpoints(workflow.historyCheckpoints, workflow.historyRefs, workflow.historyScenes), future: restoreCheckpoints(workflow.futureCheckpoints, workflow.futureRefs, workflow.futureScenes), scene: workflow.scene, resources };
-    if (original?.workflowId === workflowId) inherited.original = sessionCore.createArtifact(original.bytes, workflow.originalDescriptor?.name || original.name, workflow.originalDescriptor || original);
-    Object.defineProperty(file, 'browserpdfSession', { value: inherited });
-    return file;
-  } catch {
-    return null;
-  }
+    return await (await loadHandoffSupport()).takeChainedFile(workflowId, fileId, handoffEnvironment);
+  } catch { return null; }
 }
 
 // Fills #chainRow with "Continue in ..." buttons for the given result.
@@ -505,18 +441,6 @@ export async function offerChain(bytes, name, targets, options = {}) {
   row.hidden = false;
 }
 
-// Renders one thumbnail canvas per page into containerEl. makeTile receives
-// (canvas, pageIndex) and must return the tile element to append.
 export async function renderPdfThumbnails(pdfDoc, containerEl, makeTile, onEachProgress) {
-  containerEl.textContent = '';
-  const numPages = pdfDoc.numPages;
-  for (let i = 1; i <= numPages; i++) {
-    onEachProgress?.(i, numPages);
-    const page = await pdfDoc.getPage(i);
-    const baseViewport = page.getViewport({ scale: 1 });
-    const canvas = document.createElement('canvas');
-    const { renderBoundedPage } = await import('./core/bounded-renderer.js');
-    await renderBoundedPage(page, canvas, { scale: 220 / baseViewport.width, maxDimension: 352, maxPixels: 100000 });
-    containerEl.appendChild(makeTile(canvas, i - 1));
-  }
+  return (await loadWorkspaceSupport()).renderPdfThumbnails(pdfDoc, containerEl, makeTile, onEachProgress);
 }

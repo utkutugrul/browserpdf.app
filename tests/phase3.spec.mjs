@@ -388,79 +388,73 @@ test('pending file import disables merge and invalidates an older two-file resul
   expect(pageErrors).toEqual([]);
 });
 
-test('Clear invalidates a delayed file import without restoring stale state', async ({ page }) => {
-  const consoleErrors = [];
-  const pageErrors = [];
+test('Clear invalidates a delayed file import without restoring stale state', async ({ page }, testInfo) => {
+  const consoleErrors = [], pageErrors = [];
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  let downloads = 0;
-  page.on('download', () => { downloads += 1; });
-  await installTestModelContext(page);
-  await page.goto('/merge');
-  await rejectConsent(page);
+  let downloads = 0; page.on('download', () => { downloads++; });
+  await installTestModelContext(page); await page.goto('/merge'); await rejectConsent(page);
   await page.setInputFiles('#fileInput', [path.join(FIXTURES, 'report.pdf'), path.join(FIXTURES, 'appendix.pdf')]);
   await expect(page.locator('.file-item')).toHaveCount(2);
-
+  const oldIds = await page.evaluate(async () => (await window.__registeredWebMcpTools.get('get-selected-files').execute({}, { signal: new AbortController().signal })).files.map((file) => file.id));
   await page.evaluate(() => {
-    const originalArrayBuffer = window.File.prototype.arrayBuffer;
-    let delayedArrayBuffers = 0;
-    window.__clearPendingFileReleases = [];
-    window.File.prototype.arrayBuffer = function delayedArrayBuffer() {
-      if (delayedArrayBuffers >= 3) return originalArrayBuffer.call(this);
-      delayedArrayBuffers += 1;
-      const file = this;
+    const original = File.prototype.arrayBuffer, intents = new WeakMap();
+    window.__clearReadCalls = []; window.__clearIntakeIntent = 'old-held';
+    document.addEventListener('change', (event) => {
+      if (event.target.id === 'fileInput') for (const file of event.target.files) intents.set(file, window.__clearIntakeIntent);
+    }, true);
+    File.prototype.arrayBuffer = function () {
+      const intent = intents.get(this), file = this; window.__clearReadCalls.push({ intent, name: file.name });
+      if (intent !== 'old-held') return original.call(file);
       return new Promise((resolve, reject) => {
-        window.__clearPendingFileReleases.push({
-          name: file.name,
-          release: () => originalArrayBuffer.call(file).then(resolve, reject),
-        });
+        window.__releaseClearHeldRead = () => original.call(file).then((value) => { window.__clearHeldReadReleased = true; resolve(value); }, reject);
       });
     };
   });
-
   await page.setInputFiles('#fileInput', path.join(FIXTURES, 'appendix.pdf'));
+  await expect.poll(() => page.evaluate(() => typeof window.__releaseClearHeldRead)).toBe('function');
+  await page.evaluate(() => { window.__clearIntakeIntent = 'old-queued-report'; });
   await page.setInputFiles('#fileInput', path.join(FIXTURES, 'report.pdf'));
-  await page.setInputFiles('#fileInput', {
-    name: 'invalid.pdf',
-    mimeType: 'application/pdf',
-    buffer: Buffer.from('not a pdf'),
-  });
-  await expect.poll(() => page.evaluate(() => window.__clearPendingFileReleases.length)).toBe(3);
-  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'true');
-  await page.locator('#clearBtn').click();
-  await expect(page.locator('.file-item')).toHaveCount(0);
-  await expect(page.locator('#progressSection')).toBeHidden();
-  await expect(page.locator('#successSection')).toBeHidden();
-  await expect(page.locator('#errorSection')).toBeHidden();
+  await page.evaluate(() => { window.__clearIntakeIntent = 'old-queued-invalid'; });
+  await page.setInputFiles('#fileInput', { name: 'invalid.pdf', mimeType: 'application/pdf', buffer: Buffer.from('not a pdf') });
+  expect(await page.evaluate(() => window.__clearReadCalls)).toEqual([{ intent: 'old-held', name: 'appendix.pdf' }]);
+  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'true'); await page.click('#clearBtn');
+  await expect(page.locator('.file-item')).toHaveCount(0); await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#progressSection')).toBeHidden(); await expect(page.locator('#successSection')).toBeHidden(); await expect(page.locator('#errorSection')).toBeHidden();
   await expect.poll(() => page.evaluate(() => [...window.__registeredWebMcpTools.keys()])).toEqual(['get-selected-files']);
-
-  await page.evaluate(() => window.__clearPendingFileReleases.find(({ name }) => name === 'appendix.pdf').release());
-  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'true');
-  await expect(page.locator('.file-item')).toHaveCount(0);
-  await page.evaluate(() => window.__clearPendingFileReleases.find(({ name }) => name === 'invalid.pdf').release());
-  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'true');
-  await expect(page.locator('#errorSection')).toBeHidden();
-  await page.evaluate(() => window.__clearPendingFileReleases.find(({ name }) => name === 'report.pdf').release());
-  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'false');
-  await expect(page.locator('.file-item')).toHaveCount(0);
-  await expect(page.locator('#progressSection')).toBeHidden();
-  await expect(page.locator('#successSection')).toBeHidden();
-  await expect(page.locator('#errorSection')).toBeHidden();
-  await expect.poll(() => page.evaluate(() => [...window.__registeredWebMcpTools.keys()])).toEqual(['get-selected-files']);
-  expect(downloads).toBe(0);
-
+  // A new user intent runs while the abandoned native read is still held. The
+  // queued old report/invalid inputs must never get their own arrayBuffer call.
+  await page.evaluate(() => { window.__clearIntakeIntent = 'fresh'; });
   await page.setInputFiles('#fileInput', [path.join(FIXTURES, 'report.pdf'), path.join(FIXTURES, 'appendix.pdf')]);
-  await expect(page.locator('.file-item')).toHaveCount(2);
-  await expect(page.locator('.merge-workspace')).toHaveAttribute('aria-busy', 'false');
-  await expect.poll(() => page.evaluate(() => [...window.__registeredWebMcpTools.keys()].sort())).toEqual([
-    'get-selected-files', 'merge-selected-files', 'remove-selected-file', 'set-file-order',
-  ]);
+  await expect(page.locator('#mergeBtn')).toBeEnabled(); expect(await page.evaluate(() => !!window.__clearHeldReadReleased)).toBe(false);
+  await expect.poll(() => page.evaluate(() => [...window.__registeredWebMcpTools.keys()].sort())).toEqual(['get-selected-files', 'merge-selected-files', 'remove-selected-file', 'set-file-order']);
   const merged = await page.evaluate(() => window.__registeredWebMcpTools.get('merge-selected-files').execute({}, { signal: new AbortController().signal }));
   expect(merged).toEqual({ ready: true, fileName: 'merged.pdf', size: expect.any(Number), pageCount: 5 });
-  await expect(page.locator('#successSection')).toBeVisible();
-  expect(downloads).toBe(0);
-  expect(consoleErrors).toEqual([]);
-  expect(pageErrors).toEqual([]);
+  await expect(page.locator('#documentResultStatus')).toContainText('The actual file is shown below.'); expect(downloads).toBe(0);
+  await page.click('#useResultBtn');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#downloadResultBtn')]);
+  await download.saveAs(testInfo.outputPath('cleared-import-fresh.pdf'));
+  const bytes = readFileSync(testInfo.outputPath('cleared-import-fresh.pdf')); expect((await PDFDocument.load(bytes)).getPageCount()).toBe(5);
+  const text = await page.evaluate(async (values) => {
+    const runtime = await import('/js/lib-loader.js'), task = (await runtime.ensurePdfJs()).getDocument({ data: new Uint8Array(values), ...runtime.PDFJS_ASSET_URLS });
+    try { const doc = await task.promise, out = []; for (let n = 1; n <= doc.numPages; n++) out.push((await (await doc.getPage(n)).getTextContent()).items.map((item) => item.str).join(' ')); return out; }
+    finally { await task.destroy(); }
+  }, Array.from(bytes));
+  expect(text.map((value) => value.match(/Quarterly Report 2026|Regional Breakdown|Notes|Appendix A|Appendix B/)?.[0])).toEqual(['Quarterly Report 2026', 'Regional Breakdown', 'Notes', 'Appendix A', 'Appendix B']);
+  const snapshot = () => page.evaluate(async () => {
+    const ui = await import('/js/tool-ui.js'), selected = await window.__registeredWebMcpTools.get('get-selected-files').execute({}, { signal: new AbortController().signal });
+    return { files: selected.files, session: ui.documentSession.snapshot(), bytes: Array.from(ui.documentSession.current().bytes), result: document.getElementById('documentResultIdentity').textContent, resultStatus: document.getElementById('documentResultStatus').textContent,
+      progress: document.getElementById('progressTrack').getAttribute('aria-valuenow'), progressHidden: document.getElementById('progressSection').hidden, successHidden: document.getElementById('successSection').hidden, errorHidden: document.getElementById('errorSection').hidden, error: document.getElementById('errorText').textContent,
+      tools: [...window.__registeredWebMcpTools.keys()].sort(), busy: document.querySelector('.merge-workspace').getAttribute('aria-busy') };
+  });
+  const beforeLateRead = await snapshot(); expect(beforeLateRead.files.map((file) => file.id).some((id) => oldIds.includes(id))).toBe(false);
+  expect(beforeLateRead).toMatchObject({ progress: '100', progressHidden: true, successHidden: false, errorHidden: true, error: '', busy: 'false' });
+  expect(downloads).toBe(1);
+  await page.evaluate(() => window.__releaseClearHeldRead());
+  await expect.poll(() => page.evaluate(() => [...window.__registeredWebMcpTools.keys()].sort())).toEqual(beforeLateRead.tools);
+  expect(await snapshot()).toEqual(beforeLateRead);
+  expect(await page.evaluate(() => window.__clearReadCalls)).toEqual([{ intent: 'old-held', name: 'appendix.pdf' }, { intent: 'fresh', name: 'report.pdf' }, { intent: 'fresh', name: 'appendix.pdf' }]);
+  expect(downloads).toBe(1); expect(consoleErrors).toEqual([]); expect(pageErrors).toEqual([]);
 });
 
 test('WebMCP implementation excludes draft anti-pattern APIs and binary transport', () => {

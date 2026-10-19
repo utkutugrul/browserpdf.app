@@ -41,3 +41,92 @@
 .scene-field-editor label { display:flex; flex-direction:column; gap:.5rem; }
 .scene-field-editor input,.scene-field-editor select { width:100%; min-height:44px; }
 .scene-loaded .field-row { overflow-wrap:anywhere; }
+
+/* The loaded task keeps document controls and editable content together. */
+.scene-loaded main > .intro { margin-block-end:1rem; }
+.scene-loaded .intro p { display:none; }
+.scene-loaded .dropzone-section { margin-block-start:0; }
+.object-workspace { min-width:0; }
+.object-workspace #documentIdentity { margin-block:.5rem; overflow-wrap:anywhere; }
+.object-workspace .document-identity { display:flex; flex-wrap:wrap; gap:.2rem .5rem; }
+.object-workspace .document-identity-item { display:flex; gap:.2rem; min-width:0; max-width:100%; }
+.object-workspace .document-identity-label { flex-shrink:0; white-space:nowrap; }
+.object-workspace .document-identity-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.object-workspace .document-identity-revision { flex-shrink:0; font-weight:600; }
+.scene-taskbar { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem .75rem; padding-block:.4rem; border-block:1px solid var(--border); }
+.scene-taskbar .editor-toolbar { margin:0; gap:.3rem; }
+.scene-taskbar .btn { min-height:36px; }
+.scene-taskbar > #applyBtn { margin-inline-start:auto; }
+.scene-replace summary,.scene-panel > summary,.scene-thumbnails > summary { cursor:pointer; padding:.65rem; font-size:.85rem; font-weight:600; border-radius:.4rem; }
+.scene-replace { position:relative; }
+.scene-replace[open] { flex-basis:100%; }
+.scene-replace #dropzone { margin-block:.5rem; padding:.65rem; }
+.scene-replace #dropzone p { margin-block:.2rem; }
+.scene-taskbody { display:grid; grid-template-columns:minmax(0,1fr) minmax(16rem,19rem); gap:1rem; align-items:start; }
+.scene-stage,.scene-sidebar { min-width:0; }
+.scene-sidebar { display:flex; flex-direction:column; gap:.65rem; }
+.scene-page-controls { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block-end:.65rem; }
+.scene-page-controls .editor-toolbar { margin:0; gap:.35rem; }
+.scene-page-controls label { display:flex; align-items:center; gap:.35rem; font-size:.8rem; }
+.scene-page-controls select,.scene-page-controls input { width:5rem; max-width:100%; min-height:34px; padding:.25rem; }
+.scene-thumbnails { flex-basis:100%; min-width:0; }
+.scene-thumbnails .page-grid { display:flex; max-height:7rem; overflow:auto; gap:.4rem; padding:.4rem; }
+.scene-thumbnails .page-tile { flex:0 0 64px; min-width:0; padding:.25rem; font-size:.7rem; }
+.scene-thumbnails .page-tile canvas { max-height:64px; object-fit:contain; }
+.scene-canvas-scroll { overflow:auto; min-width:0; max-height:76vh; padding:.65rem; background:var(--surface-2,var(--bg)); border:1px solid var(--border); border-radius:.5rem; }
+.scene-canvas-scroll:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.scene-canvas-scroll #placementSection,.scene-canvas-scroll #previewPanel { margin:0; padding:0; border:0; background:transparent; }
+.scene-canvas-scroll .preview-canvas-wrap { margin:0 auto; padding:0; }
+.scene-canvas-scroll .scene-surface { display:block; }
+.scene-canvas-scroll #previewTitle { display:none; }
+.scene-panel { min-width:0; border:1px solid var(--border); border-radius:.5rem; background:var(--surface); }
+.scene-panel > summary { background:var(--surface-2,var(--bg)); }
+.scene-panel .options-panel { margin:0; border:0; border-radius:0; padding:.5rem; }
+.scene-panel .option-block { padding:.55rem .25rem; min-width:0; }
+.scene-panel .option-block-row { flex-wrap:wrap; gap:.4rem; }
+.scene-panel .option-title { flex-wrap:wrap; }
+.scene-panel .option-title svg { display:none; }
+.scene-panel .option-hint { font-size:.75rem; }
+.scene-panel .select-input,.scene-panel textarea,.scene-panel input[type=text] { min-width:0; max-width:100%; width:100%; }
+.scene-panel .scene-empty-block,.scene-panel .option-divider { display:none; }
+.scene-panel > .option-block,.scene-panel > .callout { margin:.5rem; }
+.scene-panel .scene-properties { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin:.65rem; }
+.scene-panel .scene-properties label:first-child { grid-column:1/-1; }
+.scene-panel .scene-properties input,.scene-panel .scene-properties select { min-width:0; max-width:100%; width:100%; }
+.scene-panel .scene-object-actions { margin:.5rem; }
+.scene-panel #objectList { height:5.5rem; }
+.scene-panel .field-row { display:flex; flex-wrap:wrap; gap:.4rem; }
+.scene-panel .field-row input[type=text],.scene-panel .field-row select { flex-basis:100%; min-width:0; }
+.scene-panel .field-row .btn { white-space:normal; }
+.scene-panel #fieldsList { max-height:24rem; overflow:auto; padding:.25rem; }
+.scene-panel .sig-canvas { height:auto; aspect-ratio:21/8; }
+.scene-panel .signature-asset-preview { max-width:100%; }
+.scene-panel #sigStatus { overflow-wrap:anywhere; }
+.scene-panel .split-mode-tabs { flex-wrap:wrap; }
+.scene-panel .image-picker { flex-wrap:wrap; }
+.scene-panel .image-thumb { max-width:80px; }
+.scene-panel #imageName { overflow-wrap:anywhere; }
+.scene-panel p { font-size:.8rem; }
+.scene-widget-hotspot { writing-mode:horizontal-tb; overflow:hidden; font-size:11px; }
+.scene-field-editor[hidden],.scene-overlay[hidden],.scene-widgets[hidden] { display:none; }
+.document-result-preview[aria-busy=true] { opacity:.6; }
+@media(max-width:759px) {
+  .scene-taskbody { grid-template-columns:minmax(0,1fr); gap:.65rem; }
+  .scene-sidebar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  .scene-sidebar > :last-child:nth-child(odd) { grid-column:1/-1; }
+  .scene-canvas-scroll { max-height:62vh; }
+  .scene-taskbar > #applyBtn { margin-inline-start:0; }
+  .object-workspace .document-identity { gap:0; font-size:.75rem; line-height:1.4; }
+  .object-workspace .document-identity-item { flex-basis:100%; }
+  .scene-taskbar .editor-toolbar { gap:.25rem; }
+  .scene-taskbar #workspaceModes { flex-basis:100%; }
+}
+@media(max-width:480px) {
+  .scene-sidebar { grid-template-columns:minmax(0,1fr); }
+  .scene-page-controls .editor-toolbar { width:100%; }
+  .scene-page-controls .editor-toolbar label { flex:1; }
+  .scene-page-controls .btn { padding:.4rem; font-size:.75rem; }
+  .scene-taskbar .btn { padding:.4rem .55rem; font-size:.75rem; }
+  .scene-taskbar > #applyBtn { flex:1; }
+  .scene-canvas-scroll { padding:.3rem; }
+}
