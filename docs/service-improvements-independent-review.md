@@ -1232,3 +1232,89 @@ The original first sixteen and corrected affected thirteen are distinct
 runs; no clean all-twenty-two claim is made. This accepts the scoped
 Metadata workspace for checkpointing. Full locale migration, richer
 Privacy/Doctor destinations and final service-07/all-32 gates remain open.
+
+
+### Metadata checkpoint sync
+
+Root independently verifies `9d497161ab3f7d34d5a7405cd79f93cf42bac6c6`
+on HEAD, upstream and the actual feature remote. Its title is
+`Improve PDF metadata workspace`, its body is empty and its parent is
+`f0fa2aaa99f275b14c81a7220a767db65b20cafb`. Exactly eight accepted
+paths and their committed blobs, 418 protected paths, the 426-path included
+inventory, forty untracked audit files and empty index verify. Twenty-two
+concurrent Doc/OCR paths remain explicitly excluded and unstaged. Evidence:
+`/tmp/browserpdf-metadata-workspace-checkpoint-commit-proof-20261019.json`
+and
+`/tmp/browserpdf-root-metadata-workspace-checkpoint-remote-verification-20261019.json`.
+
+### Shared document image transaction and joint ledger acceptance
+
+The five-path pure extension adds atomic local PNG/JPEG image replacement,
+one task-lifetime asset Map, current-model asset projection and actual
+external intake reservation accounting. Replacing an image keeps its
+physical document dimensions. Unreferenced old metadata is omitted from
+current exports while its owned bytes remain available for Undo. Forty-eight
+owned image entries and sixteen MiB remain lifetime limits even after history
+clear. Six retained models share the existing forty-eight-MiB history limit.
+Busy is registered before producer access; the first normalization and first
+captured disposer promises drain before release or publication. Failed
+cleanup retains its reservation and fences new work, history and disposal.
+
+The trusted external-usage accessor combines the real session snapshot,
+actual intake reservation Map and UI leases with the draft's own pending
+resources. Image peak is charged once; raw File admission remains independent.
+The first affected joint image/intake gate passes 17/17, 312.194042 ms.
+Actual named PNG/JPEG codec outputs and saved PDF/DOCX artifacts remain
+retained separately; they are Node evidence, not browser EXIF proof.
+
+A later typed cleanup-complete early-stop branch loses the exact abort
+reason. The narrow captured-signal correction passes six affected checks,
+269.917375 ms, and five private stages, including failed-disposer priority.
+Fresh independent review then finds one P2: `if (error)` swallows genuine
+null, false, zero and empty-string abort reasons. Eight actual-module probes
+wrongly fulfill undefined while preserving A and releasing safe resources.
+Those original failures remain retained. An explicit caught-presence boolean
+corrects the settlement without changing cleanup-fence precedence.
+
+The affected correction passes 3/3, 250.366542 ms, covering all eight falsy
+variants, genuine intrinsic/own-override guards, held first work, unchanged
+A/resources, valid successors and prior cleanup controls. Independent focused
+recheck passes and closes the sole P2:
+`/tmp/browserpdf-document-image-ledger-corrected-review-20261019.md`.
+It replays the original eight cases with only a new output path; all reject
+with the exact reason. All 63 source/evidence checks and a separate post-replay
+54-source check match. Root separately replays those eight with strict
+assertions, verifies all 54 sources and preserves the original failure JSON:
+`/tmp/browserpdf-root-document-image-falsy-abort-corrected-first-20261019-proof.json`.
+All six original codec/PDF/DOCX output hashes remain exact.
+
+The final documentation-only five-path reconciliation is frozen under
+`/tmp/browserpdf-document-image-checkpoint-final-20261019/` with manifest
+SHA-256 `2b33d5840b5da765a894b68665537d068ce604b8091f0b8c84d3e0c9c98fafb1`.
+Its four runtime/unit hashes are unchanged. This accepts the scoped pure
+image transaction and joint ledger for checkpointing. Markdown source-revision
+and initial named-image binding remain private proposals. UI12, real browser
+normalization/EXIF/cancellation, actual three-service Download/Use journeys,
+locales and final service acceptance remain open.
+
+### Guarded OCR: retained first failure and review finding
+
+The separately pinned private child-output guard passes twenty controlled
+source/compiled dispatch controls. Root's first actual guarded-worker run
+then fails during normal recognition before any of four cases completes,
+with `OCR publication rejected: non-data value`. The failing property is not
+identified by that report. Six pins, zero unexpected HTTP/non-GET/page errors,
+known direct child release, idle/unfenced lane, host termination, browser
+closure and all 426 included source hashes/path inventory verify. Evidence:
+`/tmp/browserpdf-root-ocr-native-gate-guarded-first-20261019/report.json`.
+
+Fresh independent review separately proves P2: a hash-correct English view
+of 5,199,098 bytes can have a twenty-MiB backing buffer that structured clone
+copies in full, exceeding the declared startup cap and reservation. Evidence:
+`/tmp/browserpdf-ocr-output-guard-fresh-review-20261019.md`.
+All fifty-six frozen private files remain exact. The guard is not accepted.
+A new private prefix is authorized for exact startup backing extents and a
+bounded property-path/type diagnostic; no generic optional-value relaxation
+or production adoption is authorized. Earlier unguarded native 4/4 remains
+separate historical evidence. Production OCR, corrected saved output and
+other-language native gates remain open.

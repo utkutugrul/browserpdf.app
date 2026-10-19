@@ -32,7 +32,8 @@ export function createDocumentIntake(settings){
     const controller=job.controller,signal=controller.signal,captured={...cfg.getOwner()},reservations=new Map();let bytes,candidate,cleanup,accepted=false;
     const current=()=>!closed&&job.generation===generation&&!signal.aborted&&(!job.options.isCurrent||job.options.isCurrent());
     const assert=()=>{abort.call(signal);if(!current()||!same(captured,cfg.getOwner()))fail('STALE','The input owner or intent changed.');};
-    function reserve(extra){assert();extra=record(extra,['resourceBytes','resourceCount','artifactBytes','expandedBytes','expandedCount']);const u=cfg.getUsage(),total={resourceBytes:0,resourceCount:0,artifactBytes:0,expandedBytes:0,expandedCount:0};for(const value of [...reservations.values(),extra])for(const key of Object.keys(total))total[key]+=value[key]??0;const result=assertDocumentWorkspaceBudget(u.snapshot,u.live,total);const key={};reservations.set(key,{...extra});let released=false;return {usage:result,release(){if(!released){released=true;reservations.delete(key);}}};}
+    function reservationUsage(){const total={resourceBytes:0,resourceCount:0,artifactBytes:0,expandedBytes:0,expandedCount:0};for(const value of reservations.values())for(const key of Object.keys(total)){total[key]+=value[key]??0;if(!Number.isSafeInteger(total[key]))fail('LIMIT','Reservation arithmetic overflow.');}return total;}
+    function reserve(extra){assert();extra=record(extra,['resourceBytes','resourceCount','artifactBytes','expandedBytes','expandedCount']);for(const value of Object.values(extra))if(!Number.isSafeInteger(value)||value<0)fail('INPUT','Reservations require finite nonnegative integers.');const u=cfg.getUsage(),total=reservationUsage();for(const key of Object.keys(total)){total[key]+=extra[key]??0;if(!Number.isSafeInteger(total[key]))fail('LIMIT','Reservation arithmetic overflow.');}const result=assertDocumentWorkspaceBudget(u.snapshot,u.live,total);const key={};reservations.set(key,{...extra});let released=false;return {usage:result,release(){if(!released){released=true;reservations.delete(key);}}};}
     const external=job.options.signal,onAbort=()=>controller.abort(signalReason.call(external));
     try{
       checkSignal(external);if(external)listen.call(external,'abort',onAbort,{once:true});assert();
@@ -40,9 +41,9 @@ export function createDocumentIntake(settings){
       // Capture/await this exact first promise; no race and no duplicate read.
       const first=read.call(job.file);const buffer=await first;bytes=new Uint8Array(buffer);assert();if(bytes.byteLength!==job.fileInfo.bytes)fail('INPUT','Native file size changed.');
       notify({phase:'parsing',name:job.fileInfo.name,intent:job.options.intent});assert();
-      const parsing=cfg.readCandidate(bytes,job.fileInfo,{signal,owner:captured,file:job.file,reserve});candidate=await parsing;cleanup=candidate?.dispose;assert();if(typeof cleanup!=='function')fail('INPUT','The parser must return an owned candidate disposer.');
+      const parsing=cfg.readCandidate(bytes,job.fileInfo,{signal,owner:captured,file:job.file,reserve,reservationUsage});candidate=await parsing;cleanup=candidate?.dispose;assert();if(typeof cleanup!=='function')fail('INPUT','The parser must return an owned candidate disposer.');
       notify({phase:'committing',name:job.fileInfo.name,intent:job.options.intent});assert();
-      const publishing=cfg.publishCandidate(candidate,{signal,owner:captured,file:job.file,descriptor:job.fileInfo,reserve,isCurrent:current,assertCurrent:assert});const next=await publishing;
+      const publishing=cfg.publishCandidate(candidate,{signal,owner:captured,file:job.file,descriptor:job.fileInfo,reserve,reservationUsage,isCurrent:current,assertCurrent:assert});const next=await publishing;
       if(!current()||!next?.owner||!same(next.owner,cfg.getOwner()))fail('STALE','The published candidate did not return its exact current owner.');accepted=true;
       job.resolve({status:'accepted',owner:{...next.owner}});notify({phase:'accepted',name:job.fileInfo.name,intent:job.options.intent});
     }catch(error){job.resolve(signal.aborted||!current()?{status:'cancelled',reason:signal.reason??error}:{status:'rejected',error});notify({phase:signal.aborted||!current()?'cancelled':'rejected',intent:job.options.intent});}
