@@ -28,7 +28,8 @@ async function alpha(page, testInfo, mode) {
   await page.evaluate(() => { window.previousDownload = document.getElementById('downloadResultBtn'); }); return bytes;
 }
 async function gated(page) {
-  await expect(page.locator('#applyBtn')).toBeDisabled(); await expect(page.locator('#placeDraftBtn')).toBeDisabled(); await expect(page.locator('#workspaceModes button')).toHaveCount(4);
+  await expect(page.locator('#applyBtn')).toBeDisabled(); await expect(page.locator('#placeDraftBtn')).toBeDisabled(); await expect(page.locator('#workspaceModes button')).toHaveCount(7);
+  expect(await page.locator('#workspaceModes button').evaluateAll((buttons) => buttons.map((button) => button.dataset.mode))).toEqual(['add-text', 'add-image', 'fill-sign', 'organize', 'view-pdf', 'highlight', 'redact']);
   for (const button of await page.locator('#workspaceModes button').all()) await expect(button).toBeDisabled();
   await expect(page.locator('#documentResult')).toBeHidden(); await expect(page.locator('#downloadResultBtn')).toBeHidden(); await expect(page.locator('#chainRow')).toBeHidden(); await expect(page.locator('#sceneStatus')).toContainText('Preparing');
   const url = page.url(); await page.evaluate(() => { window.previousDownload?.click(); document.getElementById('applyBtn').click(); document.querySelector('#workspaceModes button').click(); }); expect(page.url()).toBe(url);

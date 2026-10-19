@@ -309,7 +309,10 @@ export async function readExternalPdfFile(file, options = {}) {
 }
 
 export async function readPdfFile(file, options = {}) {
-  const limit = options.maxBytes || 250 * 1024 * 1024;
+  // Owned handoffs can have a baked current PDF larger than the editable
+  // source. begin() validates every inherited source/resource before commit.
+  const inheritedScene = options.allowInheritedScene && file.browserpdfSession?.scene;
+  const limit = inheritedScene ? 250 * 1024 * 1024 : options.maxBytes || 250 * 1024 * 1024;
   if (options.maxPages !== undefined && (!Number.isSafeInteger(options.maxPages) || options.maxPages < 1 || options.maxPages > 10000)) { showError(t('workspace.invalid_page_limit', 'Invalid PDF page limit.')); return null; }
   if (options.maxBytes && file.size > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   const intake = ++intakeGeneration;
@@ -323,6 +326,7 @@ export async function readPdfFile(file, options = {}) {
   try { bytes = new Uint8Array(await file.arrayBuffer()); }
   catch (error) { if (intake === intakeGeneration) showError(t('workspace.read_failed', 'Could not read this PDF: {message}', { message: error.message })); return null; }
   if (intake !== intakeGeneration) return null;
+  if (bytes.length > limit) { showError(t('workspace.editor_too_large', 'Choose an editable PDF smaller than {n} MB.', { n: Math.round(limit / 1024 / 1024) })); return null; }
   if (!checkPdfMagicBytes(bytes)) {
     showError(t('common.js_err_invalid_pdf', 'This file does not look like a valid PDF.'));
     return null;

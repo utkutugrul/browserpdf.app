@@ -1,0 +1,57 @@
+.reader-loaded main>.intro { margin-block:.5rem; }
+.reader-loaded .intro p { display:none; }
+.reader-loaded .intro h1 { font-size:1.45rem; margin-block:.4rem; }
+.reader-loaded .dropzone-section { margin-block-start:0; min-width:0; }
+.reader-loaded #viewerSection { margin:0; padding:0; min-width:0; overflow:visible; }
+.reader-loaded #documentIdentity { display:flex; flex-wrap:wrap; gap:0 .4rem; font-size:.75rem; margin:.3rem 0; line-height:1.4; }
+.reader-loaded .document-identity-item { display:flex; min-width:0; max-width:100%; }
+.reader-loaded .document-identity-label,.reader-loaded .document-identity-revision { flex-shrink:0; }
+.reader-loaded .document-identity-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#readerTools,#readerPanels { display:flex; flex-wrap:wrap; gap:.3rem .6rem; min-width:0; margin:.25rem 0; align-items:start; }
+#readerTools>details,#readerPanels>details { min-width:0; }
+#readerTools>details[open],#readerPanels>details[open] { flex-basis:100%; }
+#readerTools summary,#readerPanels summary { cursor:pointer; padding:.35rem; font-size:.8rem; font-weight:600; }
+#readerTools #workspaceModes { display:flex; flex-wrap:wrap; gap:.3rem; }
+#readerReplace #dropzone { min-height:0; padding:.5rem; margin:.25rem 0; }
+#readerReplace #dropzone>svg { display:none; }
+#readerReplace #dropzone p { margin:.2rem 0; }
+.reader-loaded .result-toolbar,.reader-loaded .result-toolbar .btn-row,.reader-loaded .result-actions { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; margin:0; min-width:0; }
+.reader-loaded .result-toolbar { justify-content:space-between; padding:.3rem 0; }
+.reader-loaded .result-toolbar .btn { padding:.35rem .5rem; min-height:34px; font-size:.75rem; }
+.reader-loaded .result-toolbar label { display:flex; align-items:center; gap:.25rem; font-size:.75rem; }
+#readerPage { width:3.8rem; padding:.2rem; min-height:32px; }
+#readerStatus { font-size:.75rem; margin:.2rem 0; min-height:1em; overflow-wrap:anywhere; }
+.reader-loaded #viewerContainer { display:block; padding:8px; max-height:76vh; min-width:0; overflow:auto; direction:ltr; }
+.reader-page-surface { position:relative; margin-inline:auto; background:white; --scale-round-x:1px; --scale-round-y:1px; }
+.reader-loaded #pdfCanvas { display:block; max-width:none; margin:0; }
+.reader-text-layer { color-scheme:only light; position:absolute; inset:0; text-align:initial; overflow:clip; opacity:1; line-height:1; letter-spacing:normal; word-spacing:normal; text-size-adjust:none; forced-color-adjust:none; transform-origin:0 0; caret-color:CanvasText; z-index:1; --min-font-size:1; --text-scale-factor:calc(var(--total-scale-factor) * var(--min-font-size)); --min-font-size-inv:calc(1 / var(--min-font-size)); }
+/* Required text geometry copied from pinned pdfjs-dist/web/pdf_viewer.css
+   textLayer (615ff), page variables (6237ff), rotations (6175ff). */
+.reader-text-layer :is(span,br) { color:transparent; position:absolute; white-space:pre; cursor:text; transform-origin:0% 0%; user-select:text; }
+.reader-text-layer>span { z-index:1; --font-height:0; font-size:calc(var(--text-scale-factor) * var(--font-height)); --scale-x:1; --rotate:0deg; transform:rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv)); }
+.reader-text-layer ::selection { background:rgb(0 80 255 / .3); color:transparent; }
+.reader-text-layer[data-main-rotation="90"] { transform:rotate(90deg) translateY(-100%); }
+.reader-text-layer[data-main-rotation="180"] { transform:rotate(180deg) translate(-100%,-100%); }
+.reader-text-layer[data-main-rotation="270"] { transform:rotate(270deg) translateX(-100%); }
+.reader-search-paint,.reader-link-layer { position:absolute; inset:0; pointer-events:none; }
+.reader-search-paint { z-index:2; }
+.reader-search-paint>span { position:absolute; background:rgb(255 180 0 / .45); border:1px solid #855900; box-sizing:border-box; }
+.reader-link-layer { z-index:3; }
+.reader-internal-link { position:absolute; pointer-events:auto; padding:0; border:0; background:transparent; cursor:pointer; min-height:0; min-width:0; }
+.reader-internal-link:focus-visible { outline:2px solid #1264d8; background:rgb(0 80 255 / .15); }
+#readerSearchForm { display:flex; flex-wrap:wrap; gap:.3rem; }
+#readerSearchQuery { flex:1; min-width:7rem; max-width:100%; }
+#readerSearchStatus,.reader-help,#readerOutlineStatus { font-size:.75rem; margin:.3rem; overflow-wrap:anywhere; }
+#readerSearchResults,#readerOutlineItems { max-height:14rem; overflow:auto; padding:0; list-style:none; margin:.3rem 0; }
+#readerSearchResults button,#readerOutlineItems button { display:block; width:100%; text-align:start; white-space:normal; overflow-wrap:anywhere; }
+#readerThumbnailItems { display:flex; overflow:auto; gap:.4rem; padding:.4rem 0; max-height:10rem; }
+#readerThumbnailItems button { display:flex; flex:0 0 76px; flex-direction:column; align-items:center; padding:.25rem; min-width:0; }
+#readerThumbnailItems canvas { max-width:70px; max-height:90px; object-fit:contain; }
+@media(max-width:480px) {
+  .reader-loaded .document-identity-item { flex-basis:100%; }
+  .reader-loaded .result-toolbar { gap:.15rem; }
+  .reader-loaded .page-indicator { min-width:70px; font-size:.7rem; }
+  .reader-loaded .result-toolbar .btn { padding:.3rem .4rem; }
+  .reader-loaded .viewer-zoom-level { min-width:36px; font-size:.7rem; }
+  .reader-loaded #viewerContainer { max-height:66vh; }
+}

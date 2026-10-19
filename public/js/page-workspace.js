@@ -19,7 +19,7 @@ function ensureStyles() {
 // A route supplies its plan/sources and owns operation/review actions. Selection
 // lives solely in the warmed shared session, never in a second adapter Set.
 export async function createPageWorkspace({ container, plan: initialPlan, sources: initialSources,
-  pdfjs, pdfjsAssets, onSelectionChange, onNavigate,
+  pdfjs, pdfjsAssets, onSelectionChange, onNavigate, disabled = false,
 } = {}) {
   if (!(container instanceof Element)) throw new TypeError('A page workspace container is required.');
   const requestedTaskId = documentSession.snapshot().taskId;
@@ -65,7 +65,13 @@ export async function createPageWorkspace({ container, plan: initialPlan, source
     if (snapshot.taskId !== ownerTaskId || snapshot.current?.type !== 'application/pdf') { dispose(); return false; }
     return true;
   }
-  function button(label, onClick) { const node = element('button', 'btn btn-ghost btn-small', label); node.type = 'button'; node.addEventListener('click', (event) => { if (ownsTask()) onClick(event); }); return node; }
+  function button(label, onClick) { const node = element('button', 'btn btn-ghost btn-small', label); node.type = 'button'; node.addEventListener('click', (event) => { if (ownsTask() && !disabled) onClick(event); }); return node; }
+  function setDisabled(value) {
+    disabled = !!value; root.inert = disabled;
+    for (const control of root.querySelectorAll('input,button')) control.disabled = disabled;
+    previous.disabled = disabled || windowStart === 0;
+    next.disabled = disabled || windowStart + PAGE_THUMBNAIL_WINDOW >= plan.pages.length;
+  }
   function clearError() { errorBox.textContent = ''; errorBox.hidden = true; rangeInput.removeAttribute('aria-invalid'); }
   function showError(message) { errorBox.textContent = message; errorBox.hidden = false; rangeInput.setAttribute('aria-invalid', 'true'); }
   function selected() { return ownsTask() ? normalizePageSelection(documentSession.snapshot().selection.filter((index) => index < plan.pages.length), plan.pages.length) : []; }
@@ -102,7 +108,7 @@ export async function createPageWorkspace({ container, plan: initialPlan, source
     const renderEpoch = ++epoch; active?.abort(); active = new AbortController(); const signal = active.signal;
     disposeCanvases(); grid.replaceChildren(); root.setAttribute('aria-busy', 'true');
     const end = Math.min(plan.pages.length, windowStart + PAGE_THUMBNAIL_WINDOW);
-    previous.disabled = windowStart === 0; next.disabled = end >= plan.pages.length;
+    previous.disabled = disabled || windowStart === 0; next.disabled = disabled || end >= plan.pages.length;
     windowStatus.textContent = t('pages.window_count', 'Pages {first}-{last} of {total}', { first: windowStart + 1, last: end, total: plan.pages.length });
     const pending = [];
     for (let index = windowStart; index < end; index++) {
@@ -114,13 +120,13 @@ export async function createPageWorkspace({ container, plan: initialPlan, source
       tile.append(canvas, label, sourceLabel);
       if (entry.rotation || entry.crop) { const changes = [entry.rotation ? `+${entry.rotation}°` : '', entry.crop ? t('pages.crop_pending', 'Crop pending') : ''].filter(Boolean); tile.append(element('span', 'page-workspace-pending', changes.join(' · '))); }
       tile.addEventListener('click', (event) => {
-        if (!ownsTask() || renderEpoch !== epoch) return;
+        if (!ownsTask() || disabled || renderEpoch !== epoch) return;
         const changed = changePageSelection({ selected: selected(), anchor }, index, { pageCount: plan.pages.length, shiftKey: event.shiftKey, additive: event.ctrlKey || event.metaKey });
         anchor = changed.anchor; currentPage = index; jumpInput.value = String(index + 1); setSelection(changed.selected); clearError(); if (ownsTask()) onNavigate?.(index, entry);
       });
       grid.append(tile); pending.push({ entry, canvas });
     }
-    updateSelection();
+    updateSelection(); setDisabled(disabled);
     ready = (async () => {
       const documents = new Map();
       const destroyDocuments = async () => { const tasks = [...documents.values()]; documents.clear(); await Promise.allSettled(tasks.map((value) => value.task.destroy())); };
@@ -154,6 +160,7 @@ export async function createPageWorkspace({ container, plan: initialPlan, source
     element: root,
     ready: () => { ownsTask(); return ready; },
     selection: selected,
+    setDisabled,
     setSelection,
     refreshSelection: updateSelection,
     async setPlan(nextPlan, nextSources) {

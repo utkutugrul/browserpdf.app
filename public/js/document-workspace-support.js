@@ -9,14 +9,20 @@ export async function getWorkspaceInput({ bakeScene = true, operation } = {}, { 
   if (!snapshot.current) throw new Error('Open a document first.');
   const scene = documentSession.scene();
   let bytes;
+  let capabilities = { ...snapshot.current.capabilities };
   if (scene && bakeScene) {
     const [{ renderScenePdf }, runtime] = await Promise.all([import('./core/object-scene.js'), import('./lib-loader.js')]);
     const [pdfLib, pdfjs] = await Promise.all([runtime.ensurePdfLib(), runtime.ensurePdfJs()]);
-    bytes = (await renderScenePdf({ scene, resource: documentSession.resource, pdfLib, pdfjs, pdfjsAssets: runtime.PDFJS_ASSET_URLS, signal: operation?.signal })).bytes;
+    const rendered = await renderScenePdf({ scene, resource: documentSession.resource, pdfLib, pdfjs, pdfjsAssets: runtime.PDFJS_ASSET_URLS, signal: operation?.signal });
+    bytes = rendered.bytes;
+    // The verified rewrite preserves known searchability for image-only edits,
+    // adds searchable text, and reports actual surviving fields after flatten.
+    capabilities = { ...capabilities, encrypted: false, forms: rendered.forms };
+    if (scene.objects.some((object) => object.kind === 'text')) capabilities.searchable = true;
   }
   if (!bytes) bytes = documentSession.current().bytes;
   if (operation && !operation.isCurrent()) return null;
-  return { bytes, name: snapshot.current.name, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene,
+  return { bytes, capabilities, name: snapshot.current.name, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene,
     losses: scene && (scene.objects.length || Object.keys(scene.fields).length || scene.flatten) ? ['scene-baked'] : [] };
 }
 

@@ -56,6 +56,10 @@
 .scene-taskbar { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem .75rem; padding-block:.4rem; border-block:1px solid var(--border); }
 .scene-taskbar .editor-toolbar { margin:0; gap:.3rem; }
 .scene-taskbar .btn { min-height:36px; }
+.scene-more-modes { position:relative; }
+.scene-more-modes>summary { width:24px; min-height:32px; padding:.2rem; cursor:pointer; font-size:1.1rem; list-style:none; text-align:center; }
+.scene-more-modes[open] { display:flex; flex-wrap:wrap; flex-basis:100%; }
+.scene-more-modes[open]>.btn { margin:.2rem; }
 .scene-taskbar > #applyBtn { margin-inline-start:auto; }
 .scene-replace summary,.scene-panel > summary,.scene-thumbnails > summary { cursor:pointer; padding:.65rem; font-size:.85rem; font-weight:600; border-radius:.4rem; }
 .scene-replace { position:relative; }

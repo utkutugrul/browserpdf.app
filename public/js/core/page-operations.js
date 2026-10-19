@@ -25,7 +25,7 @@ export function inspectPageOperationStructures(doc, pdfLib) {
   return Object.freeze({ forms: has('AcroForm'), outlines: has('Outlines'), tags: has('StructTreeRoot'), names: has('Names'), pageLabels: has('PageLabels'), signatures: signatures || has('Perms'), incomplete });
 }
 
-function boundaryFor(kind, structures) {
+export function pageOperationBoundary(kind, structures) {
   const losses = [];
   if (kind === 'page-copy') {
     losses.push('page-copy-structures-unverified');
@@ -116,7 +116,7 @@ export async function applyPagePlan(inputs, inputPlan, { pdfLib, signal, onProgr
   const capabilities = { encrypted: false };
   try { capabilities.forms = verified.getForm().getFields().length > 0; }
   catch { /* Unknown/malformed fields have no verified interactive capability. */ }
-  const boundary = boundaryFor(kind, structures);
+  const boundary = pageOperationBoundary(kind, structures);
   const losses = [...boundary.losses];
   if (plan.pages.some((entry) => entry.crop)) losses.push('crop-hidden-content');
   onProgress?.({ phase: 'done', percent: 100 }); abort(signal);

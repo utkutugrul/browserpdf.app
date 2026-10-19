@@ -26,7 +26,7 @@ async function open(page, route) {
   await expect(page.locator('h1').first()).toBeVisible();
 }
 
-async function grabDownload(page, action, pattern, { direct = false, encrypted = false } = {}) {
+async function grabDownload(page, action, pattern, { direct = false, encrypted = false, zip = false } = {}) {
   // Scale with the configured test timeout so a slow remote target gets the
   // whole budget instead of a hardcoded slice of it.
   const timeout = Math.max(30_000, test.info().timeout - 20_000);
@@ -48,7 +48,12 @@ async function grabDownload(page, action, pattern, { direct = false, encrypted =
         }
       }
       expect(automaticDownloads, 'building a result must wait for an explicit final download').toBe(0);
-      [download] = await Promise.all([page.waitForEvent('download', { timeout }), page.locator('#downloadResultBtn').click()]);
+      if (zip) {
+        await expect(page.locator('#pageOutputGroup')).toBeVisible({ timeout });
+        await expect(page.locator('#outputListStatus')).toContainText('3 files');
+        await expect(page.locator('#outputList li')).toHaveCount(3);
+      }
+      [download] = await Promise.all([page.waitForEvent('download', { timeout }), page.locator(zip ? '#downloadZipBtn' : '#downloadResultBtn').click()]);
     } finally { page.off('download', onDownload); }
   }
   expect(download.suggestedFilename()).toMatch(pattern);
@@ -70,7 +75,7 @@ const CASES = [
     prepare: (page) => page.locator('#modeEach').click(), // a tab, not a radio
     click: '#splitActionBtn',
     out: /\.zip$/,
-    direct: true, // legacy private exporter; shared multi-result review is Phase 2
+    zip: true, // complete reviewed output group; explicit final ZIP download
   },
   { route: 'organize', input: '#fileInput', files: ['report.pdf'], click: '#applyBtn', out: /\.pdf$/ },
   { route: 'rotate', input: '#fileInput', files: ['report.pdf'], click: '#applyBtn', out: /\.pdf$/ },
@@ -115,7 +120,7 @@ const CASES = [
 for (const c of CASES) {
   test(`${c.route}: produces a downloadable result`, async ({ page }) => {
     await open(page, c.route);
-    await grabDownload(
+    const download = await grabDownload(
       page,
       async () => {
         await page.setInputFiles(c.input, fx(...c.files));
@@ -123,8 +128,34 @@ for (const c of CASES) {
         if (c.click) await page.click(c.click);
       },
       c.out,
-      { direct: c.direct },
+      { direct: c.direct, zip: c.zip },
     );
+    if (c.zip) {
+      const archive = readFileSync(await download.path()), entries = [];
+      let offset = 0;
+      while (archive.readUInt32LE(offset) === 0x04034b50) {
+        const size = archive.readUInt32LE(offset + 18), nameLength = archive.readUInt16LE(offset + 26), extraLength = archive.readUInt16LE(offset + 28);
+        const name = archive.subarray(offset + 30, offset + 30 + nameLength).toString('utf8');
+        const start = offset + 30 + nameLength + extraLength;
+        entries.push({ name, bytes: archive.subarray(start, start + size) }); offset = start + size;
+      }
+      const source = readFileSync(fx('report.pdf')[0]), original = await PDFDocument.load(source);
+      expect(entries).toHaveLength(original.getPageCount());
+      for (const [index, entry] of entries.entries()) {
+        expect(entry.name).toBe(`report-page-${index + 1}.pdf`);
+        expect((await PDFDocument.load(entry.bytes)).getPageCount()).toBe(1);
+      }
+      const content = await page.evaluate(async ({ source, outputs }) => {
+        const { ensurePdfJs, PDFJS_ASSET_URLS } = await import('/js/lib-loader.js'), pdfjs = await ensurePdfJs();
+        async function text(values) {
+          const task = pdfjs.getDocument({ data: new Uint8Array(values), ...PDFJS_ASSET_URLS });
+          try { const doc = await task.promise, result = []; for (let number = 1; number <= doc.numPages; number++) result.push((await (await doc.getPage(number)).getTextContent()).items.map((item) => item.str).join(' ')); return result; }
+          finally { await task.destroy(); }
+        }
+        return { original: await text(source), split: (await Promise.all(outputs.map(text))).flat() };
+      }, { source: Array.from(source), outputs: entries.map((entry) => Array.from(entry.bytes)) });
+      expect(content.split).toEqual(content.original);
+    }
     await expect(page.locator('#errorSection')).toBeHidden();
   });
 }

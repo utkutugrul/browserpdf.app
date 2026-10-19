@@ -82,8 +82,8 @@ export async function openPageTask(mode, { isCurrent = () => true } = {}) {
       if (!value || !owns()) return;
       // Preserve an existing editable scene across modes. Page results themselves
       // enter the canonical session only through explicit result adoption.
-      if (value.hasScene) documentSession.publishScene(value.bytes, value.name);
-      const handoff = await stashForChain(value.bytes, value.name, slug);
+      if (value.hasScene) documentSession.publishScene(value.bytes, value.name, { capabilities: value.capabilities });
+      const handoff = await stashForChain(value.bytes, value.name, slug, { capabilities: value.capabilities });
       if (!request.isCurrent() || !owns()) return;
       const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
     } catch (error) { busy = false; update(); throw error; }
@@ -327,7 +327,7 @@ export async function openPageTask(mode, { isCurrent = () => true } = {}) {
       const result = await applyPagePlan(sources, plan, { pdfLib: lib, signal: request.signal, onProgress: (event) => { if (stillCurrent()) setProgress(event.percent, t('pages.building', 'Building the selected page result…')); } });
       if (!stillCurrent()) return;
       const boundary = { ...result.boundary, losses: [...new Set([...result.boundary.losses, ...input.losses])] };
-      const caps = { ...documentSession.snapshot().current.capabilities };
+      const caps = { ...(input.capabilities || documentSession.snapshot().current.capabilities) };
       caps.encrypted = false;
       if (typeof result.capabilities.forms === 'boolean') caps.forms = result.boundary.kind === 'pdf-rewrite' && result.capabilities.forms;
       else delete caps.forms;

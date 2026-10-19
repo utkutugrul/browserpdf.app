@@ -8,7 +8,7 @@ export function startObjectRoute(mode) {
   let workspace = null, opening = null, openingController = null, epoch = 0;
   function wire() { wireDropzone(document.getElementById('dropzone'), document.getElementById('fileInput'), (files) => { void handleFile(files[0]); }); }
   async function handleFile(file) {
-    const parsed = await readPdfFile(file, { validate: true, maxBytes: 80 * 1024 * 1024 });
+    const parsed = await readPdfFile(file, { validate: true, maxBytes: 80 * 1024 * 1024, allowInheritedScene: true });
     if (!parsed) return;
     const owner = documentSession.snapshot().taskId, token = ++epoch;
     const ownsTask = () => token === epoch && owner === documentSession.snapshot().taskId;

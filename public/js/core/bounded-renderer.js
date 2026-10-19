@@ -6,11 +6,20 @@ export function boundedViewport(page, { scale = 1, maxDimension = 4096, maxPixel
   const factor = Math.min(1, maxDimension / base.width, maxDimension / base.height, Math.sqrt(maxPixels / (Math.ceil(base.width) * Math.ceil(base.height))));
   return factor < 1 ? page.getViewport({ scale: scale * factor }) : base;
 }
-export async function renderBoundedPage(page, canvas, { signal, ...options } = {}) {
+export async function renderBoundedPage(page, canvas, { signal, displayViewport, ...options } = {}) {
   signal?.throwIfAborted();
   const viewport = boundedViewport(page, options);
   canvas.width = Math.max(1, Math.floor(viewport.width)); canvas.height = Math.max(1, Math.floor(viewport.height));
-  const task = page.render({ canvasContext: canvas.getContext('2d'), viewport });
+  // Pinned PDF.js types/src/display/api.d.ts RenderParameters.transform is
+  // the supported output-scale matrix. The installed viewer implementation
+  // (7078ff) likewise pairs a logical viewport with a bounded backing canvas.
+  let transform;
+  if (displayViewport) {
+    if (!(displayViewport.width > 0 && displayViewport.height > 0 && Number.isFinite(displayViewport.width * displayViewport.height))) throw new RangeError('Invalid display viewport.');
+    const displayWidth = Math.max(1, Math.floor(displayViewport.width)), displayHeight = Math.max(1, Math.floor(displayViewport.height));
+    transform = [canvas.width / displayWidth, 0, 0, canvas.height / displayHeight, 0, 0];
+  }
+  const task = page.render({ canvasContext: canvas.getContext('2d'), viewport: displayViewport || viewport, ...(transform ? { transform } : {}) });
   const cancel = () => task.cancel(); signal?.addEventListener('abort', cancel, { once: true });
   try { await task.promise; signal?.throwIfAborted(); return viewport; }
   finally { signal?.removeEventListener('abort', cancel); }

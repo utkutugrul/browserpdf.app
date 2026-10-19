@@ -36,7 +36,7 @@ test('lazy workspace import failure retries extra-source validation without repl
   let imports = 0;
   await page.route('**/js/document-workspace-support.js*', (route) => ++imports === 1 ? route.abort('failed') : route.continue());
   const errors = []; page.on('pageerror', (error) => errors.push(error.message));
-  await open(page);
+  await open(page, 'add-text');
   const result = await page.evaluate(async () => {
     const ui = await import('/js/tool-ui.js'), before = JSON.stringify(ui.documentSession.transfer());
     const makeFile = () => new File([ui.documentSession.current().bytes], 'additional.pdf', { type: 'application/pdf' });

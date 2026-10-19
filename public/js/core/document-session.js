@@ -98,6 +98,7 @@ export function createDocumentSession() {
         if (typeof a.id !== 'string' || !/^(source|asset)-[a-zA-Z0-9-]{1,80}$/.test(a.id)) throw new Error('Invalid workspace resource.');
         return [a.id, { ...createArtifact(a.bytes, a.name, a), id: a.id }];
       }));
+      if (stagedResources.size !== incoming.length) throw new Error('Duplicate workspace resource.');
       const restoreCheckpoint = (a) => {
         const bytes = a.scene ? stagedResources.get(a.sourceRef || a.scene.sourceRef)?.bytes : a.bytes;
         if (!bytes) throw new Error('Workspace history source is missing.');
@@ -108,6 +109,12 @@ export function createDocumentSession() {
       const stagedScene = cloneScene(options.scene);
       for (const state of [stagedScene, ...past.map((a) => a.scene), ...upcoming.map((a) => a.scene)].filter(Boolean)) {
         if (!stagedResources.has(state.sourceRef) || state.objects.some((o) => o.assetId && !stagedResources.has(o.assetId))) throw new Error('Workspace resource is missing.');
+        const editableSource = stagedResources.get(state.sourceRef);
+        if (!state.sourceRef.startsWith('source-') || editableSource.type !== 'application/pdf' || editableSource.bytes.length > 80 * 1024 * 1024) throw new RangeError('Editable workspace source PDFs are limited to 80 MB.');
+        for (const object of state.objects) if (object.assetId) {
+          const asset = stagedResources.get(object.assetId);
+          if (!object.assetId.startsWith('asset-') || !['image/png', 'image/jpeg'].includes(asset.type) || asset.bytes.length > 16 * 1024 * 1024) throw new RangeError('Invalid workspace image resource (PNG/JPEG, at most 16 MB).');
+        }
       }
       const stagedTaskId = typeof options.taskId === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(options.taskId) ? options.taskId : crypto.randomUUID();
       const stagedRevision = Math.max(0, Math.min(100000, Number(options.revision) || 0));

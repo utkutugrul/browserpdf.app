@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Watermark - BrowserPDF","description":"Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/watermark","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Watermark","item":"https://browserpdf.app/watermark"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can this remove an existing watermark?","acceptedAnswer":{"@type":"Answer","text":"No. This tool only adds watermarks to your own documents; it cannot strip marks from files you receive."}},{"@type":"Question","name":"What can I customize?","acceptedAnswer":{"@type":"Answer","text":"The text, diagonal or horizontal placement, size, opacity, and color (gray, red, or blue), with a live preview of the first page before you download."}},{"@type":"Question","name":"Why did some characters disappear from my watermark?","acceptedAnswer":{"@type":"Answer","text":"The built-in PDF fonts cover Latin (Western European) characters only. Unsupported characters are skipped with a warning instead of failing the whole file."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Add Watermark - BrowserPDF","description":"Stamp a text watermark like DRAFT or CONFIDENTIAL across every PDF page, for free, in your browser tab. No signup; BrowserPDF has no file-upload endpoint.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/watermark","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Document processing happens in the browser tab; BrowserPDF has no file-upload endpoint","Free, no signup, no added watermarks, and no service-imposed usage limits","Runs in the browser using JavaScript and WebAssembly"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"Add Watermark","item":"https://browserpdf.app/watermark"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can this remove an existing watermark?","acceptedAnswer":{"@type":"Answer","text":"No. This tool only adds watermarks to your own documents; it cannot strip marks from files you receive."}},{"@type":"Question","name":"What can I customize?","acceptedAnswer":{"@type":"Answer","text":"Choose text or a PNG/JPEG logo, selected pages, size, opacity, color, rotation, custom position or tiles. Navigate the actual saved-PDF preview before use or download."}},{"@type":"Question","name":"What happens when a font does not support my text?","acceptedAnswer":{"@type":"Answer","text":"Unicode fonts preserve supported characters. Unsupported glyphs stop the operation visibly; no characters are removed."}}]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skip_to_main">Skip to main content</a>
@@ -189,8 +189,8 @@
     <section class="about">
       <h2 data-i18n="common.how_it_works">How it works</h2>
       <ul class="about-list">
-        <li><strong data-i18n="watermark.about_1_title">The watermark is drawn into each page</strong> <span data-i18n="watermark.about_1_body">with pdf-lib (bold Helvetica, gray, at your chosen size, color, and opacity), centered straight or at 45&deg;. The live preview shows the first page exactly as it will download.</span></li>
-        <li><strong data-i18n="watermark.about_2_title">Character support:</strong> <span data-i18n="watermark.about_2_body">the built-in PDF fonts cover Latin (Western European) characters. Unsupported characters are skipped with a warning rather than failing mid-file.</span></li>
+        <li><strong data-i18n="watermark.about_1_title">The watermark is drawn into each page</strong> <span>with your selected text or logo, scope, placement and opacity. Preview any page of the actual saved PDF before choosing the result.</span></li>
+        <li><strong data-i18n="watermark.about_2_title">Character support:</strong> <span>supported text uses embedded fonts. Unsupported characters stop the operation with a clear message; choose compatible text or a logo.</span></li>
         <li><strong data-i18n="watermark.about_3_title">This is a visual stamp, not security.</strong> <span data-i18n="watermark.about_3_body">A determined user can remove a watermark; it deters casual misuse and marks status, nothing more.</span></li>
       </ul>
     </section>
@@ -204,11 +204,11 @@
         </div>
         <div class="faq-item">
           <h3 data-i18n="watermark.faq_2_q">What can I customize?</h3>
-          <p data-i18n="watermark.faq_2_a">The text, diagonal or horizontal placement, size, opacity, and color (gray, red, or blue), with a live preview of the first page before you download.</p>
+          <p>Choose text or a PNG/JPEG logo, selected pages, size, opacity, color, rotation, custom position or tiles. Navigate the actual saved-PDF preview before use or download.</p>
         </div>
         <div class="faq-item">
-          <h3 data-i18n="watermark.faq_3_q">Why did some characters disappear from my watermark?</h3>
-          <p data-i18n="watermark.faq_3_a">The built-in PDF fonts cover Latin (Western European) characters only. Unsupported characters are skipped with a warning instead of failing the whole file.</p>
+          <h3>What happens when a font does not support my text?</h3>
+          <p>Unicode fonts preserve supported characters. Unsupported glyphs stop the operation visibly; no characters are removed.</p>
         </div>
       </div>
     </section>

@@ -41,21 +41,25 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
   let grid = mode === 'fill-sign' ? $('sigPageGrid') : $('pageGrid');
   if (!grid) { grid = document.createElement('div'); grid.id = 'pageGrid'; grid.className = 'page-grid'; root.after(grid); }
   const toolbar = document.createElement('div'); toolbar.id = 'workspaceModes'; toolbar.className = 'editor-toolbar';
-  for (const [slug, name] of [['add-text', 'Add Text'], ['add-image', 'Add Image'], ['fill-sign', 'Fill & Sign'], ['organize', 'Organize']]) {
+  const moreModes = document.createElement('details'); moreModes.className = 'scene-more-modes';
+  const moreLabel = document.createElement('summary'); moreLabel.textContent = '…'; moreLabel.setAttribute('aria-label', t('workspace.more_modes', 'More document tools')); moreModes.append(moreLabel);
+  for (const [slug, name] of [['add-text', 'Add Text'], ['add-image', 'Add Image'], ['fill-sign', 'Fill & Sign'], ['organize', 'Organize'], ['view-pdf', 'Reader'], ['highlight', 'Highlight'], ['redact', 'Redact']]) {
     const button = action(t(`workspace.mode_${slug}`, name), null, async () => {
       if (busy || pendingImages || preparations.size) return;
       try {
         busy = true; controls();
         const operation = documentOperations.begin();
         const input = await getWorkspaceInput({ operation }); if (!input) return;
-        documentSession.publishScene(input.bytes, input.name);
-        const handoff = await stashForChain(input.bytes, input.name, slug);
+        documentSession.publishScene(input.bytes, input.name, { capabilities: input.capabilities });
+        const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities });
         if (!operation.isCurrent()) return;
         const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (error) { showError(error.message); busy = false; controls(); }
     });
-    button.setAttribute('aria-current', slug === mode ? 'page' : 'false'); toolbar.append(button);
+    button.setAttribute('aria-current', slug === mode ? 'page' : 'false'); button.dataset.mode = slug;
+    (['view-pdf', 'highlight', 'redact'].includes(slug) ? moreModes : toolbar).append(button);
   }
+  toolbar.append(moreModes);
   ($('documentIdentity') || root).after(toolbar);
   document.body.classList.add('scene-loaded');
   const status = document.createElement('p'); status.id = 'sceneStatus'; status.setAttribute('role', 'status'); toolbar.after(status);
@@ -359,7 +363,7 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
       const task = pdfjs.getDocument({ data: output.bytes.slice(), ...PDFJS_ASSET_URLS });
       try { const doc = await task.promise; const verify = document.createElement('canvas'); await renderBoundedPage(await doc.getPage(pageIndex + 1), verify, { scale: .3, signal: operation.signal }); } finally { await task.destroy(); }
       if (!operation.isCurrent()) return;
-      documentSession.publishScene(output.bytes, name, { capabilities: { ...documentSession.snapshot().current.capabilities, searchable: scene().objects.some((o) => o.kind === 'text') ? true : documentSession.snapshot().current.capabilities.searchable, forms: output.forms } });
+      documentSession.publishScene(output.bytes, name, { capabilities: { ...documentSession.snapshot().current.capabilities, searchable: scene().objects.some((o) => o.kind === 'text') ? true : documentSession.snapshot().current.capabilities.searchable, forms: output.forms, encrypted: false } });
       lastRendered = output; lastKey = JSON.stringify(scene()); showDocumentIdentity();
       await reviewResult(output.bytes, name, { operation, allowAdopt: false }); if (!operation.isCurrent()) return;
       await offerChain(output.bytes, name, [], { operation }); selected = null; signatureId = null;
