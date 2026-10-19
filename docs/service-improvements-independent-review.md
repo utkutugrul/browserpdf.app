@@ -2087,3 +2087,84 @@ installed API source inspection do not establish actual PDF.js native behavior,
 physical worker exit or heap reclamation. Doctor v1/v2 core integration, SDK
 schema/distribution, UI, loss disclosure, locales and Doctor/all32 final gates
 remain open. No production deployment occurs.
+
+## Owned OCR PDF source and intake checkpoint, 2026-10-19
+
+Five new source/intake/test/checkpoint paths add bounded selected-PDF preparation,
+canonical adoption, text inspection and native canvas/PNG capture. Real original
+PDF bytes remain available for later searchable output. Inspection distinguishes
+clear, embedded and unknown; only a completed clear page permits recognition.
+The source caps include 12 MiB input, 1000 pages, twenty selected recognition
+pages/attempts, twenty million cumulative attempted pixels and one million pixels
+per canvas. Reader work, retained copies and pending operations use the shared
+512 MiB retained, 96 MiB known resource and 128-entry admission limits.
+
+Initial portable evidence is retained. Fresh source reviews drive corrections for
+missing text-string classification, render cancellation acquisition, shared
+cleanup-error identity, inherited byte aliases and watchdog coverage through
+drain. Actual PDF.js then exposes two normal-stream integration failures. An
+active text stream requires an actual Error cancellation reason; adding that
+reason removes the closed-controller page errors, but a later geometry run still
+hits the bounded FIRST-drain deadline. Installed source supports a possible
+producer-close/CANCEL acknowledgement race; native internal protocol state was
+not directly recorded. Both failed runs and the original private collection
+failure remain retained.
+
+The final A07 change reads and validates the bounded stream through actual EOF,
+keeps embedded status sticky and marks complete only after validated EOF. Later
+schema/limit/read failure remains unknown and incomplete. Normal EOF unlocks
+without initiating cancellation. Exceptional cancellation keeps its bounded Error,
+exact outer falsy reason, observed FIRST and failed cleanup fence. An exceptional
+SDK cancellation that never acknowledges still retains its ownership barrier;
+reader.closed, task destruction and elapsed time do not grant release credit.
+The owner nine selected controls pass. Five new independent A07 controls pass,
+with all 208 current/evidence pins and 185 historical A06 records preserved.
+Earlier broad source/engine/font matrices are not rerun.
+
+Final five-file source manifest:
+`/tmp/browserpdf-ocr-a07-bounded-drain-corrected-20261019/manifest.json`, SHA-256
+`4701674633a956784e54caff6db4f2b00e739d80948f41b08065bc00eb40510e`.
+Independent final source review:
+`/tmp/browserpdf-ocr-a07-fresh-review-20261019/review.md`, SHA-256
+`8ca7621cf6669d67077e89fcff665cd906320d4020ca9e45bbbd846b0ce92ccf`.
+
+Root's affected actual Chromium 151.0.7922.34 geometry test passes in 2867.227 ms
+under the actual served /ocr-pdf CSP and verified public PDF.js 6.2.108 loader.
+Four scanned pages preserve fractional CropBox, rotations 0/90/180/270 and UserUnit
+1/2/1.25/2.5. Identity canvas backings are 480x360, 720x960, 600x450 and 865x1154;
+the last page uses the admitted one-million-pixel scale. Independent native renders,
+mounted source canvases and decoded PNGs have zero RGBA differences. Four saved
+PNGs total 197433 bytes. Root separately checks every PNG chunk CRC, bounds and
+all reconstructed RGBA hashes against the independent native baseline.
+
+A real embedded page drains five chunks, forty-two items and 2220 UTF-16 units,
+then reports embedded/complete and blocks recognition before rendering. Canonical
+current/original hashes, owner and source copy remain exact through scanning.
+Three actual parser tasks each destroy once, eight renders settle once and reset
+their canvases, six Blob/File FIRSTs settle once and two SDK Blob URLs revoke
+once. Final source/intake usage is zero. SDK caches and caller Files remain
+charged until the awaited parent page closes. Peak known resource use is
+98798014 bytes in sixty-four groups, within 96 MiB; peak retained use is 99367292
+bytes. These are declared ownership bounds, not native heap or physical-exit
+acknowledgements.
+
+The earlier separate actual ownership case remains passed: a held real File FIRST
+keeps B unread; false cancellation preserves its exact cause; a held real render
+retains its surface/leases until drain; malformed C preserves B and valid blank D
+succeeds. That result is retained from its original invocation; only geometry is
+rerun after the narrow stream corrections.
+
+Passing geometry report:
+`/tmp/browserpdf-root-ocr-source-native-a07-geometry-20261019/report.json`, SHA-256
+`5441497f63b46307270cb5ebccf3c584719356b98f73e336ec3c0fe55187f36c`.
+Root independent verification passes 934 checks:
+`/tmp/browserpdf-root-ocr-source-native-a07-verification-20261019.json`, SHA-256
+`97570c4c97864b1ec941d455e970462bfd84e11906f9f1eb668ad6037c3b8e43`.
+All 513 included source hashes/path inventory, twenty-two generated fixtures and
+private harness files remain exact. There are no skipped/flaky cases, page errors,
+non-GET requests or excluded imports. Concurrent Doctor/spreadsheet exceptions
+are never imported.
+
+This accepts the PDF source/intake checkpoint. Recognition accuracy, searchable
+writer integration, direct-image intake, workspace UI, locales and final OCR/all32
+acceptance remain open. No production deployment occurs.
