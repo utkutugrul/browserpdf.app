@@ -2,8 +2,8 @@
 
 import { mergePdfFiles } from './core/merge-pdf.js';
 import { scanPdfPrivacy } from './core/privacy-scan.js';
-import { diagnosePdf } from './core/document-doctor.js';
-import { normalizePdfStructure } from './core/document-doctor-output.js';
+import { createDoctorOperationContext, doctorByteLength, diagnoseDoctorWithin } from './core/document-doctor.js';
+import { normalizeDoctorWithin } from './core/document-doctor-output.js';
 
 export const PACKAGE_VERSION = '0.1.0';
 export const API_VERSION = 'v1';
@@ -68,24 +68,44 @@ export async function inspectV1(input, { pdfjs, pdfjsAssets = {}, signal, maxMat
   });
 }
 
+// Doctor owns its read FIRST before copying. Other v1 operation paths keep
+// their existing input semantics. Isolated accounting is explicit and local.
+async function ownDoctorBytes(input, api) {
+  if (input instanceof Uint8Array) { doctorByteLength(input); return api.copy(input); }
+  if (input instanceof ArrayBuffer) {
+    const count = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, 'byteLength').get.call(input);
+    const growing = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, 'resizable')?.get;
+    if (!count || count > 32 * 1024 * 1024 || growing?.call(input)) throw new RangeError('Doctor input exceeds 32 MiB or has unstable backing.');
+    return api.copy(new Uint8Array(input));
+  }
+  if (typeof Blob !== 'undefined' && input instanceof Blob) {
+    const count = Object.getOwnPropertyDescriptor(Blob.prototype, 'size').get.call(input);
+    if (!count || count > 32 * 1024 * 1024) throw new RangeError('Doctor input must be nonempty and no larger than 32 MiB.');
+    const key = Symbol('SDK Blob read'); api.reserve(key, { artifactBytes: count }, input);
+    const buffer = await api.first(() => Blob.prototype.arrayBuffer.call(input));
+    api.hold(key, buffer, { artifactBytes: buffer.byteLength });
+    if (buffer.byteLength !== count) throw new RangeError('Doctor input length changed.');
+    const bytes = new Uint8Array(buffer); doctorByteLength(bytes); return bytes;
+  }
+  throw new TypeError('Input must be a Blob, ArrayBuffer, or Uint8Array.');
+}
 export async function diagnoseV1(input, {
   pdfLib, pdfjs, pdfjsAssets = {}, mode = 'quick', createCanvas, signal, onProgress,
 } = {}) {
   requirePdfLib(pdfLib); requirePdfJs(pdfjs);
-  const bytes = await ownBytes(input, signal);
-  return diagnosePdf(bytes, {
-    mode, pdfLib, pdfjs, pdfjsAssets, createCanvas, signal,
-    onProgress: progress('diagnose', onProgress),
-  });
+  const context = createDoctorOperationContext({ kind: 'isolated' });
+  return context.run(async (_job, api) => {
+    const bytes = await ownDoctorBytes(input, api);
+    const report = await diagnoseDoctorWithin(bytes, { mode, pdfLib, pdfjs, pdfjsAssets, createCanvas, onProgress: progress('diagnose', onProgress) }, api);
+    api.registerResult(report, { expandedBytes: 2304000, expandedCount: 2 }); return report;
+  }, { signal });
 }
-
 export async function normalizeV1(input, {
   pdfLib, pdfjs, pdfjsAssets = {}, createCanvas, signal, onProgress,
 } = {}) {
   requirePdfLib(pdfLib); requirePdfJs(pdfjs);
-  const bytes = await ownBytes(input, signal);
-  return normalizePdfStructure(bytes, {
-    pdfLib, pdfjs, pdfjsAssets, createCanvas, signal,
-    onProgress: progress('normalize', onProgress),
-  });
+  const context = createDoctorOperationContext({ kind: 'isolated' });
+  return context.run(async (_job, api) => normalizeDoctorWithin(await ownDoctorBytes(input, api), {
+    pdfLib, pdfjs, pdfjsAssets, createCanvas, onProgress: progress('normalize', onProgress),
+  }, api), { signal });
 }

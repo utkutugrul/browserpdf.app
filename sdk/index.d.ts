@@ -43,8 +43,19 @@ export interface PrivacyReport {
   warnings: string[]; limitations: string[];
   [key: string]: unknown;
 }
+export type DoctorReason = "none" | "strict-rejected" | "tolerant-opened" | "pdfjs-rejected" | "page-mismatch" | "box-invalid" | "native-failed" | "work-limit" | "timeout" | "cleanup-failed" | "password-required" | "not-requested";
+export type DoctorParserState = "ok" | "failed" | "unknown" | "locked" | "skipped";
+export type DoctorCheckKey = "pageTree" | "boxes" | "metadata" | "attachments" | "annotations" | "actions" | "forms" | "signatures" | "tags" | "language" | "title" | "alt" | "operators" | "text" | "render";
+export interface DoctorInspection {
+  version: 2; mode: "quick" | "deep"; status: "complete" | "partial" | "unknown" | "locked"; pageCount: number | null;
+  parsers: Record<"strict" | "tolerant" | "pdfjs", { status: DoctorParserState; reason: DoctorReason }>;
+  checks: Record<DoctorCheckKey, { status: "complete" | "partial" | "unknown" | "locked" | "skipped"; count: number | null; lowerBound: boolean; pages: number[] }>;
+  coverage: { pagesChecked: number; renderedPages: number[]; omitted: number; complete: boolean };
+  recommendation: { remedy: "inspect" | "normalize" | "rebuild" | "unlock" | "unknown"; reason: DoctorReason };
+}
 export interface DoctorReport {
   version: number; mode: "quick" | "deep"; pageCount: number;
+  inspection?: DoctorInspection;
   parses: Record<string, { ok: boolean; error?: { name: string } }>;
   pageTree: { pdfLibCount: number; pdfjsCount: number; consistent: boolean };
   inspectionErrors: { count: number; categories: string[]; locations: Array<Record<string, unknown>>; truncated: boolean };
@@ -54,7 +65,7 @@ export interface DoctorReport {
 export interface NormalizeResult {
   bytes: Uint8Array;
   diagnosis: Record<string, unknown>;
-  verification: { pdfLibStrict: true; pdfjsStrict: true; renderedPages: number[] };
+  verification: { pdfLibStrict: true; pdfjsStrict: true; renderedPages: number[]; geometryPages?: number; complete?: boolean };
   lossManifest: { action: "normalize-structure"; changes: string[]; preservationIntent: string[]; losses: string[]; risks: string[] };
 }
 

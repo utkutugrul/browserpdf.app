@@ -27,3 +27,6 @@ diagnoseV1(blob, { pdfLib, pdfjs, mode: 'complete' });
 diagnoseV1(blob, { pdfLib, pdfjs, mode: 'deep' });
 // @ts-expect-error normalization verifies a render and requires a canvas factory
 normalizeV1(blob, { pdfLib, pdfjs });
+
+// Additive v2 inspection keeps existing v1 callers valid.
+void diagnosed.then(report => { const count: number | null | undefined = report.inspection?.checks.text.count; void count; });

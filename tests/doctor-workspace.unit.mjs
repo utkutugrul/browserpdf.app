@@ -642,3 +642,374 @@ test('Doctor correction child envelope still has its own deadline if a trusted q
   timed.at(60001); timed.fire(60000); const failure = (await child).reason; assert.equal(failure.code, 'DOCTOR_TIMEOUT');
   load.reject(false); await turn(); await turn(); assert.equal((await observation(lifetime.drained({ retry: true }))).reason, failure); assert.equal(lifetime.getUsage().artifactBytes, input().length);
 });
+
+// Doctor D2 controls execute synthetic public peers only. Original historical
+// helpers and test bodies above remain unchanged; no peer engine is imported.
+function d2Peers(options = {}) {
+  const calls = { load: 0, create: 0, save: 0, open: 0, destroy: 0, pageCleanup: 0, render: 0, textCancel: 0, blobRead: 0, embed: 0 };
+  const source = options.geometry || [{ width: 200, height: 100, rotation: 0, userUnit: 1 }, { width: 100, height: 200, rotation: 0, userUnit: 1 }];
+  let saved = source;
+  class Dict { get() { return undefined; } entries() { return []; } }
+  class Arr {} class Ref {} class Encrypted extends Error {} class Password extends Error {}
+  const input = new TextEncoder().encode('%PDF-source');
+  const resultBytes = () => new TextEncoder().encode('%PDF-output');
+  function library(pages) {
+    return { catalog: new Dict(), context: { lookup: value => value }, getPageCount: () => pages.length,
+      getPages: () => pages.map(g => ({ getMediaBox: () => ({ x: 0, y: 0, width: g.width, height: g.height }), getCropBox: () => ({ x: 0, y: 0, width: g.width, height: g.height }) })),
+      save() { calls.save++; saved = pages; return options.save ? options.save() : Promise.resolve(resultBytes()); },
+    };
+  }
+  const pdfLib = { EncryptedPDFError: Encrypted, PDFDict: Dict, PDFArray: Arr, PDFRef: Ref, PDFName: { of: value => value }, degrees: value => ({ angle: value }), PDFDocument: {
+    load(bytes, config) { calls.load++; if (options.load) return options.load(bytes, config, calls, Encrypted); return Promise.resolve(library(bytes[5] === 111 ? saved : source)); },
+    create() { calls.create++; const pages = []; return Promise.resolve({
+      addPage([width, height]) { pages.push({ width, height, rotation: 0, userUnit: 1 }); return { setMediaBox() {}, setCropBox() {}, setRotation() {}, drawImage() {} }; },
+      embedPng() { calls.embed++; return Promise.resolve({}); },
+      save() { calls.save++; saved = pages; return options.save ? options.save() : Promise.resolve(resultBytes()); },
+    }); },
+  } };
+  const pdfjs = { PasswordException: Password, getDocument(config) {
+    calls.open++; const geometry = options.pdfjsGeometry || (config.data[5] === 111 ? saved : source); let destroyed = false;
+    const pages = geometry.map(g => ({ rotate: g.rotation, userUnit: g.userUnit,
+      getViewport: ({ scale }) => ({ scale, width: g.width * scale, height: g.height * scale }),
+      getAnnotations: () => Promise.resolve([]), getJSActions: () => Promise.resolve(null), getStructTree: () => Promise.resolve(null), getOperatorList: () => Promise.resolve({ fnArray: [1], argsArray: [[]] }),
+      streamTextContent() { return new ReadableStream({ start(controller) { controller.enqueue({ items: [...(options.textItems || [{ str: 'private text' }, { str: 'second' }])] }); controller.close(); }, cancel() { calls.textCancel++; } }); },
+      render() { calls.render++; return { promise: options.render ? options.render(calls) : Promise.resolve(), cancel() {} }; },
+      cleanup() { calls.pageCleanup++; return !destroyed; },
+    }));
+    const doc = { numPages: pages.length, getPage: n => Promise.resolve(pages[n - 1]),
+      getMetadata: options.missingMetadata ? undefined : () => Promise.resolve({ info: { Title: 'private title' }, metadata: null }), getAttachments: () => Promise.resolve(null), getJSActions: () => Promise.resolve(null), getFieldObjects: () => Promise.resolve(null), getPermissions: () => Promise.resolve(null), getOpenAction: () => Promise.resolve(null), getCalculationOrderIds: () => Promise.resolve(null), getMarkInfo: () => Promise.resolve(null),
+    };
+    return { promise: options.locked ? Promise.reject(new Password('private password message')) : Promise.resolve(doc), destroy() { calls.destroy++; destroyed = true; return options.destroy ? options.destroy(calls) : Promise.resolve(); } };
+  } };
+  const createCanvas = (width, height) => ({ width, height, getContext: () => ({}), toBlob(callback) {
+    const blob = new Blob([new Uint8Array(options.blobBytes || 2)], { type: 'image/png' });
+    Object.defineProperty(blob, 'arrayBuffer', { value() { calls.blobRead++; return Blob.prototype.arrayBuffer.call(blob); } }); callback(blob);
+  } });
+  return { calls, pdfLib, pdfjs, createCanvas, input };
+}
+async function d2Core() { return import('../public/js/core/document-doctor.js'); }
+async function d2Output() { return import('../public/js/core/document-doctor-output.js'); }
+test('Doctor D2 strict success skips tolerant and retains truthful additive private inspection', async () => {
+  const core = await d2Core(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, context });
+  assert.equal(peer.calls.load, 1); assert.equal(peer.calls.open, 1); assert.equal(peer.calls.destroy, 1);
+  assert.equal(report.version, 1); assert.equal(report.inspection.version, 2); assert.equal(report.inspection.parsers.tolerant.status, 'skipped');
+  assert.equal(report.inspection.checks.title.count, 1); assert.equal(report.inspection.recommendation.remedy, 'inspect');
+  assert.equal(JSON.stringify(report.inspection).includes('private'), false); assert.equal(context.getUsage().artifactBytes, 0);
+});
+test('Doctor D2 requires explicit accounting and actual canonical owner guards before parsing', async () => {
+  const core = await d2Core(), peer = d2Peers(), session = createDocumentSession();
+  await assert.rejects(core.diagnosePdf(peer.input, peer), TypeError);
+  const expectedOwner = session.snapshot(); let recipient = {};
+  const context = core.createDoctorOperationContext({ expectedOwner, isCurrent: () => true,
+    getUsage: () => ({ snapshot: session.snapshot(), live: recipient }),
+    admitUsage() { session.begin(input(), 'changed.pdf'); }, registerResult(_value, next) { recipient = next; },
+  });
+  await assert.rejects(core.diagnosePdf(peer.input, { ...peer, context }), error => error.name === 'AbortError'); assert.equal(peer.calls.load, 0);
+});
+test('Doctor D2 typed encrypted strict rejection never opens a tolerant bypass or publishes messages', async () => {
+  const core = await d2Core(), peer = d2Peers({ load(_bytes, config, _calls, Encrypted) { assert.equal(config.ignoreEncryption, false); return Promise.reject(new Encrypted('private encrypted input')); }, locked: true });
+  const context = core.createDoctorOperationContext({ kind: 'isolated' }), report = await core.diagnosePdf(peer.input, { ...peer, context });
+  assert.equal(peer.calls.load, 1); assert.equal(report.inspection.status, 'locked'); assert.equal(report.inspection.recommendation.remedy, 'unlock'); assert.equal(JSON.stringify(report).includes('private password'), false);
+});
+test('Doctor D2 stream item limit is partial unknown and never retained as verified zero', async () => {
+  const core = await d2Core(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, context, mode: 'deep', limits: { textItemsPerPage: 1 } });
+  assert.equal(report.inspection.status, 'partial'); assert.equal(report.inspection.checks.text.count, null); assert.equal(report.inspection.checks.text.status, 'unknown'); assert.equal(report.inspection.recommendation.remedy, 'unknown');
+  assert.equal(peer.calls.destroy, 1);
+});
+test('Doctor D2 normalization verifies output in one shared inspection pass and exact selected geometry', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const result = await output.normalizePdfStructure(peer.input, { ...peer, context, selectedPage: 2 });
+  assert.equal(peer.calls.load, 2); assert.equal(peer.calls.save, 1); assert.equal(peer.calls.open, 2);
+  assert.deepEqual(result.verification.renderedPages, [1, 2]); assert.equal(result.verification.geometryPages, 2); assert.equal(result.diagnosis.inspection.version, 2);
+});
+test('Doctor D2 rebuild needs separate execution intent and refuses physical shrink before canvas', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers({ geometry: [{ width: 14401, height: 10, rotation: 0, userUnit: 1 }] });
+  await assert.rejects(output.rebuildPdfPageContent(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) }), { code: 'DOCTOR_EXECUTION' });
+  await assert.rejects(output.rebuildPdfPageContent(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }), executionIntent: 'rebuild-page-content' }), { code: 'DOCTOR_GEOMETRY' });
+  assert.equal(peer.calls.create, 0); assert.equal(peer.calls.render, 0);
+});
+test('Doctor D2 oversized encoder Blob is checked before actual readback or embed', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers({ blobBytes: 3 }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  await assert.rejects(output.rebuildPdfPageContent(peer.input, { ...peer, context, executionIntent: 'rebuild-page-content', limits: { encodedPageBytes: 2 } }), { code: 'DOCTOR_WORK_LIMIT' });
+  assert.equal(peer.calls.blobRead, 0); assert.equal(peer.calls.embed, 0); assert.equal(peer.calls.destroy, 2);
+});
+test('Doctor D2 saved output is refused before any verification parse or copy', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  await assert.rejects(output.normalizePdfStructure(peer.input, { ...peer, context, limits: { outputBytes: 10 } }), RangeError);
+  assert.equal(peer.calls.load, 1); assert.equal(peer.calls.open, 1); assert.equal(peer.calls.save, 1);
+});
+test('Doctor D2 genuine falsy cancellation of held parser retains FIRST until exit and never loads PDF.js', async () => {
+  const core = await d2Core(), held = deferred(), peer = d2Peers({ load: () => held.promise }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const outcome = rejected(core.diagnosePdf(peer.input, { ...peer, context })); await until(() => peer.calls.load === 1); context.cancel(false);
+  let ended = false; const drain = context.drained().then(() => { ended = true; }); await turn(); assert.equal(ended, false); assert.ok(context.getUsage().artifactBytes > 0);
+  held.reject(new Error('late parser exit')); assert.equal(await outcome, false); await drain; assert.equal(peer.calls.open, 0); assert.equal(context.getUsage().artifactBytes, 0);
+});
+test('Doctor D2 failed native cleanup keeps exact context reservation until explicit owned Retry', async () => {
+  const core = await d2Core(), peer = d2Peers({ destroy: calls => calls.destroy === 1 ? Promise.reject(false) : Promise.resolve() }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const failed = await rejected(core.diagnosePdf(peer.input, { ...peer, context })); assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(failed.cause, false);
+  assert.ok(context.getUsage().artifactBytes > 0); assert.equal(await rejected(context.drained()), failed);
+  await context.drained({ retry: true }); assert.equal(peer.calls.destroy, 2); assert.equal(peer.calls.load, 1); assert.equal(context.getUsage().artifactBytes, 0);
+});
+test('Doctor D2 native method getter reentry cannot start a parser after falsy cancellation', async () => {
+  const core = await d2Core(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const load = peer.pdfLib.PDFDocument.load; Object.defineProperty(peer.pdfLib.PDFDocument, 'load', { get() { context.cancel(''); return load; } });
+  assert.equal(await rejected(core.diagnosePdf(peer.input, { ...peer, context })), ''); assert.equal(peer.calls.load, 0);
+});
+test('Doctor D2 actual canvas backing mismatch cannot publish verified output', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers(), context = core.createDoctorOperationContext({ kind: 'isolated' }); let surface;
+  const createCanvas = (width, height) => (surface = { width: width + 1, height, getContext() { assert.fail('mismatched canvas used'); } });
+  await assert.rejects(output.normalizePdfStructure(peer.input, { ...peer, context, createCanvas }), { code: 'DOCTOR_GEOMETRY' });
+  assert.equal(peer.calls.render, 0); assert.equal(surface.width, 0); assert.equal(surface.height, 0);
+});
+test('Doctor D2 cycle-safe graph walk honors lower depth limits without recursive failure', async () => {
+  const core = await d2Core(), peer = d2Peers(), original = peer.pdfLib.PDFDocument.load;
+  peer.pdfLib.PDFDocument.load = async (...args) => {
+    const doc = await original(...args), root = new peer.pdfLib.PDFDict(), child = new peer.pdfLib.PDFDict();
+    root.entries = () => [['child', child]]; child.entries = () => [['cycle', root]]; doc.catalog.get = key => key === 'StructTreeRoot' ? root : undefined; return doc;
+  };
+  const healthy = await core.diagnosePdf(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(healthy.inspection.checks.tags.status, 'complete');
+  const bounded = await core.diagnosePdf(peer.input, { ...peer, limits: { depth: 1 }, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(bounded.inspection.checks.tags.status, 'unknown'); assert.equal(bounded.inspection.recommendation.remedy, 'unknown');
+});
+test('Doctor D2 unavailable public getter is unknown without fabricating native cleanup failure', async () => {
+  const core = await d2Core(), peer = d2Peers({ missingMetadata: true }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, context });
+  assert.equal(report.inspection.checks.metadata.count, null); assert.equal(report.inspection.checks.title.count, null); await context.drained(); assert.equal(context.getUsage().artifactBytes, 0);
+});
+test('Doctor D2 unsupported streamed text item is unknown instead of verified empty text', async () => {
+  const core = await d2Core(), peer = d2Peers({ textItems: [{ type: 'unsupported' }] }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context });
+  assert.equal(report.inspection.checks.text.count, null); assert.equal(report.inspection.checks.text.status, 'unknown');
+});
+test('Doctor D2 operation deadline retains a held parser FIRST and exact fence after late exit', async () => {
+  const { readFile, writeFile } = await import('node:fs/promises');
+  const file = '/tmp/browserpdf-doctor-d2-adapter-owner-20261019/clock-doctor-core.mjs';
+  const source = (await readFile(new URL('../public/js/core/document-doctor.js', import.meta.url), 'utf8'))
+    .replace("'./doctor-policy.js'", "'file:///Users/r00t/startup/public/js/core/doctor-policy.js'")
+    .replace("'./doctor-lifetime.js'", "'file:///Users/r00t/startup/public/js/core/doctor-lifetime.js?doctor-d2-clock'");
+  await writeFile(file, source);
+  const timers = [], originals = { now: Date.now, later: globalThis.setTimeout, stop: globalThis.clearTimeout }; let now = 0, core;
+  try { Date.now = () => now; globalThis.setTimeout = (fn, ms) => { const timer = { fn, ms, stopped: false }; timers.push(timer); return timer; }; globalThis.clearTimeout = timer => { timer.stopped = true; }; core = await import(`file://${file}`); }
+  finally { Date.now = originals.now; globalThis.setTimeout = originals.later; globalThis.clearTimeout = originals.stop; }
+  const held = deferred(), peer = d2Peers({ load: () => held.promise }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, context })); await until(() => peer.calls.load === 1);
+  now = 20000; timers.find(timer => timer.ms === 20000 && !timer.stopped).fn();
+  now = 60001; timers.find(timer => timer.ms === 60000 && !timer.stopped).fn();
+  const failed = await result; assert.equal(failed.code, 'DOCTOR_TIMEOUT'); assert.ok(context.getUsage().artifactBytes > 0);
+  held.reject(false); await turn(); await turn();
+  assert.equal(await rejected(context.drained({ retry: true })), failed); assert.ok(context.getUsage().artifactBytes > 0); assert.equal(peer.calls.open, 0);
+});
+
+test('Doctor D2 legacy page counts preserve independent parser disagreement', async () => {
+  const core = await d2Core(), peer = d2Peers({ pdfjsGeometry: [{ width: 200, height: 100, rotation: 0, userUnit: 1 }] });
+  const report = await core.diagnosePdf(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(report.pageTree.pdfLibCount, 2); assert.equal(report.pageTree.pdfjsCount, 1); assert.equal(report.pageTree.consistent, false);
+  assert.equal(report.inspection.checks.pageTree.count, 1); assert.equal(report.inspection.recommendation.reason, 'page-mismatch'); assert.ok(report.warnings.some(value => /disagree/.test(value)));
+});
+test('Doctor D2 decoded empty structure strings do not claim language or figure alternative text', async () => {
+  const core = await d2Core(), peer = d2Peers(), original = peer.pdfLib.PDFDocument.load;
+  peer.pdfLib.PDFDocument.load = async (...args) => {
+    const doc = await original(...args), figure = new peer.pdfLib.PDFDict(), text = value => ({ decodeText: () => value });
+    figure.get = key => key === 'S' ? '/Figure' : key === 'Alt' ? text('   ') : undefined;
+    doc.catalog.get = key => key === 'StructTreeRoot' ? figure : key === 'Lang' ? text(' ') : undefined; return doc;
+  };
+  const report = await core.diagnosePdf(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(report.inspection.checks.language.count, 0); assert.equal(report.inspection.checks.alt.count, 1);
+  assert.equal(report.accessibilityReadiness.figureCount, 1); assert.equal(report.accessibilityReadiness.figuresWithAlt, 0); assert.equal(report.accessibilityReadiness.figuresMissingAlt, 1);
+});
+test('Doctor D2 transforms reject missing bounded PDF header before any native operation', async () => {
+  const core = await d2Core(), output = await d2Output(), peer = d2Peers(), invalid = new TextEncoder().encode('arbitrary non PDF input');
+  await assert.rejects(output.normalizePdfStructure(invalid, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) }), TypeError);
+  await assert.rejects(output.rebuildPdfPageContent(invalid, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }), executionIntent: 'rebuild-page-content' }), TypeError);
+  assert.equal(peer.calls.load, 0); assert.equal(peer.calls.open, 0); assert.equal(peer.calls.create, 0);
+});
+
+test('Doctor D2 real empty and populated canonical snapshots hand off before producer credit without changing history', async () => {
+  const core = await d2Core();
+  for (const populated of [false, true]) {
+    const session = createDocumentSession(), peer = d2Peers();
+    if (populated) { session.begin(new Uint8Array([1, 2]), 'a.pdf'); session.adopt(new Uint8Array([3, 4]), 'b.pdf'); session.adopt(new Uint8Array([5, 6]), 'c.pdf'); }
+    const before = session.snapshot(), original = session.original(), current = session.current(); let recipient = {}, registrations = 0, context;
+    assert.equal(Object.keys(before).length, 19);
+    context = core.createDoctorOperationContext({ expectedOwner: before, isCurrent: () => true,
+      getUsage: () => ({ snapshot: session.snapshot(), live: recipient }), admitUsage() {},
+      registerResult(value, next) { assert.equal(value.version, 1); assert.ok(context.getUsage().artifactBytes > 0); recipient = next; registrations++; },
+    });
+    const report = await core.diagnosePdf(peer.input, { ...peer, context });
+    assert.equal(report.inspection.status, 'complete'); assert.equal(registrations, 1); assert.equal(context.getUsage().artifactBytes, 0); assert.equal(recipient.expandedCount, 2);
+    assert.deepEqual(session.snapshot(), before); assert.deepEqual(session.original(), original); assert.deepEqual(session.current(), current);
+  }
+});
+test('Doctor D2 staged File FIRST blocks unread successors and starts only the latest descriptor after actual drain', async () => {
+  const core = await d2Core(), held = deferred(), context = core.createDoctorOperationContext({ kind: 'isolated' }), reads = [];
+  const stage = (name, first) => context.run(async (_job, api) => { reads.push(name); const key = Symbol(name); api.reserve(key, { artifactBytes: 8 }); await api.first(() => first); return name; });
+  const a = rejected(stage('A', held.promise)); await until(() => reads.length === 1);
+  const b = rejected(stage('B', Promise.resolve())), c = stage('C', Promise.resolve());
+  await turn(); assert.deepEqual(reads, ['A']); assert.equal(context.getUsage().artifactBytes, 8);
+  held.resolve(); await a; await b; assert.equal(await c, 'C'); await context.drained(); assert.deepEqual(reads, ['A', 'C']); assert.equal(context.getUsage().artifactBytes, 0);
+});
+
+test('Doctor D2 retained streamed chunk strings stay charged through physical operation drain', async () => {
+  const core = await d2Core(), totals = [];
+  for (const units of [1, 50000]) {
+    const peer = d2Peers({ geometry: [{ width: 100, height: 100, rotation: 0, userUnit: 1 }], textItems: [{ str: 'x'.repeat(units) }] });
+    const context = core.createDoctorOperationContext({ kind: 'isolated' }); let measured;
+    await core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context, onProgress() { measured = context.getUsage().expandedBytes; } });
+    totals.push(measured); assert.equal(context.getUsage().expandedBytes, 0);
+  }
+  assert.ok(totals[1] - totals[0] >= 99998, 'retained response text must be included alongside fixed report reservations');
+});
+test('Doctor D2 capped page box locations keep omitted partial coverage instead of complete absence', async () => {
+  const core = await d2Core(), peer = d2Peers(), original = peer.pdfLib.PDFDocument.load;
+  peer.pdfLib.PDFDocument.load = async (...args) => { const doc = await original(...args), pages = doc.getPages(); for (const page of pages) page.getCropBox = () => ({ x: -1, y: 0, width: 1, height: 1 }); doc.getPages = () => pages; return doc; };
+  const report = await core.diagnosePdf(peer.input, { ...peer, limits: { locations: 1 }, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(report.inspection.checks.boxes.count, 2); assert.equal(report.inspection.checks.boxes.status, 'partial'); assert.equal(report.inspection.coverage.omitted, 1); assert.equal(report.inspection.coverage.complete, false); assert.equal(report.pageBoxes.truncated, true); assert.equal(report.inspection.recommendation.remedy, 'unknown');
+});
+
+
+// Narrow R01-R03 corrections. Genuine WHATWG streams and synthetic public PDF
+// peers only; the prior83982-byte implementation prefix remains unchanged.
+function correctionPeer(kind = 'limit', options = {}) {
+  const events = { reads: 0, cancels: 0, releases: 0, underlyingCancels: 0 }, gate = deferred(); let streamController;
+  const peer = d2Peers({ geometry: [{ width: 100, height: 100, rotation: 0, userUnit: 1 }], destroy: options.destroy });
+  const stream = new ReadableStream({ start(controller) {
+    streamController = controller;
+    if (kind !== 'held-read') controller.enqueue({ items: [{ str: 'a' }, { str: 'b' }] });
+    if (kind === 'eof') controller.close();
+  }, cancel(reason) {
+    events.underlyingCancels++; events.reason = reason; assert.ok(reason instanceof Error);
+    if (options.cancelReject !== undefined) return Promise.reject(options.cancelReject);
+    if (kind === 'held-cancel') return gate.promise;
+  } });
+  const getReader = stream.getReader.bind(stream);
+  Object.defineProperty(stream, 'getReader', { value() {
+    const reader = getReader(), read = reader.read.bind(reader), cancel = reader.cancel.bind(reader), release = reader.releaseLock.bind(reader);
+    Object.defineProperties(reader, {
+      read: { value() { events.reads++; const first = read(); events.readFirst = first; return options.onRead ? options.onRead(first) : first; } },
+      cancel: { value(reason) { events.cancels++; const first = cancel(reason); events.cancelFirst = first; return options.unavailableCancel ? false : first; } },
+      releaseLock: { value() { events.releases++; if (options.releaseFailure) throw new Error('private unlock failure'); release(); } },
+    }); return reader;
+  } });
+  const open = peer.pdfjs.getDocument;
+  peer.pdfjs.getDocument = config => {
+    const task = open(config); task.promise = task.promise.then(doc => {
+      const getPage = doc.getPage; doc.getPage = async n => { const page = await getPage(n); page.streamTextContent = () => stream; return page; };
+      return doc;
+    }); return task;
+  };
+  return { ...peer, stream, events, gate, releaseRead: () => streamController.enqueue({ items: [{ str: 'late' }] }) };
+}
+test('Doctor D2 correction R01 capped mark categories stay partial and overall incomplete', async () => {
+  const core = await d2Core(), peer = d2Peers(), open = peer.pdfjs.getDocument;
+  peer.pdfjs.getDocument = config => { const task = open(config); task.promise = task.promise.then(doc => {
+    const getPage = doc.getPage; doc.getPage = async n => { const page = await getPage(n); page.getAnnotations = () => Promise.resolve([{ subtype: 'FileAttachment', url: 'private URL' }]); return page; }; return doc;
+  }); return task; };
+  const report = await core.diagnosePdf(peer.input, { ...peer, limits: { locations: 1 }, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  for (const key of ['annotations', 'actions', 'attachments']) { assert.equal(report.inspection.checks[key].status, 'partial'); assert.equal(report.inspection.checks[key].lowerBound, true); assert.deepEqual(report.inspection.checks[key].pages, [1]); }
+  assert.equal(report.inspection.status, 'partial'); assert.equal(report.inspection.coverage.complete, false); assert.ok(report.inspection.coverage.omitted > 0); assert.equal(report.inspection.recommendation.remedy, 'unknown'); assert.equal(JSON.stringify(report.inspection).includes('private'), false);
+});
+test('Doctor D2 correction R01 mark omission never promotes an earlier unknown category', async () => {
+  const core = await d2Core(), peer = d2Peers(), open = peer.pdfjs.getDocument;
+  peer.pdfjs.getDocument = config => { const task = open(config); task.promise = task.promise.then(doc => {
+    doc.getAttachments = () => Promise.reject(false); const getPage = doc.getPage; doc.getPage = async n => { const page = await getPage(n); page.getAnnotations = () => Promise.resolve([{ subtype: 'FileAttachment' }]); return page; }; return doc;
+  }); return task; };
+  const report = await core.diagnosePdf(peer.input, { ...peer, limits: { locations: 1 }, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  assert.equal(report.inspection.checks.attachments.status, 'unknown'); assert.equal(report.inspection.checks.attachments.count, null); assert.equal(report.inspection.checks.attachments.lowerBound, false); assert.equal(report.inspection.status, 'partial'); assert.equal(report.inspection.coverage.complete, false);
+});
+test('Doctor D2 correction R02 unknown MarkInfo renders Not confirmed while v1 boolean stays false', async () => {
+  const core = await d2Core(), peer = d2Peers(), open = peer.pdfjs.getDocument;
+  peer.pdfjs.getDocument = config => { const task = open(config); task.promise = task.promise.then(doc => { doc.getMarkInfo = () => Promise.reject(false); return doc; }); return task; };
+  const report = await core.diagnosePdf(peer.input, { ...peer, context: core.createDoctorOperationContext({ kind: 'isolated' }) });
+  const { readFile } = await import('node:fs/promises'), source = await readFile(new URL('../public/js/document-doctor.js', import.meta.url), 'utf8');
+  const exact = source.slice(source.indexOf('function renderReport('), source.indexOf('\nfunction selectedMode(')), findings = [], element = () => ({});
+  const render = new Function('FEATURE_LABELS', 't', 'appendFinding', 'doctorSummary', 'doctorFindingList', 'signatureWarning', 'doctorResults', 'doctorActions', 'setBusy', 'scheduleToolRefresh', `${exact}; return renderReport;`)({}, (_key, fallback) => fallback, (label, value) => findings.push({ label, value }), element(), element(), element(), element(), element(), () => {}, () => {});
+  render(report, core.summarizeDoctorReport);
+  assert.equal(report.inspection.checks.tags.status, 'unknown'); assert.equal(report.accessibilityReadiness.markInfoMarked, false); assert.equal(findings.find(item => item.label === 'MarkInfo marked').value, 'Not confirmed');
+});
+test('Doctor D2 correction R03 natural validated EOF unlocks without cancellation', async () => {
+  const core = await d2Core(), peer = correctionPeer('eof'), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context }); await context.drained();
+  assert.equal(report.inspection.checks.text.status, 'complete'); assert.equal(report.inspection.checks.text.count, 2); assert.equal(peer.events.cancels, 0); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(context.getUsage().expandedBytes, 0);
+});
+test('Doctor D2 correction R03 exceptional text limit uses bounded Error cancel reason and unlock acknowledgement', async () => {
+  const core = await d2Core(), peer = correctionPeer(), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const report = await core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context }); await context.drained();
+  assert.equal(report.inspection.checks.text.count, null); assert.equal(peer.events.cancels, 1); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.ok(peer.events.reason instanceof Error); assert.equal(peer.events.reason.message, 'Doctor text stream stopped before validated EOF.'); assert.equal(context.getUsage().expandedBytes, 0);
+});
+test('Doctor D2 correction R03 held original read drains before cleanup despite exact false abort', async () => {
+  const core = await d2Core(), peer = correctionPeer('held-read'), context = core.createDoctorOperationContext({ kind: 'isolated' }), controller = new AbortController();
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context, signal: controller.signal })); await until(() => peer.events.reads === 1); controller.abort(false);
+  let drained = false; const drain = context.drained().then(() => { drained = true; }); await turn(); assert.equal(drained, false); assert.equal(peer.events.cancels, 0); assert.equal(peer.events.releases, 0); assert.ok(context.getUsage().artifactBytes > 0);
+  peer.releaseRead(); assert.equal(await result, false); await drain;
+  assert.equal(peer.events.cancels, 1); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(context.getUsage().expandedBytes, 0); assert.equal(peer.calls.destroy, 1);
+});
+for (const reason of [false, null, 0, '']) test(`Doctor D2 correction R03 held cancel drains and unlocks before exact falsy ${JSON.stringify(reason)} rejection`, async () => {
+  const core = await d2Core(), peer = correctionPeer('held-cancel'), context = core.createDoctorOperationContext({ kind: 'isolated' }), controller = new AbortController();
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context, signal: controller.signal })); await until(() => peer.events.cancels === 1); controller.abort(reason);
+  let drained = false; const drain = context.drained().then(() => { drained = true; }); await turn(); assert.equal(drained, false); assert.equal(peer.events.releases, 0); assert.ok(context.getUsage().expandedBytes > 0);
+  peer.gate.resolve(); assert.equal(await result, reason); await drain;
+  assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(context.getUsage().expandedBytes, 0); assert.equal(peer.calls.destroy, 1);
+});
+test('Doctor D2 correction R03 validated EOF ACK followed by abort still unlocks without cancel', async () => {
+  const core = await d2Core(), controller = new AbortController(), peer = correctionPeer('eof', { onRead(first) { return first.then(value => { if (value.done) controller.abort(false); return value; }); } }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  assert.equal(await rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context, signal: controller.signal })), false); await context.drained();
+  assert.equal(peer.events.cancels, 0); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(context.getUsage().expandedBytes, 0);
+});
+test('Doctor D2 correction R03 rejected cancel still unlocks but remains behind exact cleanup fence', async () => {
+  const core = await d2Core(), peer = correctionPeer('limit', { cancelReject: false }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const failed = await rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context }));
+  assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.ok(context.getUsage().expandedBytes > 0);
+  const held = context.getUsage(); assert.equal(await rejected(context.drained({ retry: true })), failed); assert.equal(await rejected(core.diagnosePdf(peer.input, { ...peer, context })), failed); assert.deepEqual(context.getUsage(), held); assert.equal(peer.calls.load, 1); assert.equal(peer.events.cancels, 1);
+});
+test('Doctor D2 correction R03 unavailable cancel FIRST unlocks yet cannot claim cleanup credit', async () => {
+  const core = await d2Core(), peer = correctionPeer('limit', { unavailableCancel: true }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const failed = await rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context }));
+  assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.ok(context.getUsage().expandedBytes > 0); assert.equal(await rejected(context.drained()), failed);
+});
+test('Doctor D2 correction R03 failed EOF unlock retains owned stream and reservation without cancellation', async () => {
+  const core = await d2Core(), peer = correctionPeer('eof', { releaseFailure: true }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const failed = await rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', context }));
+  assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(peer.events.cancels, 0); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, true); assert.ok(context.getUsage().expandedBytes > 0); assert.equal(await rejected(context.drained({ retry: true })), failed); assert.equal(peer.events.releases, 1);
+});
+
+async function d2CorrectionClock(label) {
+  const { readFile, writeFile } = await import('node:fs/promises'), file = `/tmp/browserpdf-doctor-d2-corrected-owner-20261019/clock-${label}.mjs`;
+  const source = (await readFile(new URL('../public/js/core/document-doctor.js', import.meta.url), 'utf8')).replace("'./doctor-policy.js'", "'file:///Users/r00t/startup/public/js/core/doctor-policy.js'").replace("'./doctor-lifetime.js'", `'file:///Users/r00t/startup/public/js/core/doctor-lifetime.js?correction-${label}'`);
+  await writeFile(file, source); let now = 0; const timers = [], original = { now: Date.now, later: globalThis.setTimeout, stop: globalThis.clearTimeout }; let core;
+  try {
+    Date.now = () => now; globalThis.setTimeout = (fn, ms) => { const value = { fn, ms, stopped: false }; timers.push(value); return value; }; globalThis.clearTimeout = value => { value.stopped = true; }; core = await import(`file://${file}`);
+  } finally { Date.now = original.now; globalThis.setTimeout = original.later; globalThis.clearTimeout = original.stop; }
+  return { core, expire() { now = 60001; const timer = timers.find(value => value.ms === 60000 && !value.stopped); assert.ok(timer); timer.fn(); } };
+}
+test('Doctor D2 correction R03 cleanup failure before deadline retains exact usage through late task ACK', async () => {
+  const { core, expire } = await d2CorrectionClock('cleanup-first'), destroy = deferred(), peer = correctionPeer('limit', { cancelReject: false, destroy: () => destroy.promise }), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context })); await until(() => peer.calls.destroy === 1 && peer.events.releases === 1); const held = context.getUsage();
+  expire(); const failed = await result; assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(await rejected(context.drained()), failed);
+  destroy.resolve(); await turn(); await turn(); assert.deepEqual(context.getUsage(), held); assert.equal(await rejected(context.drained({ retry: true })), failed); assert.equal(peer.events.releases, 1); assert.equal(peer.calls.load, 1);
+});
+test('Doctor D2 correction R03 deadline before cancel ACK stays authoritative after later unlock', async () => {
+  const { core, expire } = await d2CorrectionClock('deadline-first'), peer = correctionPeer('held-cancel'), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context })); await until(() => peer.events.cancels === 1); expire(); const failed = await result;
+  assert.equal(failed.code, 'DOCTOR_TIMEOUT'); const held = context.getUsage(); assert.equal(peer.events.releases, 0); peer.gate.resolve(); await turn(); await turn();
+  assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(await rejected(context.drained({ retry: true })), failed); assert.deepEqual(context.getUsage(), held);
+});
+test('Doctor D2 correction R03 earlier native falsy cleanup beats deadline and retries only failed destroy', async () => {
+  const { core, expire } = await d2CorrectionClock('native-cleanup'), peer = correctionPeer('held-cancel', { destroy: calls => calls.destroy === 1 ? Promise.reject(false) : Promise.resolve() }), context = core.createDoctorOperationContext({ kind: 'isolated' }), controller = new AbortController();
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context, signal: controller.signal })); await until(() => peer.events.cancels === 1); controller.abort(0); await until(() => peer.calls.destroy === 1); await turn(); expire(); const failed = await result;
+  assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(failed.cause, false); peer.gate.resolve(); await turn(); await turn(); assert.equal(await rejected(context.drained()), failed);
+  await context.drained({ retry: true }); assert.equal(peer.events.releases, 1); assert.equal(peer.calls.destroy, 2); assert.equal(peer.calls.load, 1); assert.equal(context.getUsage().expandedBytes, 0);
+});
+
+test('Doctor D2 correction R03 rejected cancel after falsy abort remains a cleanup failure despite unlock ACK', async () => {
+  const core = await d2Core(), peer = correctionPeer('held-cancel'), context = core.createDoctorOperationContext({ kind: 'isolated' }), controller = new AbortController();
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context, signal: controller.signal })); await until(() => peer.events.cancels === 1); controller.abort(''); peer.gate.reject(false); const failed = await result;
+  assert.equal(failed.code, 'DOCTOR_CLEANUP'); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.ok(context.getUsage().expandedBytes > 0); assert.equal(await rejected(context.drained({ retry: true })), failed);
+});
+test('Doctor D2 correction R03 earlier public deadline wins over later cancel rejection and unlock ACK', async () => {
+  const { core, expire } = await d2CorrectionClock('deadline-late-rejection'), peer = correctionPeer('held-cancel'), context = core.createDoctorOperationContext({ kind: 'isolated' });
+  const result = rejected(core.diagnosePdf(peer.input, { ...peer, mode: 'deep', limits: { textItemsPerPage: 1 }, context })); await until(() => peer.events.cancels === 1); expire(); const failed = await result, held = context.getUsage(); assert.equal(failed.code, 'DOCTOR_TIMEOUT');
+  peer.gate.reject(false); await turn(); await turn(); assert.equal(peer.events.releases, 1); assert.equal(peer.stream.locked, false); assert.equal(await rejected(context.drained({ retry: true })), failed); assert.deepEqual(context.getUsage(), held); assert.equal(await rejected(core.diagnosePdf(peer.input, { ...peer, context })), failed);
+});

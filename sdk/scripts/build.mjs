@@ -12,6 +12,8 @@ const files = new Map([
   ['core/privacy-scan.js', path.join(repositoryRoot, 'public/js/core/privacy-scan.js')],
   ['core/document-doctor.js', path.join(repositoryRoot, 'public/js/core/document-doctor.js')],
   ['core/document-doctor-output.js', path.join(repositoryRoot, 'public/js/core/document-doctor-output.js')],
+  ['core/doctor-policy.js', path.join(repositoryRoot, 'public/js/core/doctor-policy.js')],
+  ['core/doctor-lifetime.js', path.join(repositoryRoot, 'public/js/core/doctor-lifetime.js')],
 ]);
 
 async function outputFiles(directory, prefix = '') {

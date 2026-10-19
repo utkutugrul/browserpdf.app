@@ -68,9 +68,11 @@ function fakePdfJs({ failPage = false, wait = false, waitPage = false } = {}) {
   const pageGate = new Promise((resolve) => { releasePage = resolve; });
   let rejectLoad;
   const page = {
-    getAnnotations: async () => [], getJSActions: async () => null,
+    getAnnotations: async () => [], getJSActions: async () => null, getStructTree: async () => null,
     getTextContent: async () => { if (failPage) throw new Error('page failure'); return { items: [] }; },
     getOperatorList: async () => ({ fnArray: [], argsArray: [] }),
+    cleanup: () => true, rotate: 0, userUnit: 1,
+    getViewport: ({ scale }) => ({ width: 200 * scale, height: 100 * scale, scale }),
   };
   const doc = {
     numPages: 1, getMetadata: async () => ({ info: {}, metadata: null }), getAttachments: async () => null,
@@ -130,7 +132,7 @@ test('diagnosis and normalization suppress in-flight completion after abort and 
   });
   await delayedDiagnosis.pageStarted; diagnosisController.abort(); delayedDiagnosis.releasePage();
   await assert.rejects(diagnosis, (error) => error.name === 'AbortError');
-  assert.equal(delayedDiagnosis.calls.doc, 1);
+  assert.equal(delayedDiagnosis.calls.doc, 0);
   assert.ok(delayedDiagnosis.calls.task >= 1);
 
   let releaseLoad;
@@ -155,7 +157,7 @@ test('diagnosis and normalization suppress in-flight completion after abort and 
 });
 
 test('built runtime has no site-bound imports, CDN URLs, or browser-shell access', async () => {
-  const files = ['index.js', 'core/merge-pdf.js', 'core/privacy-scan.js', 'core/document-doctor.js', 'core/document-doctor-output.js'];
+  const files = ['index.js', 'core/merge-pdf.js', 'core/privacy-scan.js', 'core/document-doctor.js', 'core/document-doctor-output.js', 'core/doctor-policy.js', 'core/doctor-lifetime.js'];
   const source = (await Promise.all(files.map((name) => readFile(path.join(ROOT, 'dist', name), 'utf8')))).join('\n');
   assert.doesNotMatch(source, /tool-ui|i18n|webmcp|consent|analytics|jsdelivr|unpkg/i);
   assert.doesNotMatch(source, /querySelector|getElementById|localStorage|navigator\.|window\./);
@@ -180,8 +182,19 @@ test('package dry-run contains only the declared runtime, declarations, docs, an
   const manifest = JSON.parse(packed.stdout)[0];
   assert.deepEqual(manifest.files.map((entry) => entry.path).sort(), [
     'LICENSE.md', 'README.md', 'THIRD_PARTY_NOTICES.md',
+    'dist/core/doctor-lifetime.js', 'dist/core/doctor-policy.js',
     'dist/core/document-doctor-output.js', 'dist/core/document-doctor.js',
     'dist/core/merge-pdf.js', 'dist/core/privacy-scan.js',
     'dist/index.d.ts', 'dist/index.js', 'package.json',
   ]);
+});
+
+// Runtime execution of these SDK peer tests is allocated by Root.
+test('Doctor v1 retains additive inspection and refuses oversized Blob before read', async () => {
+  const input = await pdf('Doctor bounded contract');
+  const diagnosis = await sdk.diagnoseV1(input, { pdfLib, pdfjs: fakePdfJs().runtime });
+  assert.equal(diagnosis.version, 1); assert.equal(diagnosis.inspection.version, 2);
+  assert.equal(diagnosis.inspection.parsers.tolerant.status, 'skipped');
+  const tooLarge = new Blob([new Uint8Array(32 * 1024 * 1024 + 1)]);
+  await assert.rejects(sdk.diagnoseV1(tooLarge, { pdfLib, pdfjs: fakePdfJs().runtime }), RangeError);
 });

@@ -2249,3 +2249,66 @@ harness files remain exact across the affected native gate. There are zero
 skips, flaky cases, page errors, non-GET requests or excluded imports. Concurrent
 Reader5 and Doctor19 paths are explicit exceptions and are never imported.
 This accepts only the source/export checkpoint. No production deployment occurs.
+
+### Doctor D2 bounded inspection, verified outputs and minimal adapter
+
+Accept the exact corrected19-path checkpoint and this ledger after independent
+source review, selected SDK controls, actual minimal browser intake and real
+saved-output verification. The full Doctor workspace, explicit rebuild loss
+review, remaining browser workflows and all32 final service gates stay open.
+The raster rebuild button remains disabled pending that separate visible flow.
+
+R01 makes capped affected-page inspection partial and keeps unknown categories
+unknown. R02 displays unconfirmed MarkInfo honestly. R03 drains original text
+read/cancel FIRSTs, skips cancellation after genuine EOF, supplies a real bounded
+Error for exceptional native cancellation, and unlocks even after cancellation
+failure or abort. Opaque cleanup retains a stable fence, references and charges.
+The original portable failures, source copies and bounded-document failures are
+preserved. Correction controls17+2 and six affected neighbors pass; these selected
+runs do not claim a single full historical suite. The independent corrected
+review adds four passing controls with420 exact pins. Its report is
+`/tmp/browserpdf-doctor-d2-correction-fresh-review-20261019/review.md`, SHA-256
+`7e8b8d48c6edbc86d1d498365301908efde3f33a071f2553cbfa8d9d15a168ae`.
+
+Root selects four SDK controls without collecting unmatched tests:4/4 pass in
+170.801 ms. Those controls use actual pdf-lib and synthetic PDF.js peers, so they
+do not establish native output success. The separate minimal browser adapter
+passes2/2 in4490.305 ms: real rejected B retains accepted local A and the full
+canonical original/current/history; a real32 MiB+1 choice refuses before replacing
+A. Report SHA-256
+`afa48ce6169df03ddab316108cebc2ab0b9eaae02df94b04c7b6f65b79bb694c`.
+
+The subsequent genuine browser gate passes3/3 in3500.764 ms with pinned Chromium
+151.0.7922.34, actual public PDF.js6.2.108 and pdf-lib1.17.1. Seven SDK JavaScript
+files are served byte-identically from the frozen dist package. Observation
+forwards original native objects/promises; hooks are restored before independent
+reference rendering. SDK accounting is explicitly isolated per invocation, with
+no browser joint-budget, physical heap or worker-exit claim.
+
+Deep inspection reaches real EOF on all4 pages:40 items,96 text units, zero
+cancellations, four successful unlocks and one original loading-task destroy
+FIRST. Normalization produces a real2333-byte PDF, SHA-256
+`4022ebc4659085091bcc4a27c0a392cedf74fd8cfb6bdec5db34ac8f25ba2329`.
+All4 fractional CropBox/rotation/UserUnit physical geometries, ordered literal
+labels and same-scale RGBA bytes match the independent source reference exactly.
+Explicit internal raster rebuild produces a19779-byte PDF, SHA-256
+`6f24e44051df3d081e57bdcd3ee5906a407c9e18957507e66b8c09ae166b523e`.
+All4 physical page sizes survive as rotation0/UserUnit1 with matching Media/Crop
+boxes and nonblank pages. Searchable text is absent as declared in the loss
+manifest; this proves neither pixel equivalence nor general feature preservation.
+Original input and complete canonical snapshot/current/original hashes remain
+unchanged in all three cases, and each observed loading task destroys once with
+its original FIRST fulfilled. The native report is
+`/tmp/browserpdf-root-doctor-output-native3-20261019/report.json`, SHA-256
+`99a8a201ffb748d34b2476f4aa625e23baebe29eb7e10ecd822bb08f4ccf68c9`.
+Saved evidence is independently rehashed in
+`/tmp/browserpdf-root-doctor-output-native3-saved-evidence-20261019.json`, SHA-256
+`9f29f39470338c0c4f50f8dfacc22dca404f9145a4871f9d63cf4d81c19d6dc2`.
+
+All520 included sources,22 generated fixtures and the private harness remain exact
+across that gate; there are zero skips, flaky cases, page errors, non-GET requests
+or excluded imports. Concurrent shared PDF4 and spreadsheetB5 are explicit mutable
+exceptions and are not imported. SDK runtime export names, v1 and package0.1.0
+remain unchanged. The protected merge copy stays exact; the reviewed SDK Privacy
+refresh matches its accepted public source. This checkpoint is a feature-branch
+push only and does not deploy production or close a final service row.

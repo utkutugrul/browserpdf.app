@@ -1,154 +1,110 @@
 'use strict';
-
-import { diagnosePdf, summarizeDoctorReport } from './document-doctor.js';
-import { withPdfDocument } from './privacy-scan.js';
-
-const MAX_CANVAS_DIMENSION = 4096;
-const MAX_CANVAS_PIXELS = 16_000_000;
-const MAX_OUTPUT_PAGE_DIMENSION = 14400;
-
-function abort(signal) { signal?.throwIfAborted(); }
-
-function boundedViewport(page, requestedScale) {
-  let viewport = page.getViewport({ scale: requestedScale });
-  const pixelScale = Math.min(
-    1,
-    MAX_CANVAS_DIMENSION / Math.max(1, viewport.width),
-    MAX_CANVAS_DIMENSION / Math.max(1, viewport.height),
-    Math.sqrt(MAX_CANVAS_PIXELS / Math.max(1, viewport.width * viewport.height)),
-  );
-  if (pixelScale < 1) viewport = page.getViewport({ scale: requestedScale * pixelScale });
-  return viewport;
+import { DOCTOR_LIMITS, rebuildPagePolicy } from './doctor-policy.js';
+import { doctorByteLength, doctorInput, doctorLimits, doctorParse, diagnoseDoctorWithin, summarizeDoctorReport } from './document-doctor.js';
+const fail = (code, message) => Object.assign(new Error(message), { code: `DOCTOR_${code}` });
+const tolerance = 1e-6;
+function dimensions(page, api) {
+  const view = api.sync(page, 'getViewport', [{ scale: 1 }]);
+  if (![view.width, view.height, page.rotate, page.userUnit].every(Number.isFinite) || view.width <= 0 || view.height <= 0 || page.userUnit <= 0) throw fail('GEOMETRY', 'The physical page geometry is unavailable.');
+  return { width: view.width, height: view.height, rotation: page.rotate, userUnit: page.userUnit };
 }
-
-function makeCanvas(createCanvas, viewport) {
-  if (typeof createCanvas !== 'function') throw new TypeError('A canvas factory is required.');
-  return createCanvas(Math.max(1, Math.ceil(viewport.width)), Math.max(1, Math.ceil(viewport.height)));
+async function render(page, pageScope, api, createCanvas, limits, source = false) {
+  const base = api.sync(page, 'getViewport', [{ scale: 1 }]);
+  if (![base.width, base.height].every(Number.isFinite) || base.width <= 0 || base.height <= 0) throw fail('GEOMETRY', 'Page dimensions are invalid.');
+  const scale = Math.min(source ? 1.25 : 0.35, limits.renderDimension / base.width, limits.renderDimension / base.height, Math.sqrt(limits.renderPixels / (Math.ceil(base.width) * Math.ceil(base.height))));
+  const viewport = api.sync(page, 'getViewport', [{ scale }]), width = Math.ceil(viewport.width), height = Math.ceil(viewport.height), pixels = width * height;
+  if (!Number.isSafeInteger(pixels) || width < 1 || height < 1 || width > limits.renderDimension || height > limits.renderDimension || pixels > limits.renderPixels) throw fail('GEOMETRY', 'The bounded canvas cannot represent this page.');
+  api.work.admit({ pixels, ...(source ? { sourcePixels: pixels } : {}) });
+  const key = Symbol('canvas'); api.reserve(key, { expandedBytes: pixels * 4, expandedCount: 1 });
+  if (typeof createCanvas !== 'function') throw new TypeError('Verified output requires a canvas factory.');
+  const canvas = createCanvas(width, height); api.capture(key, canvas); api.resetAfterDrain(() => { canvas.width = canvas.height = 0; });
+  const actualWidth = canvas.width, actualHeight = canvas.height;
+  if (!Number.isSafeInteger(actualWidth) || !Number.isSafeInteger(actualHeight) || actualWidth < 1 || actualHeight < 1 || !Number.isSafeInteger(actualWidth * actualHeight * 4)) throw fail('GEOMETRY', 'Canvas factory returned invalid backing dimensions.');
+  api.hold(key, canvas, { expandedBytes: actualWidth * actualHeight * 4, expandedCount: 1 });
+  if (actualWidth !== width || actualHeight !== height) throw fail('GEOMETRY', 'Canvas factory changed backing size.'); api.guard();
+  await pageScope.render({ canvasContext: canvas.getContext('2d'), viewport }); api.guard(); return { canvas, pixels };
 }
-
-async function renderPage(page, createCanvas, signal, scale = 0.5) {
-  abort(signal);
-  const viewport = boundedViewport(page, scale);
-  const canvas = makeCanvas(createCanvas, viewport);
-  const task = page.render({ canvasContext: canvas.getContext('2d'), viewport });
-  const cancel = () => task.cancel?.();
-  signal?.addEventListener('abort', cancel, { once: true });
-  try {
-    await task.promise;
-    abort(signal);
-    return canvas;
-  } finally {
-    signal?.removeEventListener('abort', cancel);
-  }
-}
-
-async function canvasPng(canvas) {
-  const blob = await new Promise((resolve, reject) => canvas.toBlob(
-    (value) => value ? resolve(value) : reject(new Error('Page rasterization failed.')),
-    'image/png',
-  ));
-  return new Uint8Array(await blob.arrayBuffer());
-}
-
-async function verifyOutput(bytes, expectedPages, { pdfLib, pdfjs, pdfjsAssets, createCanvas, signal }) {
-  abort(signal);
-  const strict = await pdfLib.PDFDocument.load(bytes.slice(), {
-    ignoreEncryption: false, throwOnInvalidObject: true, updateMetadata: false, parseSpeed: 100,
+async function geometries(bytes, options, api, rebuild) {
+  api.reserve(Symbol('geometry'), { expandedBytes: 1152000, expandedCount: 1 });
+  return api.inspectPdf(options.pdfjs, bytes, options.pdfjsAssets || {}, async (doc, scope) => {
+    if (doc.numPages > (rebuild ? options.limits.rebuildPages : options.limits.pages)) throw fail('WORK_LIMIT', 'Doctor page limit reached.');
+    const pages = [];
+    for (let n = 1; n <= doc.numPages; n++) { api.work.admit({ pageVisits: 1 }); await scope.withPage(n, page => { const geometry = dimensions(page, api); if (rebuild) rebuildPagePolicy(api.sync(page, 'getViewport', [{ scale: 1 }])); pages.push(geometry); return null; }); }
+    return pages;
   });
-  if (strict.getPageCount() !== expectedPages) throw new Error('Output page-count verification failed.');
-  const renderedPages = [];
-  await withPdfDocument(pdfjs, bytes, { signal, pdfjsAssets: { ...pdfjsAssets, stopAtErrors: true } }, async (document) => {
-    if (document.numPages !== expectedPages) throw new Error('PDF.js output page-count verification failed.');
-    const representatives = document.numPages > 1 ? [1, document.numPages] : [1];
-    for (const pageNumber of representatives) {
-      await renderPage(await document.getPage(pageNumber), createCanvas, signal, 0.35);
-      renderedPages.push(pageNumber);
+}
+async function save(document, options, api) {
+  const key = Symbol('saved'); api.reserve(key, { artifactBytes: options.limits.outputBytes });
+  const bytes = await api.call(document, 'save', [{ updateFieldAppearances: false }]);
+  // Native save allocates first; charge its real backing before refusing it.
+  const actual = bytes instanceof Uint8Array ? bytes.buffer.byteLength : 0;
+  api.hold(key, bytes, { artifactBytes: actual });
+  doctorByteLength(bytes, options.limits.outputBytes); return bytes;
+}
+async function verify(bytes, expected, options, api, everyPage) {
+  const renderedPages = [], selected = options.selectedPage ?? 1;
+  if (!Number.isSafeInteger(selected) || selected < 1 || selected > expected.length) throw new RangeError('Selected verification page is out of range.');
+  const representatives = new Set(everyPage ? expected.map((_value, n) => n + 1) : [1, expected.length, selected]);
+  let checked = 0;
+  const diagnosis = await diagnoseDoctorWithin(bytes, { ...options, mode: 'quick', verifyPage: async (page, pageScope, n) => {
+    const actual = dimensions(page, api), wanted = expected[n - 1];
+    if (!wanted || Math.abs(actual.width - wanted.width) > tolerance || Math.abs(actual.height - wanted.height) > tolerance || actual.rotation !== wanted.rotation || actual.userUnit !== wanted.userUnit) throw fail('VERIFY', 'Saved physical page geometry changed.');
+    checked++;
+    if (representatives.has(n)) { await render(page, pageScope, api, options.createCanvas, options.limits); renderedPages.push(n); }
+  } }, api);
+  if (!diagnosis.parses.pdfLibStrict.ok || !diagnosis.parses.pdfjsStrict.ok || !diagnosis.pageTree.consistent || diagnosis.pageCount !== expected.length || checked !== expected.length || renderedPages.length !== representatives.size) throw fail('VERIFY', 'Saved output did not pass strict count, geometry and rendering verification.');
+  return { diagnosis: summarizeDoctorReport(diagnosis), verification: { pdfLibStrict: true, pdfjsStrict: true, renderedPages, geometryPages: checked, complete: true } };
+}
+function optionsFor(options) { if (!options.pdfLib?.PDFDocument || !options.pdfjs?.getDocument) throw new TypeError('Pinned peer runtimes are required.'); return { ...options, limits: doctorLimits(options.limits) }; }
+export async function normalizeDoctorWithin(input, rawOptions, api) {
+  const options = optionsFor(rawOptions); doctorInput(input, options.limits.inputBytes);
+  const parsed = await doctorParse(input, options.pdfLib, api, options.limits);
+  if (!parsed.doc || parsed.locked) throw fail('LOCKED', 'Normalization needs a usable unlocked PDF. Open protected files in Unlock.');
+  const expected = await geometries(input, options, api, false);
+  if (api.sync(parsed.doc, 'getPageCount') !== expected.length) throw fail('VERIFY', 'Source parsers disagree about page count.');
+  api.guard(); options.onProgress?.({ phase: 'serialize' }); api.guard();
+  const bytes = await save(parsed.doc, options, api); api.guard(); options.onProgress?.({ phase: 'verify' }); api.guard();
+  const checked = await verify(bytes, expected, options, api, false);
+  const result = { bytes, ...checked, lossManifest: { action: 'normalize-structure', changes: ['Rewrites PDF serialization into a new copy.'], preservationIntent: ['Attempts to retain page content', 'page order', 'metadata', 'attachments', 'actions', 'forms', 'and structure tags'], losses: [], risks: ['Unsupported or malformed structures may be omitted.', 'Any rewrite can invalidate digital signatures; signature validity is not checked.'] } };
+  api.registerResult(result, { artifactBytes: bytes.buffer.byteLength, expandedBytes: 2304000, expandedCount: 2 }); return result;
+}
+export async function rebuildDoctorWithin(input, rawOptions, api) {
+  const options = optionsFor(rawOptions); doctorInput(input, options.limits.inputBytes);
+  if (options.executionIntent !== 'rebuild-page-content') throw fail('EXECUTION', 'Raster rebuilding needs a separate explicit execution request after loss review.');
+  const expectedSource = await geometries(input, options, api, true), expected = expectedSource.map(value => ({ width: value.width, height: value.height, rotation: 0, userUnit: 1 }));
+  const output = await api.call(options.pdfLib.PDFDocument, 'create', [{ updateMetadata: false }]);
+  await api.inspectPdf(options.pdfjs, input, options.pdfjsAssets || {}, async (doc, scope) => {
+    if (doc.numPages !== expected.length) throw fail('VERIFY', 'Source page count changed.');
+    for (let n = 1; n <= doc.numPages; n++) {
+      api.work.admit({ pageVisits: 1 });
+      await scope.withPage(n, async (page, pageScope) => {
+        const policy = rebuildPagePolicy(api.sync(page, 'getViewport', [{ scale: 1 }])), surface = await render(page, pageScope, api, options.createCanvas, options.limits, true);
+        const pngKey = Symbol('PNG'); api.reserve(pngKey, { expandedBytes: options.limits.encodedPageBytes, expandedCount: 1 });
+        const toBlob = surface.canvas.toBlob; api.guard(); if (typeof toBlob !== 'function') throw new TypeError('A PNG encoder is required.');
+        const blob = await api.first(() => new Promise((resolve, reject) => Reflect.apply(toBlob, surface.canvas, [value => value ? resolve(value) : reject(fail('ENCODE', 'Page rasterization failed.')), 'image/png'])));
+        if (!(blob instanceof Blob)) throw new TypeError('The encoder did not return a Blob.');
+        api.hold(pngKey, blob, { expandedBytes: blob.size, expandedCount: 1 });
+        if (blob.size > options.limits.encodedPageBytes) throw fail('WORK_LIMIT', 'Encoded page limit reached.');
+        api.work.admit({ encodedBytes: blob.size });
+        const readKey = Symbol('PNG read'); api.reserve(readKey, { expandedBytes: blob.size, expandedCount: 1 });
+        const buffer = await api.call(blob, 'arrayBuffer'); api.hold(readKey, buffer, { expandedBytes: buffer.byteLength, expandedCount: 1 });
+        if (buffer.byteLength !== blob.size) throw fail('ENCODE', 'Encoded page length changed.');
+        api.reserve(Symbol('decoded PNG'), { expandedBytes: surface.pixels * 4, expandedCount: 1 });
+        const image = await api.call(output, 'embedPng', [new Uint8Array(buffer)]);
+        const target = api.sync(output, 'addPage', [[policy.width, policy.height]]); api.sync(target, 'setMediaBox', [0, 0, policy.width, policy.height]); api.sync(target, 'setCropBox', [0, 0, policy.width, policy.height]); api.sync(target, 'setRotation', [api.sync(options.pdfLib, 'degrees', [0])]); api.sync(target, 'drawImage', [image, { x: 0, y: 0, width: policy.width, height: policy.height }]);
+      });
+      api.guard(); options.onProgress?.({ phase: 'page', page: n, pageCount: doc.numPages }); api.guard();
     }
+    return null;
   });
-  return { pdfLibStrict: true, pdfjsStrict: true, renderedPages };
+  const bytes = await save(output, options, api); api.guard(); options.onProgress?.({ phase: 'verify' }); api.guard();
+  const checked = await verify(bytes, expected, options, api, true);
+  const result = { bytes, ...checked, lossManifest: { action: 'rebuild-page-content', changes: ['Rasterizes every visible physical page into a new PDF.'], losses: ['Searchable/selectable text', 'links and actions', 'forms and annotations', 'attachments', 'original metadata', 'structure tags and alternative text', 'vector detail', 'existing digital signatures'], risks: ['Rasterization can reduce visual detail and increase size.'] } };
+  api.registerResult(result, { artifactBytes: bytes.buffer.byteLength, expandedBytes: 2304000, expandedCount: 2 }); return result;
 }
-
-export async function normalizePdfStructure(inputBytes, {
-  pdfLib, pdfjs, pdfjsAssets = {}, createCanvas, signal, onProgress,
-} = {}) {
-  if (!pdfLib?.PDFDocument || !pdfjs?.getDocument) throw new TypeError('pdf-lib and PDF.js runtimes are required.');
-  const original = Uint8Array.from(inputBytes instanceof Uint8Array ? inputBytes : new Uint8Array(inputBytes));
-  abort(signal);
-  const source = await pdfLib.PDFDocument.load(original.slice(), {
-    ignoreEncryption: true, throwOnInvalidObject: false, updateMetadata: false,
-  });
-  const expectedPages = source.getPageCount();
-  onProgress?.({ phase: 'serialize' });
-  abort(signal);
-  const bytes = Uint8Array.from(await source.save({ updateFieldAppearances: false }));
-  abort(signal);
-  onProgress?.({ phase: 'verify' });
-  const verification = await verifyOutput(bytes, expectedPages, { pdfLib, pdfjs, pdfjsAssets, createCanvas, signal });
-  const diagnosis = await diagnosePdf(bytes, { mode: 'quick', pdfLib, pdfjs, pdfjsAssets, signal });
-  if (!diagnosis.parses.pdfLibStrict.ok || !diagnosis.parses.pdfjsStrict.ok || !diagnosis.pageTree.consistent) {
-    throw new Error('Normalized output did not pass strict verification.');
-  }
-  return {
-    bytes,
-    diagnosis: summarizeDoctorReport(diagnosis),
-    verification,
-    lossManifest: {
-      action: 'normalize-structure',
-      changes: ['Rewrites the PDF object graph, cross-reference data, and serialization into a new file.'],
-      preservationIntent: ['Attempts to retain page content', 'page order', 'metadata', 'attachments', 'actions', 'forms', 'and structure tags'],
-      losses: ['Encryption, passwords, permissions, and other access controls are not preserved; the new copy is unencrypted.'],
-      risks: [
-        'Unsupported or malformed structures may be omitted by reserialization.',
-        'Any existing digital signature can be invalidated. Signature validity is not checked.',
-      ],
-    },
-  };
+function run(input, options, producer) {
+  if (!options.context) return Promise.reject(new TypeError('Doctor requires an explicit joint or SDK isolated context.'));
+  return options.context.run((_job, api) => producer(input, options, api), { expectedOwner: options.expectedOwner, limits: options.limits, signal: options.signal });
 }
-
-export async function rebuildPdfPageContent(inputBytes, {
-  pdfLib, pdfjs, pdfjsAssets = {}, createCanvas, signal, onProgress,
-} = {}) {
-  if (!pdfLib?.PDFDocument || !pdfjs?.getDocument) throw new TypeError('pdf-lib and PDF.js runtimes are required.');
-  const original = Uint8Array.from(inputBytes instanceof Uint8Array ? inputBytes : new Uint8Array(inputBytes));
-  const output = await pdfLib.PDFDocument.create({ updateMetadata: false });
-  let expectedPages = 0;
-  await withPdfDocument(pdfjs, original, { signal, pdfjsAssets: { ...pdfjsAssets, stopAtErrors: true } }, async (document) => {
-    expectedPages = document.numPages;
-    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
-      abort(signal);
-      const sourcePage = await document.getPage(pageNumber);
-      const base = sourcePage.getViewport({ scale: 1 });
-      const rendered = await renderPage(sourcePage, createCanvas, signal, 1.25);
-      const image = await output.embedPng(await canvasPng(rendered));
-      const pageScale = Math.min(1, MAX_OUTPUT_PAGE_DIMENSION / Math.max(1, base.width), MAX_OUTPUT_PAGE_DIMENSION / Math.max(1, base.height));
-      const outputWidth = Math.max(1, base.width * pageScale);
-      const outputHeight = Math.max(1, base.height * pageScale);
-      const page = output.addPage([outputWidth, outputHeight]);
-      page.drawImage(image, { x: 0, y: 0, width: outputWidth, height: outputHeight });
-      onProgress?.({ phase: 'page', page: pageNumber, pageCount: document.numPages });
-    }
-  });
-  abort(signal);
-  const bytes = Uint8Array.from(await output.save({ updateFieldAppearances: false }));
-  onProgress?.({ phase: 'verify' });
-  const verification = await verifyOutput(bytes, expectedPages, { pdfLib, pdfjs, pdfjsAssets, createCanvas, signal });
-  const diagnosis = await diagnosePdf(bytes, { mode: 'quick', pdfLib, pdfjs, pdfjsAssets, signal });
-  if (!diagnosis.parses.pdfLibStrict.ok || !diagnosis.parses.pdfjsStrict.ok || !diagnosis.pageTree.consistent) {
-    throw new Error('Rebuilt output did not pass strict verification.');
-  }
-  return {
-    bytes,
-    diagnosis: summarizeDoctorReport(diagnosis),
-    verification,
-    lossManifest: {
-      action: 'rebuild-page-content',
-      changes: ['Rasterizes every page into a fresh PDF document.'],
-      losses: [
-        'Searchable/selectable text', 'links and actions', 'forms and annotations', 'attachments',
-        'original metadata', 'structure tags and alternative text', 'vector detail', 'existing digital signatures',
-        'encryption, passwords, permissions, and other access controls',
-      ],
-      risks: ['Image rendering can reduce visual fidelity and increase file size.', 'Very large page render surfaces and output page dimensions are bounded.'],
-    },
-  };
-}
+export function normalizePdfStructure(input, options = {}) { return run(input, options, normalizeDoctorWithin); }
+export function rebuildPdfPageContent(input, options = {}) { return run(input, options, rebuildDoctorWithin); }
