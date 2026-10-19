@@ -1906,3 +1906,70 @@ case occurs. Earlier portable and engine matrices are retained without reruns.
 This accepts the engine foundation checkpoint only. The editable OCR workspace,
 route integration, selected-page rasterization, complete locale coverage and
 final service17/all32 acceptance remain open. No production deployment occurs.
+
+## Literal PDF document reader checkpoint, 2026-10-19
+
+The three new pure reader/test/checkpoint paths provide a direct PDF text model
+for PDF to Markdown, PDF to Word and Extract Text. The model preserves every
+returned PDF.js item string and EOL flag in stream order, including empty items,
+with a separate source-page/item-span sidecar and all-page coverage. It does not
+infer tables, lists, images, styles or layout. Its fidelity boundary is the actual
+PDF.js disable-normalization projection; it does not claim raw PDF operator or
+whitespace identity, and it performs no automatic OCR or Markdown roundtrip.
+
+The retained owner twenty-seven-case gate and saved literal MD/DOCX/TXT proof
+pass. Fresh review then finds two P2 defects: disposal invokes its release
+callback before caching FIRST, allowing reentry and a false cleanup-failure
+bypass, and a source-copy pair performs 32768 visits before cooperation. Exactly
+two runtime lines change: cache a scheduled FIRST before callbacks and copy
+8192-byte pairs. The three focused correction cases pass without rerunning the
+prior twenty-seven cases. Original failing probes remain retained.
+
+Independent corrected review passes the original reentry/copy probes and a
+sole-release-throws-false control. All disposer callers share the exact FIRST;
+release occurs once, and its false failure retains the shared CLEANUP error,
+ownership and charge. Copy intervals now stay within 16384 visits while total
+visits and byte identity remain exact. All 142 reviewed pins remain unchanged.
+Corrected three-file manifest:
+`/tmp/browserpdf-pdf-document-corrected-20261019/final-three-manifest.json`, SHA-256
+`2517759205abb48682f8a715b570072f3f658434dd3d60821f9f801f2833c2af`.
+Fresh corrected review:
+`/tmp/browserpdf-pdf-document-corrected-review-20261019.md`, SHA-256
+`dac50a3ef304588f56991c9906ce50d8e417d7be1045d652bf025f61a9ed75a9`.
+
+Root's actual Chromium 151.0.7922.34 gate passes two tests in 2872.487 ms using
+the public verified PDF.js 6.2.108 loader and exact frozen reader source. An
+independent five-page native getTextContent baseline supplies 159 item strings
+and EOL flags. All item spans, 150 literal paragraphs, page geometry and four
+page boundaries agree with the reader model. Actual direct writers produce a
+12479-byte Markdown file, 35006-byte DOCX and 12330-byte TXT. Root separately
+reads the six saved artifacts, validates every DOCX ZIP CRC/XML part and exact
+paragraph/page-break sequence, checks literal Markdown escape projection and
+matches all TXT text with explicit page separators. None of these checks
+reconstructs the original table/image/style layout.
+
+The second actual test holds FIRST after the real PDF load resolves. Abort(false)
+destroys that real task once, but the outer result remains pending with its
+4199168-byte resource and 78940-byte artifact reservation until the held promise
+is explicitly released. It then rejects with the exact false reason, publishes
+nothing, releases owned usage and permits a valid five-page successor. Both
+tests use a genuine populated canonical session and joint admission; current,
+original, input bytes and owner remain exact. The normal peak is 50718068 known
+resource bytes and twenty groups, inside the shared limits. This is not a native
+heap or physical-exit guarantee.
+
+Native report:
+`/tmp/browserpdf-root-pdf-document-native-first-20261019/report.json`, SHA-256
+`347a23c83c7a230f4c3003121b75551809c29ce3f17fa1f7d62afbcca2576301`.
+Independent saved-artifact verification passes 191 checks:
+`/tmp/browserpdf-root-pdf-document-native-artifact-verification-20261019.json`,
+SHA-256 `f5d57cd82db1a7683acd2d2260b8afbfa0b4c9477627c99ae245543558ac0216`.
+All 503 included source hashes/path inventory, twenty-two generated fixtures and
+private harness files remain unchanged. No skipped/flaky cases, page errors or
+non-GET requests occur. Concurrent spreadsheet paths are never imported.
+
+This accepts the pure reader checkpoint only. The later PDF intake/draft seams
+must explicitly account for retained extraction sidecars and their ownership
+handoff. The three service workspaces, source preview, editable order, original
+PDF OCR handoff, locale coverage and final service20/21/23/all32 gates remain
+open. No production deployment occurs.
