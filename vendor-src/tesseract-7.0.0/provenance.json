@@ -1,0 +1,50 @@
+{
+  "distribution": "BrowserPDF Tesseract.js7.0.0 compatibility distribution, modified2026-10-19",
+  "construction": "Exact-hash appended factory/publication helper; not upstream compiler rebuild. Original main/worker whole reverse is checked offline.",
+  "upstream": {
+    "main": "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.esm.min.js",
+    "worker": "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js",
+    "source": "https://github.com/naptha/tesseract.js/tree/v7.0.0/src",
+    "license": "https://raw.githubusercontent.com/naptha/tesseract.js/v7.0.0/LICENSE.md"
+  },
+  "core": {
+    "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@v7.0.0/tesseract-core-lstm.wasm.js",
+    "license": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/LICENSE",
+    "embeddedWasmBytes": 2855361,
+    "embeddedWasmSha256": "66b17df6e20c5329a17ffa9c202a47eaa3e32500b253d4c7f38e7f2bc01457c3"
+  },
+  "models": {
+    "eng": {
+      "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int/eng.traineddata.gz",
+      "encodedBytes": 2952873,
+      "encodedSha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+      "decodedBytes": 5199098,
+      "decodedSha256": "5dc5d8d640a212c9d6184921ba103b186f50e0fed9ee716c53e6b312b400d747"
+    },
+    "tur": {
+      "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int/tur.traineddata.gz",
+      "encodedBytes": 2141291,
+      "encodedSha256": "384ba0dc28040451b7818d7d60e0a88df0d3003fa5a01d713a468779bc3d8c04",
+      "decodedBytes": 4680866,
+      "decodedSha256": "f0127d0f3745f9c65e2ae7ec6b23198fbe5aa186a61b35661426f5e1ef9dedd7"
+    }
+  },
+  "acquisition": {
+    "alreadyPerformed": true,
+    "encodedVerifiedBeforeInflate": true,
+    "encodedCap": 4194304,
+    "decodedCap": 16777216,
+    "deadlineMs": 30000,
+    "redirect": "error",
+    "retry": false,
+    "nestedGzipRejected": true,
+    "runtime": "Serve decoded pinned bytes; no runtime SDK language network or inflate."
+  },
+  "modelLicensing": {
+    "packageMetadata": "Exact eng/tur metadata declares MIT. This is provenance, not a missing binary license supplied by inference.",
+    "repositoryLicense": "Retained separate tessdata Apache-2.0 license.",
+    "documentationCommit": "806cd9adc8c6e8abc11c782db1818c990576bebc",
+    "repositoryLicenseUrl": "https://raw.githubusercontent.com/naptha/tessdata/806cd9adc8c6e8abc11c782db1818c990576bebc/LICENSE",
+    "binaryToCommitMapping": "Not established; documentation commit is not represented as model build provenance."
+  }
+}

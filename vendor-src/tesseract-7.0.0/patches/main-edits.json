@@ -1,0 +1,22 @@
+[
+  {
+    "from": "'use strict';\n",
+    "to": "/* Modified 2026-10-19: first-party native-owner compatibility prototype.\n * Added a distinct owner hook API; original upstream factory is retained.\n * Derived from Tesseract.js v7.0.0, Apache-2.0. See LICENSE.md. */\n'use strict';\n"
+  },
+  {
+    "from": "module.exports = async (langs = 'eng', oem = OEM.LSTM_ONLY, _options = {}, config = {}) => {",
+    "to": "module.exports = async function createWorkerWithNativeOwner(langs = 'eng', oem = OEM.LSTM_ONLY, _options = {}, config = {}) {"
+  },
+  {
+    "from": "    errorHandler,\n    ...options",
+    "to": "    errorHandler,\n    onNativeWorker,\n    ...options"
+  },
+  {
+    "from": "      payload: { langs: _langs, oem: _oem, config: _config },",
+    "to": "      payload: {\n        langs: typeof _langs === 'string' ? _langs : _langs.map(lang => typeof lang === 'string' ? lang : lang.code).join('+'),\n        oem: _oem, config: _config,\n      },"
+  },
+  {
+    "from": "  let worker = spawnWorker(options);\n  worker.onerror = workerError;",
+    "to": "  let worker = spawnWorker(options);\n  // NEW compatibility API. The hook never enters child options or messages.\n  try {\n    if (typeof onNativeWorker !== 'function') throw new TypeError('A native owner hook is required.');\n    onNativeWorker(worker);\n  } catch (ownerError) {\n    try {\n      terminateWorker(worker);\n    } catch (releaseError) {\n      throw new AggregateError([ownerError, releaseError], 'Native owner hook and direct termination failed.');\n    }\n    throw ownerError;\n  }\n  worker.onerror = workerError;"
+  }
+]

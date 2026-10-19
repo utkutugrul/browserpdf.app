@@ -1,0 +1,74 @@
+# OCR distribution and owned host foundation, 2026-10-19
+
+This checkpoint adds the approved 41 new paths only. It is unreachable from application routes. The old OCR route, shared loader/session/budget/fonts, accepted pure OCR model/writer, locale/package files and server/CSP remain unchanged. App intake, page selection, editing, result review and route integration are later work. No browser, native Worker, Tesseract/core execution, model acquisition or recognition acceptance occurred in this checkpoint.
+
+## Offline distribution
+
+Run from the repository root:
+
+```sh
+rtk proxy node scripts/build-ocr-distribution.mjs --check
+rtk proxy node --experimental-vm-modules --test tests/ocr-distribution.unit.mjs tests/ocr-assets.unit.mjs tests/ocr-ownership.unit.mjs tests/ocr-host.unit.mjs
+```
+
+The explicit `--write` build mode reconstructs only six generated outputs after validating all fixed inputs and locked authored runtime source. It uses Node built-ins without network, install, compiler, minifier or variant selection. `--check` constructs twice in memory, checks determinism and compares current outputs without writing. The copied source/model/license files are local inputs, not new dependencies downloaded by a build. Tests own bounded temporary files and transport fixtures; they import no private artifact paths and invoke no global browser setup.
+
+`vendor-src/tesseract-7.0.0/exact-pins.json` enumerates the exact 41 paths, source/static input hashes, accepted main/worker outputs and locked host/envelope/loader-body hashes. A runtime source change requires an explicit authored source-pin update; `--write` cannot silently accept a changed host or loader body. The embedded generated runtime pins and `public/vendor/ocr-7.0.0/manifest.json` contain actual source/final-Blob byte lengths and SHA256. There are no pending/null execution pins. The manifest is a review record, not a fetched trust root.
+
+The modified distribution is named **BrowserPDF Tesseract.js 7.0.0 native-owner + publication-guard compatibility distribution, modified 2026-10-19**. The separately named main is the exact accepted 71,533-byte `1c12db34…` artifact. The guarded worker is 125,485 bytes, `1bd038a2…`. The 3,896,484-byte portable LSTM core includes its own pinned WASM; no separate WASM fetch is required. English is 5,199,098 decoded bytes and Turkish 4,680,866 decoded bytes. Both are already acquired, exact-pinned assets; no gzip/inflate occurs at runtime.
+
+The builder appends the exact first-party factory as module1001 using the six reviewed dependency mappings. Original normal `createWorker` module603 stays byte-identical. Only the distinct new factory exposes synchronous native ownership before startup awaits, strips the hook before options serialization, and normalizes public language objects to codes at initialization while retaining cached exact `Lang.data` bytes. The guarded worker appends helper1002, recognition admission in968 and a browser final-publication gate. SDK facade and internal five-field protocol remain unchanged. No host code sends internal SDK jobs or reads private SDK worker properties.
+
+The reverse proof restores the WHOLE original 63,220-byte main (`64871d76…`) and 111,307-byte worker (`576b7df7…`), plus original source/browser/factory and ownership CJS. Source/compiled mapping records exact byte spans, module IDs, source edits and source line counts. It is a compatibility transform, not an upstream compiler rebuild or invented sourcemap. Stale map advertisements are removed.
+
+The ownership ESM changes one final export statement only: 10,675 bytes, SHA256 `87e22994bbadffe3fda50e7818236445d448b39e37ff81478bce43577ec3e28e`. Its inverse restores the accepted 10,683-byte CJS (`e1a90e14…`). Default timers retain the genuine global receiver, genuine signal intrinsics ignore overridden duck methods, and independent direct termination still occurs when listener/timer cleanup fails. Failed clears preserve their handle and fence.
+
+Original Tesseract Apache license, main/worker bundled notices, core Apache license, separate model repository Apache provenance and a dated modification notice are distributed. Exact English/Turkish package metadata and READMEs remain under vendor-src. `provenance.json` records original URLs, encoded/decoded sizes/hashes and prior verification-before-inflate facts. Package MIT metadata is distinguished from repository Apache provenance; no missing model package license or model binary-to-repository-commit mapping is invented.
+
+## New callable boundary
+
+```js
+const task = createOcrHostTask({
+  language: 'eng', // or 'tur', one selected model only
+  signal,
+  sessionUsage: () => documentSession.snapshot(),
+  getExternalUsage: () => otherLiveWorkspaceUsage,
+});
+await task.ready;
+const page = await task.recognize({ pageId, png, width, height });
+await task.dispose();
+```
+
+This is a new API exported only by `public/js/ocr-assets.js`. `png` is a genuine offset-zero, exact-backing Uint8Array. Successful submission transfers its buffer, consuming it. Callers must retain original source resources separately and account for them in external usage. No unverified paths/pins/SDK options/config or runtime test injection is accepted. Tests replace browser globals only inside their private VM realms.
+
+The parent captures canonical taskId/revision/generation from the snapshot accessor, reserves before construction and checks budget/owner/signal/closing after callback-bearing accessors immediately before creating URLs/spawning/transferring/publishing. Initial callback reentrancy cannot overwrite another admitted task. One task, one host, one direct child and one page operation are admitted at a time. A successor requires successful first cleanup. `view()` exposes busy/draining/fenced state and the reservation. `cancel(reason)` and `dispose()` return the first cleanup promise; native failures preserve explicit failure presence even when the rejection is false,0,empty string,null or undefined. Causes stay nonenumerable and local.
+
+Recognition reserves its FIRST pending slot before inspecting caller data or invoking usage callbacks. It captures the four own-data fields once, releases the slot on admission rejection and settles it when callback cancellation/disposal interrupts admission, so cleanup cannot wait on itself. Later caller request mutation is ignored. Header checks and transfer use captured native typed-array/ArrayBuffer/DataView intrinsics: fixed, exact, offset-zero, nonshared, attached backing is required; resizable/shared/detached input rejects. A fresh native view aliases the same admitted buffer without copying PNG bytes. No public input buffer/length/slice/subarray/constructor/species getter enters transport. A closed six-field recognize envelope uses only captured values, and backing/header are rechecked after the final callback before native post. The existing48MiB phase formula is unchanged.
+
+There are six sequential fixed same-origin asset GETs: main, guarded worker, core, the selected decoded model, ownership module and host. Every read uses redirect:error/cache:no-store/same-origin credentials, exact streamed extent/SHA256, an eight-MiB hard cap, 30-second inclusive deadline and at most4,096 read results including empty chunks. Content-Length disagreement rejects. The loader owns the first fetch/read/digest/cancel promise, late response body and lock; cancellation aborts fetch, independently cancels reader, drains first promises and independently cleans listeners/timers. No unowned Promise.race, unbounded chunk list, response.arrayBuffer, retry, mirror, SDK language fetch or model/core fallback exists. Blob URLs are created only after all six hashes pass; immutable final Blob bytes are unchanged source bytes, tested by actual digest. All created URLs and the native host are owned immediately.
+
+The host is new standalone module-worker source, not the private four-case fixture controller. It imports only verified main/ownership Blob URLs and rehashes the selected model before SDK import/use. Exact model extent/backing and decoded magic are checked. It uses public ONE `[{code,data}]`, OEM1/cacheMethod:none/gzip:false/legacyCore:false/legacyLang:false and coreBase plus `#tesseract-core-lstm.wasm.js`. The accepted lane synchronously captures the direct native child; ready/recognition/cancel/dispose envelopes settle exactly once without waiting for killed SDK job promises. Startup is at most60s, recognition120s/page and whole task5min. The parent independently owns startup/recognition reply watchdogs; failed clears in successful completion callbacks remain observable and fenced. A failed native host publication during synchronous child capture defers owner disposal one microtask, so the returned lane owner is captured and direct termination still occurs even for falsy post failures.
+
+New first-party envelopes carry finite own-data init/recognize/cancel/dispose identities. Parent-to-host model/PNG buffers transfer. Host replies ready/page/error/release; progress is optional, at most128 events/eight KiB. IDs<=100 UTF16 units, bootstrap URLs<=2048 units, errors<=512message/64code. Duplicate/mismatched/stale replies cannot settle an unrelated request. At most62 page requests leave room for initialization/disposal within64 protocol identities; malformed-request publication is bounded after the first refusal. No raw causes, binaries or SDK nested output are forwarded to UI.
+
+PNG signature/IHDR/actual dimensions must agree, positive edges<=4096, <=one million pixels and <=four MiB. Host repeats admission before recognition. A task permits20 distinct pages,20million submitted pixels and10,000 admitted lines; retries consume work. Source parsing/rendering/page selection and PDF viewport geometry stay outside this foundation.
+
+The unchanged child guard admits recognition BEFORE native post at four MiB/no binary, with finite nested/string/count/geometry rules. Startup selected Lang.data echo has a separate exact English/Turkish allowance plus64KiB metadata and exact backing. Own root psm/oem undefined enum projections remain literal; other undefined values reject. This guard runs AFTER SDK dump, so it does not bound WASM/native/SDK dump heaps.
+
+Host projects a whole page through an explicit scalar DTO schema, preserving exact independent page/line text, confidence, bbox, horizontal baseline, signed row attributes, finite font facts and native counts. It limits raw traversal, checks/yields at128 actions or16,384 character visits and validates packet admission BEFORE host post. Page JSON allowance is one MiB minus2048bytes, leaving room for the terminal envelope; stored strings are conservatively limited to199,000 units, below the200,000 packet allowance. Parent independently validates one-MiB/200,000-unit/1,000-line DTO admission and identity before resolving. Unsupported literal controls are retained; nothing trims, filters or normalizes text. Approved reversible final-LF splitting remains the pure model's `projectOcrLine`, not this host.
+
+## Joint reservation and release truth
+
+The task reserves48MiB/32 resources inside existing `assertDocumentWorkspaceBudget`, including live external OCR model/history/writer usage. Global96MiB/128resources/512MiB limits remain unchanged. This is not another capacity pool. A transferred host/model remains charged until first release; held fetch/digest/read/cancel/release controls prove no early charge removal. Any cleanup failure fences successors and retains the reservation.
+
+The manifest contains concrete known application-buffer peaks. English load19,716,127B and recognition49,640,160B; Turkish load18,161,431B and recognition48,085,464B. Both recognition phases fit50,331,648B. Formula: code source Blob bytes; three selected-model extents; four bounded PNG/input extents;4,000,000B backing;4MiB raw reply; two1MiB DTO extents;2,855,361B embedded-WASM input. Fetch phase includes reserved destination, one largest browser chunk and digest input. The phase schedule is conservative known-byte accounting, not a browser/native/SDK heap measurement or hard heap guarantee. Source parsing/retained caller resources remain separately included through shared session/external usage.
+
+Cancel/dispose independently attempt timer/listener cleanup, child release, host termination, all URL revocations and byte clearing. Parent owns the first host release response with a five-second bound; absence/contradictory lane facts fence and still attempt host terminate. A host that was never bootstrapped cannot have spawned its child. A bootstrapped host must report actual lane idle/unfenced and cleanup success. Direct native terminate returns void; no physical exit or heap-release acknowledgement is invented. Killing an outer host does not prove immediate recursive child cleanup. First uncancelable native operations remain charged until their actual drain; killed SDK job promises are never awaited.
+
+## Evidence and next gate
+
+Portable controls exercise actual new source with genuine streams/crypto/Blob/EventTarget/AbortSignal and controlled public facades, not OCR. They cover source/compiled reverse, altered-input refusal, selected-one models/hash/backing, final Blob pins, default receiver, first drains, falsy errors, callback abort/dispose/owner changes, joint headroom, per-message limits before post, literal LF/CRLF, nested positive counts, timer failures, direct termination, fences and valid successors. Two fixture assumptions were corrected and retained privately: captured progress can precede ready; VM budget errors must share the controlled module realm. They were not engine or product failures.
+
+The focused recognition-entry correction separately retains all three fresh-review reproductions (competing RPCs, late2MiB request addition and unrelated2MiB buffer transfer) and their corrected replays. Six new portable recognition-entry tests cover reentry from both usage accessors, closed input capture, poisoned PNG public properties, invalid then valid inputs, callback false abort/cancel/dispose with held release, and final-callback detachment. They can run alone with `--test-name-pattern='recognition entry'` before `tests/ocr-assets.unit.mjs`; this correction does not rerun the prior40 controls or accepted engine/native/font/writer matrices. Main/worker/ownership/host/core/model bytes are unchanged.
+
+Fresh independent source review must precede Root's changed-boundary actual-CSP allocation: fixed six GETs with no unexpected requests, selected-English/Turkish normal/startupcancel/recognitioncancel/successor, actual raw strings/confidence, direct capture/terminate-once, truthful release, immutable source/path graph and browser cleanup. No browser gate was run here. Route/UI/service acceptance and recognition accuracy are not implied. Accepted private engine/font/writer matrices were not rerun.

@@ -1847,3 +1847,62 @@ This accepts the Privacy core/workspace checkpoint. Opaque scene-bake cleanup
 failures conservatively retain their fence and require reload; no heap or physical
 exit guarantee is made. Full locale coverage and final service31/all32 acceptance
 remain open. No production deployment is performed.
+
+## Owned OCR engine foundation checkpoint, 2026-10-19
+
+The exact forty-one new foundation paths provide the pinned English and Turkish
+assets, upstream sources, reversible compatibility recipe, notices, owned loader,
+host and envelope protocol. They do not activate the existing OCR route. The
+offline construction, inverse mapping and forty portable controls pass in the
+retained owner evidence. No additional model or dependency is acquired here.
+
+Fresh source review found two P2 defects in the recognition entry: callbacks
+could reenter before its pending marker, and the original mutable request or a
+public typed-array buffer property could introduce unadmitted packet bytes or
+transfer the wrong backing. The corrected loader reserves its FIRST slot before
+inspection or callbacks, captures only the four own input fields and uses the
+intrinsic fixed PNG backing. Final checks precede the closed packet transfer.
+Original failing probes remain retained. Their corrected replays, six focused
+owner controls and independent recheck pass. The other thirty-six foundation
+files remain exact, including the host, engine, envelope and language assets.
+
+Corrected forty-one-file manifest:
+`/tmp/browserpdf-ocr-foundation-recognition-corrected-20261019/foundation41.json`,
+SHA-256 `62dc59dbb1420a9597ed34ffec2112378c356661dcfbb2289c1f787e6ac051fd`.
+Independent corrected source review:
+`/tmp/browserpdf-ocr-foundation-corrected-review-20261019.md`, SHA-256
+`0f533e3868de0fbe54b1886d0552ee43f492724221bb2bc79f9cf15201971f3a`.
+
+Root then exercises the actual new public loader and host under the unchanged
+production CSP in Chromium 151.0.7922.34. Two tests pass in 5402.512 ms, each
+covering normal recognition, startup cancellation, recognition cancellation and
+a successful successor. Every task makes exactly six same-origin GETs for the
+selected model and pinned assets. A genuine canonical PDF session and fixture
+buffers participate in the joint budget. Each task releases once, terminates
+its observed host once, revokes all five parent-created URLs and finishes with
+zero owned reservation, no pending work and no fence. False cancellation reasons
+are preserved. The current PDF, original PDF and owner tuple remain unchanged.
+
+The literal English and Turkish fixture DTOs match the retained prior captures.
+The Turkish accent mismatch is retained; this is not a general accuracy claim.
+The observer sees the parent host and protocol release facts. It does not observe
+the host's child directly or establish physical exit or a native heap bound.
+The first invocation stopped before recognition because of a private test-local
+shadowed variable. That failure remains retained; only its local name and private
+package references change before the passing invocation. Product sources remain
+unchanged across both invocations.
+
+Passing native report:
+`/tmp/browserpdf-root-ocr-foundation-native-tdz-corrected-first-20261019/report.json`,
+SHA-256 `f8a92e445760dddfd36c168d982041db2c185538598201e427e91b75e35ff15d`.
+Root verification:
+`/tmp/browserpdf-root-ocr-foundation-native-verification-20261019.json`, SHA-256
+`e86146f9fa58c93d613e1c52b490a87113d90597095896ef110ea2ac2cbe87d7`.
+All 503 included source hashes and their path inventory, twenty-two generated
+fixtures and private harness files remain exact. Concurrent spreadsheet reader
+paths are excluded and never imported. No skipped, flaky, page-error or non-GET
+case occurs. Earlier portable and engine matrices are retained without reruns.
+
+This accepts the engine foundation checkpoint only. The editable OCR workspace,
+route integration, selected-page rasterization, complete locale coverage and
+final service17/all32 acceptance remain open. No production deployment occurs.

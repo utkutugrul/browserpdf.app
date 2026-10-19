@@ -1,0 +1,127 @@
+{
+  "kind": "Appended compatibility transform, not upstream compiler rebuild",
+  "reverse": {
+    "main": {
+      "bytes": 63220,
+      "sha256": "64871d76c75609fd5413b88a8171e2ef40deedd77d5875ba23df104b2d05eb29"
+    },
+    "factory": {
+      "bytes": 6672,
+      "sha256": "730c82036c801416256cdbf4bf36df934b0f25f2dcb3913454bccd9e2cfdb857"
+    },
+    "worker": {
+      "bytes": 111307,
+      "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d"
+    },
+    "ownership": {
+      "bytes": 10683,
+      "sha256": "e1a90e14978e06b39c902f025eedaf504bb74285167ec7125eb3ed81711d6bd3"
+    }
+  },
+  "main": {
+    "original603": [
+      37667,
+      51525
+    ],
+    "output603": [
+      37900,
+      51758
+    ],
+    "module603Sha256": "ee44ce9b5f036ad03caf3ccf7c714d2632834fcd439120e51e4fdeb2b819bf55",
+    "factory1001": {
+      "source": "vendor-src/tesseract-7.0.0/compat/createWorkerWithNativeOwner.cjs",
+      "range": [
+        63290,
+        70815
+      ],
+      "lines": 266
+    },
+    "dependencyMap": {
+      "./utils/resolvePaths": 35,
+      "./createJob": 910,
+      "./utils/log": 65,
+      "./utils/getId": 70,
+      "./constants/OEM": 972,
+      "./worker/node": 523
+    }
+  },
+  "worker": {
+    "helper1002": {
+      "source": "vendor-src/tesseract-7.0.0/compat/publication-guard.cjs",
+      "range": [
+        81817,
+        95588
+      ]
+    },
+    "recognitionModule": 968,
+    "sourceRecognition": "publication.recognition(result, image)",
+    "compiledRecognition": "__bpdfPublication.recognition(j,o)",
+    "protocol": [
+      "jobId",
+      "workerId",
+      "action",
+      "status",
+      "data"
+    ],
+    "sourceMappings": [
+      {
+        "path": "vendor-src/tesseract-7.0.0/upstream/worker-script.cjs",
+        "original": {
+          "bytes": 18777,
+          "sha256": "a5759d6d3d8beda31134dd041e2d3482b3adf26b6da4a3e7da9b1c5379114268"
+        },
+        "changed": {
+          "bytes": 18888,
+          "sha256": "3d819805f37ab7ae6bbc8a79a38ca8208032edd0628952d7cbcd1d132b238d7a"
+        },
+        "edits": [
+          {
+            "description": "source helper dependency",
+            "before": "const dump = require('./utils/dump');",
+            "after": "const dump = require('./utils/dump');\nconst publication = require('./utils/browserpdfPublicationGuard');",
+            "position": 325
+          },
+          {
+            "description": "source pre-resolve admission",
+            "before": "    res.resolve(result);",
+            "after": "    publication.recognition(result, image);\n    res.resolve(result);",
+            "position": 16412
+          }
+        ]
+      },
+      {
+        "path": "vendor-src/tesseract-7.0.0/upstream/browser-adapter.cjs",
+        "original": {
+          "bytes": 676,
+          "sha256": "ed824cc16d15782a2764cb6264fb5f677c60d5bde92d03f7ab0537b3d818027c"
+        },
+        "changed": {
+          "bytes": 845,
+          "sha256": "25ade8da9bbe22e6988c9914146faf035b9069239847f94e5854ad3d3548cc5e"
+        },
+        "edits": [
+          {
+            "description": "browser helper dependency",
+            "before": "const worker = require('..');",
+            "after": "const worker = require('..');\nconst publication = require('../utils/browserpdfPublicationGuard');",
+            "position": 236
+          },
+          {
+            "description": "source final pre-post admission",
+            "before": "  worker.dispatchHandlers(data, (obj) => postMessage(obj));",
+            "after": "  const gate = publication.open(data, (obj) => postMessage(obj));\n  if (gate.valid) worker.dispatchHandlers(data, gate.publish);\n  else gate.reject(gate.error);",
+            "position": 529
+          }
+        ]
+      }
+    ]
+  },
+  "ownership": {
+    "source": "vendor-src/tesseract-7.0.0/compat/owned-envelopes.cjs",
+    "replace": {
+      "before": "module.exports={createOwnedOcrLane,finiteError,validateSignal,signalAborted};",
+      "after": "export {createOwnedOcrLane,finiteError,validateSignal,signalAborted};"
+    }
+  },
+  "sourceMap": "No stale or invented map advertisement"
+}

@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "paths": [
+    "scripts/build-ocr-distribution.mjs",
+    "vendor-src/tesseract-7.0.0/upstream/tesseract.esm.min.js",
+    "vendor-src/tesseract-7.0.0/upstream/worker.min.js",
+    "vendor-src/tesseract-7.0.0/upstream/createWorker.cjs",
+    "vendor-src/tesseract-7.0.0/upstream/worker-script.cjs",
+    "vendor-src/tesseract-7.0.0/upstream/browser-adapter.cjs",
+    "vendor-src/tesseract-7.0.0/upstream/dump.cjs",
+    "vendor-src/tesseract-7.0.0/upstream/getCore.cjs",
+    "vendor-src/tesseract-7.0.0/compat/createWorkerWithNativeOwner.cjs",
+    "vendor-src/tesseract-7.0.0/compat/publication-guard.cjs",
+    "vendor-src/tesseract-7.0.0/compat/owned-envelopes.cjs",
+    "vendor-src/tesseract-7.0.0/patches/main-edits.json",
+    "vendor-src/tesseract-7.0.0/patches/worker-edits.json",
+    "vendor-src/tesseract-7.0.0/provenance/eng-package.json",
+    "vendor-src/tesseract-7.0.0/provenance/tur-package.json",
+    "vendor-src/tesseract-7.0.0/provenance/model-repository-README.md",
+    "vendor-src/tesseract-7.0.0/provenance/eng-package-README.md",
+    "vendor-src/tesseract-7.0.0/provenance/tur-package-README.md",
+    "vendor-src/tesseract-7.0.0/exact-pins.json",
+    "vendor-src/tesseract-7.0.0/source-compiled-mapping.json",
+    "vendor-src/tesseract-7.0.0/provenance.json",
+    "public/vendor/ocr-7.0.0/tesseract.browserpdf-owner-20261019.esm.js",
+    "public/vendor/ocr-7.0.0/worker.browserpdf-guard-20261019.js",
+    "public/vendor/ocr-7.0.0/tesseract-core-lstm.wasm.js",
+    "public/vendor/ocr-7.0.0/eng.traineddata",
+    "public/vendor/ocr-7.0.0/tur.traineddata",
+    "public/vendor/ocr-7.0.0/LICENSE.md",
+    "public/vendor/ocr-7.0.0/tesseract.min.js.LICENSE.txt",
+    "public/vendor/ocr-7.0.0/worker.min.js.LICENSE.txt",
+    "public/vendor/ocr-7.0.0/LICENSE.tesseract-core",
+    "public/vendor/ocr-7.0.0/LICENSE.tessdata",
+    "public/vendor/ocr-7.0.0/NOTICE.browserpdf.md",
+    "public/vendor/ocr-7.0.0/manifest.json",
+    "public/js/ocr-assets.js",
+    "public/js/ocr-ownership.js",
+    "public/js/ocr-host.js",
+    "tests/ocr-distribution.unit.mjs",
+    "tests/ocr-assets.unit.mjs",
+    "tests/ocr-ownership.unit.mjs",
+    "tests/ocr-host.unit.mjs",
+    "docs/ocr-foundation-checkpoint.md"
+  ],
+  "inputs": {
+    "vendor-src/tesseract-7.0.0/upstream/tesseract.esm.min.js": {
+      "bytes": 63220,
+      "sha256": "64871d76c75609fd5413b88a8171e2ef40deedd77d5875ba23df104b2d05eb29"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/worker.min.js": {
+      "bytes": 111307,
+      "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/createWorker.cjs": {
+      "bytes": 6672,
+      "sha256": "730c82036c801416256cdbf4bf36df934b0f25f2dcb3913454bccd9e2cfdb857"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/worker-script.cjs": {
+      "bytes": 18777,
+      "sha256": "a5759d6d3d8beda31134dd041e2d3482b3adf26b6da4a3e7da9b1c5379114268"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/browser-adapter.cjs": {
+      "bytes": 676,
+      "sha256": "ed824cc16d15782a2764cb6264fb5f677c60d5bde92d03f7ab0537b3d818027c"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/dump.cjs": {
+      "bytes": 2972,
+      "sha256": "09a7e2585627056d48e5ae0facf77cd21a97fcd8219f0ca6abd21065d157ad9f"
+    },
+    "vendor-src/tesseract-7.0.0/upstream/getCore.cjs": {
+      "bytes": 2682,
+      "sha256": "1b02ae0477af3201147c7ba4ac8f19248940b8e185a38f1f1e9f97a017280412"
+    },
+    "vendor-src/tesseract-7.0.0/compat/createWorkerWithNativeOwner.cjs": {
+      "bytes": 7525,
+      "sha256": "e7bbbe92c3738db6b50bd0f511805a8f889d02e63b9db6f7c2f16b6863b05aba"
+    },
+    "vendor-src/tesseract-7.0.0/compat/publication-guard.cjs": {
+      "bytes": 13771,
+      "sha256": "30ef64e8f6a3265bf170ede0a7967f8c096c088de7205ca523aefa8d9bc26823"
+    },
+    "vendor-src/tesseract-7.0.0/compat/owned-envelopes.cjs": {
+      "bytes": 10683,
+      "sha256": "e1a90e14978e06b39c902f025eedaf504bb74285167ec7125eb3ed81711d6bd3"
+    },
+    "vendor-src/tesseract-7.0.0/patches/main-edits.json": {
+      "bytes": 1605,
+      "sha256": "eb59ec82386564ff23a553c2b604ec65332d0c516091b5056c0eedcfba63c445"
+    },
+    "vendor-src/tesseract-7.0.0/patches/worker-edits.json": {
+      "bytes": 16517,
+      "sha256": "4f39983ea35e5415fd3a232ec323a1db6cf1f1c7ebc99965c47267637de1caf7"
+    },
+    "vendor-src/tesseract-7.0.0/provenance/eng-package.json": {
+      "bytes": 530,
+      "sha256": "b603509212196b5d09e10519bf252c1e344b79704d065e0d62886846f8554c80"
+    },
+    "vendor-src/tesseract-7.0.0/provenance/tur-package.json": {
+      "bytes": 1366,
+      "sha256": "7f45184dd39dc18ae9fce90fa0466ca46283fdea07f69961aa7f4bef8405745b"
+    },
+    "vendor-src/tesseract-7.0.0/provenance/model-repository-README.md": {
+      "bytes": 4408,
+      "sha256": "7e83e5899fd3883f10cc44c5b1b57550910b13ee759ed9a8ac57831e960cd7dd"
+    },
+    "vendor-src/tesseract-7.0.0/provenance/eng-package-README.md": {
+      "bytes": 381,
+      "sha256": "adcb325473fe124291951a0a3d29fcb54b341828881570e45c42dc2a3a61a45d"
+    },
+    "vendor-src/tesseract-7.0.0/provenance/tur-package-README.md": {
+      "bytes": 381,
+      "sha256": "554645a952960954e79ed8dee1cd42c84e6b152ef8619e5522bfcc88b5c29b2e"
+    },
+    "public/vendor/ocr-7.0.0/tesseract-core-lstm.wasm.js": {
+      "bytes": 3896484,
+      "sha256": "eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680"
+    },
+    "public/vendor/ocr-7.0.0/eng.traineddata": {
+      "bytes": 5199098,
+      "sha256": "5dc5d8d640a212c9d6184921ba103b186f50e0fed9ee716c53e6b312b400d747"
+    },
+    "public/vendor/ocr-7.0.0/tur.traineddata": {
+      "bytes": 4680866,
+      "sha256": "f0127d0f3745f9c65e2ae7ec6b23198fbe5aa186a61b35661426f5e1ef9dedd7"
+    },
+    "public/vendor/ocr-7.0.0/LICENSE.md": {
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    "public/vendor/ocr-7.0.0/tesseract.min.js.LICENSE.txt": {
+      "bytes": 149,
+      "sha256": "cdf963ced7d25a0f98901a547647b4d6e2dbe0197fd78c87a059a87b0e542fe2"
+    },
+    "public/vendor/ocr-7.0.0/worker.min.js.LICENSE.txt": {
+      "bytes": 466,
+      "sha256": "45f54171aeaa1d10c0c1a66f374b7bba1f02472b1487fbe892eec04f840002ac"
+    },
+    "public/vendor/ocr-7.0.0/LICENSE.tesseract-core": {
+      "bytes": 11358,
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+    },
+    "public/vendor/ocr-7.0.0/LICENSE.tessdata": {
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  },
+  "ownership": {
+    "bytes": 10675,
+    "sha256": "87e22994bbadffe3fda50e7818236445d448b39e37ff81478bce43577ec3e28e"
+  },
+  "runtime": {
+    "host": {
+      "bytes": 14656,
+      "sha256": "8e7f4ded00725f92977fc8a2eddbaa781ef248c72cf928f4c217b1812d22486c"
+    },
+    "envelope": {
+      "bytes": 10675,
+      "sha256": "87e22994bbadffe3fda50e7818236445d448b39e37ff81478bce43577ec3e28e"
+    },
+    "loaderBody": {
+      "bytes": 26462,
+      "sha256": "a482301947bdf8a5240a6e4b2cf1466983dee16acec8c428c180ddcf9c6193c9"
+    }
+  },
+  "acceptedOutputs": {
+    "public/vendor/ocr-7.0.0/tesseract.browserpdf-owner-20261019.esm.js": {
+      "bytes": 71533,
+      "sha256": "1c12db34982b2dd905532431374f5127cbd5485ac163b1a7db98b56f53160b8a"
+    },
+    "public/vendor/ocr-7.0.0/worker.browserpdf-guard-20261019.js": {
+      "bytes": 125485,
+      "sha256": "1bd038a24f06a7b49bbc98dbe8c5d67acfaad49d29343d0a1e4f84c42fff58b2"
+    }
+  }
+}
