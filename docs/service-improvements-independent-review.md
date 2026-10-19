@@ -709,3 +709,78 @@ remain exact. Expected list identity, table header/width and image size limits
 are finite reported differences. Source and nine-module closure hashes remain
 exact. Report: `/tmp/browserpdf-root-markdown-independent-first-20261019/report.json`.
 Fresh source review remains required before accepting this pure checkpoint.
+
+
+### Markdown pure checkpoint acceptance and typed Compress continuation
+
+Fresh Markdown review found two real literal-contract defects: ordinary tilde
+fence prefixes became code syntax, and closing emphasis omitted promised
+punctuation flanking. The first new regressions retain 25 passed / 2 failed.
+Corrected scoped tests pass 27/27 in 1,292.739375 ms. Original six-case probes
+and adjacent positive controls then pass in focused independent review at
+`/tmp/browserpdf-markdown-document-corrected-review-20261019.md`. The corrected
+writer saves literal tilde fences with exactly one boundary escape; the reader
+preserves punctuation-adjacent unsupported emphasis as complete literal text.
+Ordinary prose and intentional code fences remain represented. Original failed
+artifacts and thirteen accepted dependency hashes remain unchanged.
+
+Root repeats its separate actual DOCX-to-Markdown artifact inspection on the
+corrected adapters. The readable 908-byte output remains byte-identical with
+SHA-256 `0f87b676e5100c32101fd61e91d969e49f2d8c2e15ba721f4d97186f28dc19db`.
+Literal text, run styles, list sequence and local image bytes remain exact.
+Report: `/tmp/browserpdf-root-markdown-independent-corrected-20261019/report.json`.
+This accepts only the five-path pure Markdown checkpoint. PDF layout, fonts,
+workspace/routes, resource integration and individual service acceptance stay
+open; no new browser execution is claimed for these pure adapters.
+
+The narrow shared capability change removes only Compress's searchable/forms
+PDF exclusion. The preceding encrypted Unlock-only branch stays exact. Fresh
+focused source review passes at
+`/tmp/browserpdf-compress-capability-fresh-review-20261019.md`. Its two affected
+cases pass within Root's combined first five-case native invocation: typed
+session capability contracts and an actual Reader/shared rail/stash/guarded
+Compress/result/Use/Reader journey. All 310 runtime/test hashes, path set,
+configuration, private idle test and 22 fixtures remain exact. The invocation
+passes 5/5 in 6,107.745 ms, zero skipped/flaky/unexpected cases or top-level
+errors, with five retained traces. No globalSetup, server or fixture action ran.
+Evidence: `/tmp/browserpdf-capability-protection-native-first-20261019/final.json`.
+
+The actual manually saved searchable/form output is 3,298 bytes from 54,711,
+SHA-256 `8f0eac4615fa3b92911882cd9162b3b7a48e9c1e141681ea3e71d987599f82ab`.
+Source/result PNG, invisible selectable text, fields, checked value, URI and
+geometry remain exact. Review preserves current; explicit Use and Reader retain
+task, original, chosen current and the established searchable/forms facts.
+Encrypted inputs still reject Compress. Optional raster mode, complete locales
+and final service/program gates remain open.
+
+### Protection engine first native evidence and remaining cleanup correction
+
+The same first five-case invocation contains three new protection engine cases:
+actual same-origin integrity/CSP/Blob module/WASM delivery, native-phase abort
+with successor, and held-fetch overlap/stale/corrupt-asset rejection with clean
+successors. These pass separately from the two capability cases. Owner Node
+checks pass 23/23; the browser serializer matches all sixteen retained low-level
+outputs byte-for-byte, without rerunning the old encryption matrix.
+
+Root's separate actual browser artifact inspection passes two cases under the
+verified live CSP: AES-256 on its independent structural source and AES-128 on
+the retained rich graph source. Wrong credentials reject with a finite code,
+then the correct operation succeeds. Actual PDF.js text, annotations, page
+geometry and pixels match through encryption and decryption. Six saved
+protected/unlocked/ordinary-edited PDFs are retained. Ordinary pdf-lib1.17.1
+edit/save preserves inspected Info, language, forms, geometry and attachment
+MIME/payload/date. Report:
+`/tmp/browserpdf-root-protection-native-independent-first-20261019/report.json`.
+All 306 included hashes, inventory and source corpora remain exact; excluded
+Markdown modules are absent from actual requests, and the browser closes.
+
+Fresh production source review nevertheless finds one loader cleanup defect:
+an admitted signal can override its public removeEventListener method, including
+a genuine AbortSignal. Its thrown raw Error interrupts finally cleanup and
+leaves the successor permanently busy. Original duck-signal and genuine-signal
+probes are retained at
+`/tmp/browserpdf-protection-production-fresh-review-20261019.md` and adjacent
+probe JSON files. A narrow genuine-brand/captured-intrinsic/independent-cleanup
+correction is approved. The first native and independent artifact results
+predate this correction; they do not close that finding. Protection engine
+acceptance and both Protect/Unlock route/UI tasks remain open.

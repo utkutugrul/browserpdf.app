@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-async function fixture({ raw = true, pages = 1, name = 'Structural.pdf', label = 'STRUCTURAL RETAIN', size = [560, 725], rotation = 0, crop } = {}) {
+async function fixture({ raw = true, pages = 1, name = 'Structural.pdf', label = 'STRUCTURAL RETAIN', size = [560, 725], rotation = 0, crop, invisibleText = '' } = {}) {
   const doc = await pdfLib.PDFDocument.create({ updateMetadata: false }); doc.setTitle('Portable route title');
   const font = await doc.embedFont(pdfLib.StandardFonts.Helvetica);
   for (let index = 0; index < pages; index++) {
@@ -12,6 +12,7 @@ async function fixture({ raw = true, pages = 1, name = 'Structural.pdf', label =
     if (rotation) page.setRotation(pdfLib.degrees(rotation));
     if (crop) page.setCropBox(...crop);
     page.drawText(`${label} PAGE ${index + 1}`, { x: 40, y: 640, font, size: 16 });
+    if (invisibleText) page.drawText(invisibleText, { x: 40, y: 350, font, size: 12, opacity: 0 });
     if (raw) page.node.addContentStream(doc.context.register(doc.context.stream('q\n0.2 w\n' + '40 120 m 180 120 l S\n'.repeat(2400) + 'Q\n')));
   }
   const form = doc.getForm(), field = form.createTextField('portable-field'), check = form.createCheckBox('portable-check');
@@ -51,6 +52,50 @@ test('structural route reviews actual reduction, keeps fields/link/text/pixels a
   await expect(page.locator('#readerTextLayer')).toContainText('STRUCTURAL RETAIN PAGE 1');
   const readerState = await state(page); expect(readerState.current).toBe(chosen.current); expect(readerState.original).toBe(chosen.original); expect(readerState.snapshot.taskId).toBe(chosen.snapshot.taskId);
   expect(observed.errors).toEqual([]); expect(observed.nonGet).toEqual([]); expect(observed.downloads).toHaveLength(1);
+});
+
+test('typed searchable form PDF uses shared Compress continuation and retains invisible text and capabilities through Use and Reader', async ({ page }, testInfo) => {
+  const observed = observe(page), marker = 'RETAINED INVISIBLE SEARCH LAYER', capabilities = { encrypted: false, searchable: true, forms: true };
+  const source = await fixture({ name: 'Searchable form.pdf', invisibleText: marker });
+  const options = { ignoreEncryption: false, throwOnInvalidObject: true, updateMetadata: false };
+  const input = await pdfLib.PDFDocument.load(source.buffer, options);
+  expect(input.getForm().getTextField('portable-field').getText()).toBe('RETAINED VALUE'); expect(input.getForm().getCheckBox('portable-check').isChecked()).toBe(true);
+  await page.goto('/view-pdf'); await page.setInputFiles('#fileInput', source); await expect(page.locator('#readerTextLayer')).toContainText('STRUCTURAL RETAIN PAGE 1');
+  const inspect = async (bytes) => page.evaluate(async (values) => {
+    const runtime = await import('/js/lib-loader.js'), task = (await runtime.ensurePdfJs()).getDocument({ data: Uint8Array.from(values), ...runtime.PDFJS_ASSET_URLS, stopAtErrors: true, enableXfa: false });
+    try {
+      const pdf = await task.promise, page = await pdf.getPage(1);
+      return { pages: pdf.numPages, text: (await page.getTextContent()).items.map((item) => item.str).join(' '), urls: (await page.getAnnotations({ intent: 'display' })).map((item) => item.url).filter(Boolean), view: page.view, rotation: page.rotate, userUnit: page.userUnit };
+    } finally { await task.destroy(); }
+  }, [...bytes]);
+  const sourceFacts = await inspect(source.buffer); expect(sourceFacts.text).toContain(marker); expect(sourceFacts.urls).toContain('https://example.invalid/compress-route');
+  // The actual source above establishes the facts carried by this typed current.
+  await page.evaluate(async (capabilities) => {
+    const ui = await import('/js/tool-ui.js'), current = ui.documentSession.current();
+    ui.documentSession.adopt(current.bytes, current.name, { ...current, capabilities });
+    const chosen = ui.documentSession.current();
+    await ui.offerChain(chosen.bytes, chosen.name, [{ slug: 'compress', label: 'Compress' }], chosen);
+  }, capabilities);
+  const before = await state(page); expect(before.current).toBe(hash(source.buffer)); expect(before.original).toBe(hash(source.buffer)); expect(before.snapshot.current.capabilities).toEqual(capabilities);
+  // Clicking the shared rail exercises acceptsArtifact, stash, IndexedDB and guarded intake.
+  await page.locator('#chainRow').getByRole('button', { name: 'Compress', exact: true }).click(); await ready(page);
+  await expect(page).toHaveURL(/\/compress\?workflow=[^&]+&file=/);
+  const arrived = await state(page); expect(arrived.current).toBe(before.current); expect(arrived.original).toBe(before.original); expect(arrived.snapshot.taskId).toBe(before.snapshot.taskId); expect(arrived.snapshot.revision).toBe(before.snapshot.revision); expect(arrived.snapshot.current.capabilities).toEqual(capabilities);
+  const sourcePreview = await page.locator('#compressionSourceCanvas').evaluate((canvas) => ({ width: canvas.width, height: canvas.height, png: canvas.toDataURL() }));
+  await page.click('#compressBtn'); await reviewed(page);
+  expect(await page.locator('#documentResult canvas').evaluate((canvas) => ({ width: canvas.width, height: canvas.height, png: canvas.toDataURL() }))).toEqual(sourcePreview);
+  expect(await state(page)).toEqual(arrived); expect(observed.downloads).toEqual([]); await expect(page.locator('#chainRow')).toHaveCount(0);
+  const result = await saved(page, testInfo, 'searchable-form-actual.pdf'); expect(result.bytes.length).toBeLessThan(source.buffer.length); expect(result.name).toBe('Searchable form-optimized.pdf');
+  const output = await pdfLib.PDFDocument.load(result.bytes, options);
+  expect(output.getPageCount()).toBe(1); expect(output.getTitle()).toBe(input.getTitle()); expect(output.getPage(0).getMediaBox()).toEqual(input.getPage(0).getMediaBox()); expect(output.getPage(0).getCropBox()).toEqual(input.getPage(0).getCropBox()); expect(output.getPage(0).getRotation()).toEqual(input.getPage(0).getRotation());
+  expect(output.getForm().getTextField('portable-field').getText()).toBe('RETAINED VALUE'); expect(output.getForm().getCheckBox('portable-check').isChecked()).toBe(true);
+  const resultFacts = await inspect(result.bytes); expect(resultFacts).toEqual(sourceFacts); expect(resultFacts.text).toContain(marker); expect(await state(page)).toEqual(arrived);
+  await page.click('#useResultBtn'); await expect(page.locator('#chainRow')).toBeVisible(); const chosen = await state(page);
+  expect(chosen.current).toBe(hash(result.bytes)); expect(chosen.original).toBe(before.original); expect(chosen.snapshot.taskId).toBe(before.snapshot.taskId); expect(chosen.snapshot.current.capabilities).toEqual(capabilities); expect(chosen.snapshot.canUndo).toBe(true);
+  await page.locator('#chainRow').getByRole('button', { name: /Reader|View PDF/, exact: true }).click(); await expect(page.locator('#readerTextLayer')).toContainText('STRUCTURAL RETAIN PAGE 1');
+  const reader = await state(page); expect(reader.current).toBe(chosen.current); expect(reader.original).toBe(before.original); expect(reader.snapshot.taskId).toBe(before.snapshot.taskId); expect(reader.snapshot.current.capabilities).toEqual(capabilities);
+  expect(observed.errors).toEqual([]); expect(observed.nonGet).toEqual([]); expect(observed.downloads).toHaveLength(1);
+  await testInfo.attach('actual-searchable-form-retention', { body: JSON.stringify({ sourceSha: hash(source.buffer), outputSha: hash(result.bytes), sourceBytes: source.buffer.length, outputBytes: result.bytes.length, sourceFacts, resultFacts, chosen: chosen.snapshot, reader: reader.snapshot }), contentType: 'application/json' });
 });
 
 for (const geometry of [

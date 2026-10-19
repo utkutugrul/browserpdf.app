@@ -31,7 +31,18 @@ test('document sessions are typed, bounded, immutable, secret-free and idempoten
   const taskId = metadata.taskId; const inherited = session.transfer(); const resumed = createDocumentSession(); resumed.begin(inherited.current.bytes, inherited.current.name, inherited);
   expect(resumed.snapshot().taskId).toBe(taskId); expect(resumed.undo()).toBeTruthy(); expect(resumed.redo()).toBeTruthy();
   expect(acceptsArtifact('unknown-tool', createArtifact(new Uint8Array([1]), 'x.pdf'))).toBe(false);
-  expect(acceptsArtifact('compress', createArtifact(new Uint8Array([1]), 'x.pdf', { capabilities: { searchable: true } }))).toBe(false);
+  for (const capabilities of [{}, { searchable: true }, { forms: true }, { searchable: true, forms: true }, { searchable: false, forms: false, rasterized: true }]) {
+    const artifact = createArtifact(new Uint8Array([1]), 'x.pdf', { capabilities }), before = structuredClone(artifact);
+    expect(acceptsArtifact('compress', artifact)).toBe(true); expect(artifact).toEqual(before);
+    expect(acceptsArtifact('unknown-tool', artifact)).toBe(false);
+  }
+  for (const capabilities of [{ encrypted: true }, { encrypted: true, searchable: true, forms: true }]) {
+    const artifact = createArtifact(new Uint8Array([1]), 'x.pdf', { capabilities });
+    expect(acceptsArtifact('compress', artifact)).toBe(false); expect(acceptsArtifact('unlock', artifact)).toBe(true);
+  }
+  for (const type of ['text/plain', 'image/png', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']) {
+    expect(acceptsArtifact('compress', createArtifact(new Uint8Array([1]), 'misleading.pdf', { type, capabilities: { searchable: true, forms: true } }))).toBe(false);
+  }
   expect(acceptsArtifact('add-text', createArtifact(new Uint8Array([1]), 'x.pdf', { capabilities: { encrypted: true } }))).toBe(false);
   expect(acceptsArtifact('unlock', createArtifact(new Uint8Array([1]), 'x.pdf', { capabilities: { encrypted: true } }))).toBe(true);
   const identity = createDocumentSession(); identity.begin(new Uint8Array([1, 2]), 'original.pdf'); identity.adopt(new Uint8Array([1, 2]), 'renamed.pdf'); expect(identity.snapshot().original.name).toBe('original.pdf'); expect(identity.snapshot().current.name).toBe('renamed.pdf');

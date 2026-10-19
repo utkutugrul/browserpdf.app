@@ -2,9 +2,9 @@
 
 Status: structural Compress route accepted by Root's focused native gates,
 independent saved-artifact continuation check and fresh source review below.
-Raster compression, safe Compress capability admission for known searchable or
-form PDFs, complete translations, OCR, either Excel service and the full
-32-service program remain open.
+Known searchable and form PDF admission is accepted by its separate two-case
+gate below. Raster compression, complete translations, OCR, either Excel
+service and the full 32-service program remain open.
 
 ## Ownership and accepted dependency
 
@@ -396,3 +396,85 @@ No further tests, browser work, fixture writes or server actions were performed
 by this owner. Root owns the ledger and checkpoint commit. The open capability,
 raster, translation and service-program work listed above is not accepted by
 this structural checkpoint.
+
+## Known searchable and form PDF admission
+
+Root verified the structural checkpoint on the feature remote at
+`af2d87fabeb49fd3dde0a7e19894074af92e9f23`, parent
+`97f57af8a9321dd63143856d7611dcff30146713`; verification is retained at
+`/tmp/browserpdf-root-compress-route-commit-remote-verification-20261019.json`.
+The following separate capability delta is accepted by the focused source
+review and native evidence recorded below. It is not included in the earlier
+structural-route native evidence.
+
+The PDF branch of `acceptsArtifact` now permits the existing PDF-tool list
+without excluding Compress when `searchable` or `forms` is known true. Its
+preceding encrypted-PDF branch remains byte identical and still permits only
+Unlock. No capability inference, schema, public signature, font, dependency,
+budget, optimizer or raster behavior changes. Compatibility admission does not
+guarantee that an input fits the strict Compress intake or yields a reduction.
+The accepted structural core still validates the actual rewritten artifact and
+retains known boolean facts; it has no lossy raster fallback.
+
+The real foundation consumer test covers plain, searchable, form, combined and
+rasterized PDF admission, descriptor immutability, unknown-tool and non-PDF MIME
+rejection, and encrypted Compress rejection with Unlock retained. One new
+portable native case creates its own actual selectable transparent text layer,
+prefilled field, checked box, URI and reducible stream through existing public
+pdf-lib APIs. Source inspection establishes those facts before the session
+carries `searchable:true` and `forms:true`. The case clicks the actual shared
+Compress rail, exercising its filter, owned stash, local storage and guarded
+destination intake. It then requires unchanged task/current/original on arrival
+and before Use, exact source/result PNGs, one manually downloaded smaller PDF,
+strict reopened text/field/check/URI/geometry, and retained capabilities through
+native Use and Reader. This is a compatibility and artifact-preservation test;
+it does not claim Tesseract recognition accuracy or new Unicode font support.
+
+Only `core/document-session.js`, `tests/service-foundation.spec.mjs`,
+`tests/compress-workspace.spec.mjs` and this checkpoint belong to this delta.
+The scoped actual-predicate Node check passed 24 assertions across ten input
+descriptors, including the byte-identical encrypted branch and unchanged source
+hashes. Evidence is retained at
+`/tmp/browserpdf-compress-capability-predicate-first-20261019.json`. Syntax checks
+for the three JavaScript files and `git diff --check` passed. The stable
+four-path manifest is supplied to Root separately. No browser, global setup, shared
+fixture generation, unchanged core/intake rerun or server action was performed
+by this owner. Raster, full translations, OCR, Excel and final all-service
+acceptance remain open.
+
+Root's focused capability source review passed at
+`/tmp/browserpdf-compress-capability-fresh-review-20261019.md`. Root then ran the
+two exact capability cases within a combined five-case allocation: the actual
+typed-session foundation consumer passed, and the new searchable/forms
+Reader-to-Compress-to-Reader journey passed. The other three cases belonged to
+the separate protection-engine checkpoint. The combined gate was **5/5 PASS**
+in 6,107.745 ms with zero unexpected, skipped or flaky cases and zero top-level
+errors. All 310 runtime/test hashes, path set, configuration, private idle test
+and all 22 generated fixtures remained exact; five traces are retained. No
+excluded runtime was imported, and no global setup or server lifecycle action
+occurred. Final evidence is
+`/tmp/browserpdf-capability-protection-native-first-20261019/final.json`, with
+results at `/tmp/browserpdf-capability-protection-native-first-20261019-results.json`.
+This is acceptance of these two capability cases, not a full Compress or
+all-service regression run.
+
+The native `actual-searchable-form-retention` attachment in that result records
+54,711 source bytes, SHA-256
+`93f1e3acf3e484c09aee0d98a678e8be1ec6c50ab3a6018918f67579787bb63e`,
+and the actual manually saved 3,298-byte output, SHA-256
+`8f0eac4615fa3b92911882cd9162b3b7a48e9c1e141681ea3e71d987599f82ab`.
+The saved artifact is retained at
+`/tmp/browserpdf-capability-protection-native-first-20261019-output/compress-workspace-typed-s-fdf95-ties-through-Use-and-Reader-typed-compress/searchable-form-actual.pdf`;
+its size and digest match the attachment. Actual source/output facts agree on
+the visible text and `RETAINED INVISIBLE SEARCH LAYER`, URI, one-page view,
+rotation and UserUnit. Passing assertions also require exact source/result
+PNGs, prefilled field and checked box preservation, unchanged current before
+Use, and one manual download with zero page errors or non-GET requests. The
+attached chosen and Reader snapshots retain the same task and immutable
+original, the exact saved current, and
+`{encrypted:false,searchable:true,forms:true}`.
+
+This final reconciliation changes only this checkpoint. The predicate and both
+test files remain byte identical to the accepted native gate. No additional
+tests, browser work, OCR discovery, fixture writes or server actions were
+performed by this owner. Root owns the final ledger and checkpoint sync.

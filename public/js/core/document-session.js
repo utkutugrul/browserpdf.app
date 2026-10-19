@@ -358,7 +358,7 @@ export function createDocumentSession() {
 export function acceptsArtifact(slug, artifact) {
   const pdfTools = ['add-text', 'add-image', 'fill-sign', 'highlight', 'redact', 'view-pdf', 'edit-metadata', 'merge', 'split', 'organize', 'rotate', 'delete-pages', 'crop', 'page-numbers', 'watermark', 'compress', 'ocr-pdf', 'protect', 'unlock', 'pdf-to-markdown', 'pdf-to-word', 'extract-text', 'images', 'pdf-to-excel', 'workflows', 'privacy-scan', 'document-doctor'];
   if (artifact.capabilities?.encrypted) return artifact.type === 'application/pdf' && slug === 'unlock';
-  if (artifact.type === 'application/pdf') return pdfTools.includes(slug) && !(slug === 'compress' && (artifact.capabilities?.searchable || artifact.capabilities?.forms));
+  if (artifact.type === 'application/pdf') return pdfTools.includes(slug);
   if (['text/markdown', 'text/plain'].includes(artifact.type)) return ['markdown-to-pdf', 'markdown-viewer'].includes(slug);
   if (artifact.type.startsWith('image/')) return ['jpg-to-pdf', 'images'].includes(slug);
   if (/wordprocessingml/.test(artifact.type)) return slug === 'word-to-pdf';
