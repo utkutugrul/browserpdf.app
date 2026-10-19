@@ -16,7 +16,7 @@ export function ensureDocumentSession() {
   sessionPromise ||= loadSessionModule().then((module) => { sessionCore = module; sessionDelegate = module.createDocumentSession(); return sessionDelegate; }).catch((error) => { sessionPromise = null; throw error; });
   return sessionPromise;
 }
-const emptySession = () => ({ taskId: null, original: null, current: null, revision: 0, generation: 0, selection: [], canUndo: false, canRedo: false, historyBytes: 0, retainedBytes: 0 });
+const emptySession = () => ({ taskId: null, original: null, current: null, revision: 0, generation: 0, selection: [], canUndo: false, canRedo: false, historyBytes: 0, retainedBytes: 0, resourceBytes: 0, resourceCount: 0 });
 // Empty pages need no document bytes or history implementation. File intake and
 // result publication await initialization before using the synchronous delegate.
 export const documentSession = {

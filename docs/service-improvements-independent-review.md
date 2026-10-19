@@ -1027,3 +1027,116 @@ include the frozen shared changes and exclude only explicitly owned
 unrelated active paths. This accepts the standalone workspace and focused
 corrections for checkpointing. Finite Unlock return intent, complete
 twenty-two-locale semantics and both final service rows remain open.
+
+The exact thirteen workspace paths and this ledger are committed and pushed
+as `e6732af120072a1a80c36be164b1822c8aaa552d`, parent
+`98a406e52b1c0eba6fdd8c1b10d16c0d6c1b80b1`, title
+`Improve PDF protection workspaces`, empty body. All fourteen staged and
+committed blobs match Root's immutable allowlist. The index is empty;
+actual remote, HEAD and upstream agree. All 406 protected hashes, audit40
+and the 420-path inventory outside sixteen explicit concurrent document
+and Metadata paths stay exact. The excluded paths are never staged. Root
+independently checks the actual remote, commit metadata and all 420 hashes.
+Evidence:
+`/tmp/browserpdf-protection-workspace-checkpoint-commit-proof-20261019.json`.
+
+### First shared document draft, intake and font checkpoint
+
+The first ten-path foundation adds a bounded editable document draft,
+one-job intake and exact pinned font acquisition. Only two shared production
+sources change: the real session exposes readonly resource Map cardinality,
+and its lazy empty descriptor exposes finite zero resource scalars. No byte
+inventory, copy-based usage query, loader signature or SDK export changes.
+Readonly SDK distribution and type checks pass without a build or dist write.
+
+The draft retains baseline and bounded local history under joint session
+resource and retained-byte admission, reserves before copying, rejects
+concurrent mutations, preserves exact list values and literal text/styles,
+and exposes finite model/source windows with CR/CRLF offset mapping. Intake
+owns the first File read and parser promise, retains at most one latest
+unread candidate and drains actual work before successors. Font loading is
+serial and limited to five exact pins; bytes are checked before font parsing,
+abort/cleanup drain and erase owned arrays, and font-free content loads none.
+New local image-file admission and service UI remain a later checkpoint.
+
+The first nineteen portable checks pass, followed by an expanded and final
+**20/20**, 394.034917 ms. Four initial scalar checks and two artifact-capture
+checks pass. Forty-four protected core, font, loader, result, handoff and SDK
+files remain exact. Saved artifacts include nested list edits retaining
+7/12/8, a five-style/table/image DOCX and a genuine one-page 29,664-byte PDF,
+SHA256 `78813f4112a06248c64e68ac22317bf86c8e4d01d6fa2790763a1dd9b8330940`.
+The small build admits its 80 MiB output reserve plus actual scratch and
+live state at 86,657,217 bytes, leaving 14,006,079 bytes of retained-byte
+headroom. This is application-owned reservation evidence, not a native heap
+bound or a new independent pixel/geometry check. Evidence:
+`/tmp/browserpdf-document-workspace-pure-first-20261019/report.json`.
+
+Fresh review finds one P2 prerequisite: the actual lazy empty descriptor
+omits `resourceBytes`, so the new budget admission rejects the first Markdown
+File before parsing. An independent exact-expression probe reproduces the
+failure and a single-zero positive control. Other current draft/history,
+source-window, list, static-image, intake drain and fixed-font scope passes
+review. Evidence:
+`/tmp/browserpdf-document-workspace-pure-fresh-review-20261019.md`.
+
+The approved correction changes only the lazy helper, its scalar unit and
+checkpoint document. It adds `resourceBytes:0` and exercises the actual
+unnormalized empty expression through a real first Markdown File, exactly
+one parser call, zero-resource and missing-field controls. The affected
+**5/5** pass, 47.166917 ms. An initial 4/5 test result is retained: its hard
+break oracle incorrectly expects Markdown CRLF after the accepted reader's
+LF conversion. Only that expectation changes. Other seven owned paths,
+all forty-four protected files and original artifacts/proofs remain exact.
+Evidence:
+`/tmp/browserpdf-document-workspace-pure-corrected-20261019/report.json`.
+Focused independent review passes and closes the sole P2:
+`/tmp/browserpdf-document-workspace-pure-corrected-review-20261019.md`.
+Its new probe uses the unnormalized actual empty expression, a genuine File
+whose own read override must not run, the real Markdown reader exactly once
+and one publisher call. The missing-scalar negative remains strict. All ten
+owned, forty-four protected and nineteen evidence hashes stay exact before
+and after. This accepts the ten-path foundation for checkpointing. UI
+integration, a new-image transaction, route artifacts, manual Download/Use,
+full locales and all three final service rows remain open.
+
+### OCR: first actual owned native engine proof
+
+The private one-English native prototype first fails before engine startup:
+its CommonJS-to-ESM wrapper redeclares the exported factory. Root corrects
+only that wrapper. The next run exposes a real ownership bug: browser timer
+functions copied to a plain object receive the wrong receiver and throw
+`Illegal invocation` after reserving the lane. A separate actual
+DedicatedWorker diagnostic reproduces both timer failures and proves the
+captured global receiver succeeds. Both original failed prefixes remain
+retained; no OCR success is inferred from them.
+
+The corrected private lane captures the default timer receiver, guards
+registration and successful completion cleanup, settles owned promises once,
+retains failed handles, attempts direct native termination independently and
+fences failed cleanup. Host cancellation cannot acknowledge release for a
+busy/fenced lane without an owner. Twenty-three original, eighteen focused
+timer and four host controls pass, with no unhandled rejections. The eight
+prior genuine-signal checks remain separate historical evidence. All
+twenty-eight new private artifact hashes verify. Upstream main/worker/core,
+language normalization and the pinned English data stay unchanged.
+
+Root's corrected actual native gate passes **4/4** in Chromium
+151.0.7922.34 under the site's real CSP. Normal recognition and its positive
+successor return `ROOT ENGLISH OCR 9472` plus LF, confidence 95, one block,
+one line and four words. Startup cancellation occurs while the SDK promise
+is still pending; recognition cancellation occurs at public progress zero.
+Four direct Worker captures each receive exactly one native termination
+invocation. Owned ready/recognition promises settle once, the final lane is
+idle and unfenced, and parent cleanup terminates its host and revokes owned
+URLs. Browser termination remains a void invocation; physical exit and heap
+reclamation are not acknowledged.
+
+Exactly six private asset pins are served and verified; unexpected HTTP,
+non-GET requests and page errors are zero. All 308 included source hashes
+and path inventory remain exact, and the browser closes. The explicitly
+excluded document pure, Protection and Metadata paths are not imported.
+Evidence:
+`/tmp/browserpdf-root-ocr-native-gate-timers-corrected-first-20261019/report.json`.
+This proves the bounded private engine/lifecycle case. Fresh focused timer
+review, production distribution/route integration, correction UI, actual
+saved OCR PDF, other languages and general accuracy acceptance remain open.
