@@ -820,3 +820,84 @@ by native execution. Compiler identity remains honestly unproved provenance;
 no hard native heap or browser termination acknowledgement is claimed.
 Protect and Unlock route/UI, private encrypted preview, explicit adoption,
 finite return intent, full locales and final service acceptance remain open.
+
+
+### Pure document PDF core C: independent artifact checkpoint
+
+The new three-path pure builder is frozen against base `6128885994` for
+independent review. Owner checks pass **22/22**, 1,062.776833 ms, with twenty
+retained PDF/layout files. The first owner failures remain in
+`/tmp/browserpdf-document-pdf-owner-20261019`; extractor whitespace formatting
+is distinguished from actual saved glyph identity and visible indentation.
+The builder uses the accepted logical model directly, requests only actual
+styles, pins existing fonts, owns source ranges and serial native promises,
+and returns actual PDF plus layout bytes. It has no route/session integration.
+
+Root independently reads the retained actual Word corpus and builds a
+20,363-byte PDF: **FIRST PASS**, seventeen source runs reconstructed exactly,
+literal punctuation and Turkish/Greek/Cyrillic preserved, list values 7 and 8,
+all table paragraphs and the 120 by 60 image retained. Actual PDF.js extraction,
+strict reopening and raster output pass; seven module hashes and the source
+stay exact. Evidence:
+`/tmp/browserpdf-root-document-pdf-independent-first-20261019/report.json`.
+
+Root then builds the same actual Word source inside pinned Chromium
+151.0.7922.34 with the existing verified Fontkit/pdf-lib/PDF.js loaders:
+**FIRST PASS**, genuine 20,363-byte PDF, SHA256
+`1d855a1ad3b4b9b9f1ecc565d797c534980ffc7ba5fd60004c0b3ab0acfbcb45`.
+Saved text, list/table/image and long-token content match, with a retained
+actual page PNG. All 308 included hashes, path inventory and corpus remain
+exact; zero page errors/non-GET requests. The explicitly disjoint thirteen
+Protect/Unlock paths are excluded and none is imported. No globalSetup,
+fixtures or server lifecycle occurs. The browser closes. Evidence:
+`/tmp/browserpdf-root-document-pdf-native-first-20261019/report.json`.
+
+These Root artifacts cover one page and three requested font styles. Native
+five-style and tall-table pagination proof remains open. Fresh review has
+already confirmed repeated uncharged look-ahead across empty runs for every
+CR/LF, with control branches delaying cancellation. The bounded original
+probe and unchanged-source artifact passes are retained separately. A narrow
+charged linear scan/cooperative-yield correction is required before this core
+can be accepted. No document route, editable workspace, shared font service,
+manual download, locale or final service row closes at this checkpoint.
+
+
+### Pure document PDF core C: corrected acceptance
+
+Both fresh findings are closed in the exact three owned paths. Look-ahead
+occurs only for a final CR that can pair across runs, with charged linear work
+and cooperative yields in hard-boundary, TAB and empty-run paths. Unsupported
+content retains zero font requests and rejects nonempty supplied fonts as
+unused through the same strict admission. It never parses an unsupported font.
+
+The seven focused regressions first fail **0/7 PASS**, then pass **7/7** after
+the correction. The original twenty-two plus seven new checks pass **29/29**,
+12,207.91025 ms. All original twenty saved artifact hashes, ten protected
+source/font hashes and original test prefix remain exact. Evidence:
+`/tmp/browserpdf-document-pdf-core-corrected-20261019/report.json`.
+Fresh focused review passes at
+`/tmp/browserpdf-document-pdf-core-corrected-review-20261019.md`. Independent
+copies of the original public probes now admit the same normal model with
+2,714,149 charged visits, while the queued abort fires after thirty layout
+records rather than 2,001. The original reason is retained and malformed
+font records reject with DOCUMENT_PDF_INPUT. Adjacent exact cross-run CRLF
+and font-free positive cases pass. This controlled timing is not a general
+performance guarantee. No broad test or artifact matrix was repeated.
+
+Root separately closes the unresolved native five-font and pagination scope
+on the corrected source: **FIRST PASS** in pinned Chromium 151. All five real
+font styles preserve the same Turkish/Greek/Cyrillic phrase, followed by a
+synchronized tall table over two more pages. All 130 unique source line
+markers occur exactly once. Each of three actual page PNGs has visible ink;
+the saved PDF is 39,985 bytes, SHA256
+`dd3447b311738f66c7b5763aea91bdb546af28e4a3add0af1eb3bdc9a000cab8`.
+Ten dependency/font hashes and the authored source remain exact. Browser
+errors and non-GET requests are zero; the browser closes. Evidence:
+`/tmp/browserpdf-root-document-pdf-native-layout-first-20261019/report.json`.
+The earlier actual Word artifacts stay distinct pre-correction evidence for
+unchanged content/layout behavior.
+
+This accepts the pure builder, finite layout/source model and owned checks.
+Document routes, editable correction, shared font loading, joint retained
+resources, actual workspace previews/manual downloads, complete scripts,
+locales and all final thirty-two service acceptance rows remain open.
