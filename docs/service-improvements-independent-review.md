@@ -312,3 +312,158 @@ The narrow prerequisite source removes only Review's premature rail publication 
 
 
 The isolated final Redact invocation passes **22/22 in61,374.922ms**, zero failed/skipped/flaky/top-level errors and no retries (`/tmp/browserpdf-redact-prerequisite-gate-20261019-results.json`). Root independently inspects the report and decodes the new native proof: downloaded, chosen and Privacy input all have SHAf385893d38004a1fc851e47b61054b66d514c8fc49853dba73019dfdda18a316 under the same task/revision1 with the immutable original retained. The actual completed-render hold, hidden/inert pending surfaces/panels, unavailable pre-Use rail and exact zero-channel verified preview all pass. All286 frozen source paths/config remain unchanged;33 actual PDFs are retained. Only authorized globalSetup regenerates11 of22 ignored generated PDFs, with the untracked path set unchanged. The browser closes. This is one clean22-case Redact run, alongside the earlier clean79 shared affected run and Root's exact original-prefix actual artifact/Privacy postfix; the historical324/7 full331 result remains retained. Root accepts the functional annotation gates and awaits exact checkpoint-path/documentation reconciliation before commit approval. Complete locales, later conversion/platform work and final all32 acceptance remain open.
+
+
+## Verified annotation commit and parallel Phase 3 foundations
+
+Root verifies annotation commit `a28b4ee4845288c91322bd78e912c60556cdea7e`
+against HEAD, upstream and the actual feature remote. Its parent is `1184fc6`,
+with exactly 46 approved paths, 4,841 insertions and 996 deletions. The message
+contains the description only. All 286 frozen runtime/test/SDK/script hashes
+remain unchanged; the forty untracked design-audit files are preserved. Proof:
+`/tmp/browserpdf-root-annotation-commit-remote-verification-20261019.json`.
+No main push or production deployment occurs.
+
+After the user's request for stronger service-level parallelism, Root removes
+the intermediate coordinator and directly uses the three available worker
+slots. Documents, compression and platform continuity have disjoint owners;
+the canonical `service32-execution-queue` tracks all 32 service acceptances
+separately. Shared changes still require exact ownership and browser windows
+remain exclusive. No service closes from foundations or a continuation link.
+
+The first structural compression core gate passes 11/11 Node cases in
+2,796.881542 ms. Root's independent first actual-core invocation additionally
+reduces a 69,950-byte synthetic PDF to 3,753 bytes, SHA-256
+`1c08689128a8a3ee1d718c4eb9e9055e3e7cc9d283b6d6b5a089a8f01f02171f`.
+The actual saved PDF retains selectable text, operator sequence, pixels, title,
+form values, URI, application references and decoded streams; previously
+filtered streams retain encoded bytes. The second pass is byte-identical, input
+and source hashes stay unchanged, and owned canvases release. Evidence:
+`/tmp/browserpdf-root-compression-core-first/report.json`. This is Node/native
+core evidence, without route or browser-delivery acceptance.
+
+Fresh independent review then blocks core acceptance on two real-runtime
+failures: undefined PDF.js text-stream cancellation produces an uncaught closed
+controller error during oversized-text rejection; a quoted annotation serializes
+8,600,002 bytes before the 8 MiB descriptor check. Initial failures and a clean
+private-copy cancellation correction remain under
+`/tmp/browserpdf-compression-core-fresh-review-20261019/`; the exact report is
+`/tmp/browserpdf-compression-core-fresh-review-20261019.md`. Narrow owned
+corrections and meaningful recovery/preflight regressions are authorized.
+
+The bounded ZIP/model author's final first-foundation Node gate passes 22/22 in
+3,798.4395 ms. Root's first combined private comparison crashes in Node 22's
+native InflateRaw adapter before its nonincremental report; no per-case verdict
+is inferred from it. The retained first failure is
+`/tmp/browserpdf-root-ooxml-foundation-first/first-invocation.json`. A subsequent
+isolated-subprocess comparison attempts all 41 synthetic cases: 39 pass, valid
+empty XML comment admission fails, and a 9 MiB XML budget cancellation crashes
+the Node native adapter. All three relevant source hashes remain unchanged.
+`/tmp/browserpdf-root-ooxml-foundation-isolated/report.json` retains every case,
+owned part/input/disposal check and process log. Browser behavior is unclassified.
+
+Fresh ZIP/model review independently proves the empty-comment failure without
+an inflater, four malformed XML lexical acceptances, an input-controlled array
+map that bypasses finite model validation, and ordinary Node Buffer aliasing
+whose disposal erases the original. Report:
+`/tmp/browserpdf-ooxml-model-fresh-review-20261019.md`. The five frozen hashes
+remain exact. Narrow corrections are authorized; no caller/font/session or
+Office conversion acceptance follows these foundation results.
+
+Root separately proves only target native raw-DEFLATE feasibility on pinned
+Chromium 151.0.7922.34 in about:blank: the real 969-byte control expands to the
+exact 3,514-byte source, while appended-zero and truncated controls reject.
+`/tmp/browserpdf-native-rawdeflate-feasibility-20261019/report.json` records zero
+requests/errors and a closed browser. No application source, server or shared
+fixture is used. Node 22 accepts the appended zero, so Node cannot supply that
+negative browser verdict. Actual implemented ZIP/browser lifecycle and budget
+gates remain required.
+
+The parallel initial-handoff READ checkpoint passes 44/44 affected Node cases
+in 422.612209 ms, with nine JavaScript syntax checks and a clean diff check.
+Its guarded old shared entries and exact committed-owner return are frozen at
+`/tmp/browserpdf-initial-handoff-source-20261019.json`. Stash write code remains
+byte-identical. The 593-byte tool-ui delta has only a static idle estimate;
+actual idle measurement, fresh review and all sixteen proposed native artifact
+cases remain pending. Full locales, conversion/platform service work and final
+all-32 reconciliation remain open.
+
+
+### Corrected foundations and independent native module acceptance
+
+The corrected compression gate passes 16/16 in 4,497.562208 ms. Fresh focused
+review closes the text cancellation and descriptor preflight findings by
+replaying both original actual-runtime prefixes; ordinary Buffer/subclass
+copying is reviewed separately. Root's corrected independent actual-core
+normal path passes again at
+`/tmp/browserpdf-root-compression-core-corrected-first/report.json`.
+All old failures remain preserved.
+
+The corrected ZIP/model gate passes 29/29 in 4,388.22675 ms. Its first
+correction attempt, 28 passed/one cross-realm test-helper failure, is retained
+with the cause-based helper correction. Fresh review replays the original
+model-map, byte-ownership/Buffer and XML lexical probes successfully, and the
+seven added portable regressions pass 7/7 in 248.480375 ms. The five corrected
+source/test/document hashes stay unchanged.
+
+Root's first actual-module Chromium 151.0.7922.34 gate passes all 42 independent
+ZIP/XML inputs, ten positive and 32 negative, plus a real 65,536-byte inflated
+chunk AbortSignal cancellation with both native ends drained and a valid
+seven-part successor. The 9 MiB XML rejects cleanly at the 8 MiB part budget,
+without the Node adapter error. An exact ZIP payload with trailing compressed
+garbage rejects. Literal Turkish/Greek/Cyrillic text, ordered list start seven,
+owned model copying and map-override rejection also pass. Evidence:
+`/tmp/browserpdf-root-native-foundations-first/report.json`.
+
+That same real-origin gate loads the pinned runtimes and actual structural
+compression module. The browser-produced 3,753-byte artifact is byte-identical
+to Root's independently inspected corrected Node artifact, SHA-256
+`1c08689128a8a3ee1d718c4eb9e9055e3e7cc9d283b6d6b5a089a8f01f02171f`.
+Native source/result 612x792 canvases have equal pixel SHA-256
+`d0de20190ca5ce546946eb2a1bb97c364b1f0c4efc996d5233558cb0d3074e1d`;
+second-pass bytes, original input and released canvases are exact.
+`independent-artifact-byte-identity.json` binds the actual browser file to the
+separate graph/forms/URI/stream/text/operator/pixel inspection. All five actual
+import-closure hashes remain unchanged, no tool-route module is requested,
+page/console errors and non-GET requests are zero, and the browser closes.
+These accept the pure foundations for reviewed caller integration, without
+claiming DOCX/XLSX conversion, font support or Compress route delivery.
+
+Root's independent Add Text original-prefix postfix also passes on its first
+invocation. The completed old workflow read loses to ready two-page B; the
+actual helper settles, old A File reads remain zero and B's task/current SHA
+stays exact. A fresh native edit saves a two-page 5,960-byte B artifact, SHA-256
+`c8304ea02ebd29348e28730e221dc591d9cec909ba6af05074b74187ede02ec9`,
+independently reopened with both B page markers and the new edit, without old A.
+The URL is clean, errors/non-GET requests are zero and two reference/final
+downloads are deliberate. All 244 frozen sources stay unchanged. Concurrent
+View/Merge/spec corrections are explicitly excluded and never imported, so
+this is narrow Add Text evidence, not their acceptance. Proof:
+`/tmp/browserpdf-root-initial-handoff-postfix-first/report.json` and its
+`source-closure.json`. The corrected twenty-case native matrix remains pending.
+
+### First initial READ matrix and correction classification
+
+The first twenty-case native matrix finishes with 13 passed and seven failed in
+233,361.636 ms, zero skipped/flaky cases and zero top-level errors. All 272
+runtime/test/SDK/script/package hashes and the private configuration remain
+unchanged. Global setup and server lifecycle are disabled. Results and original
+traces remain under `/tmp/browserpdf-initial-handoff-native-20261019-results.json`
+and `/tmp/browserpdf-initial-handoff-native-20261019-output`; the wrapper closure
+is `/tmp/browserpdf-initial-handoff-native-20261019/final.json`.
+
+Four Turkish failures read a null canonical SHA because the test selects the
+first module script, the injected `/js/i18n.js`, then imports root `/js/tool-ui.js`
+instead of the actual localized `/tr/js/tool-ui.js`. Captured response HTML and
+network traces establish the separate module namespaces while B is visibly
+ready. This requires a test-helper entry-selection correction, with exact SHA,
+task, localization and saved-artifact assertions preserved.
+
+Two Reader cases reach the native continuation step but attempt to click Add
+Text inside the closed `readerModes` disclosure. The helper must open the real
+disclosure, as existing Reader tests do. The remaining cold page-effects case
+retains A but its rejected-B error is hidden; source review identifies the
+successful resume render's `hideError()` as a candidate cause. Its exact error
+lifecycle is being classified before a product correction. This invocation is
+not recorded as a passing matrix. Other workers resume only their disjoint pure
+document cores and isolated protection feasibility after this browser closes.
