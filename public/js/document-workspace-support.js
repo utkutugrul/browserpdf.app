@@ -30,7 +30,8 @@ export async function getWorkspaceInput({ bakeScene = true, bakeComposition = tr
   if (operation && !operation.isCurrent()) return null;
   const now = documentSession.snapshot();
   if (now.taskId !== snapshot.taskId || now.revision !== snapshot.revision || now.generation !== snapshot.generation) return null;
-  return { bytes, capabilities, name: composition && bakeComposition ? snapshot.current.name.replace(/\.[^.]+$/, '') + '.pdf' : snapshot.current.name, type: composition && bakeComposition ? 'application/pdf' : snapshot.current.type, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene, hasComposition: !!composition,
+  const name = composition && bakeComposition ? snapshot.current.name.replace(/\.[^.]+$/, '') + '.pdf' : snapshot.current.name;
+  return { bytes, capabilities, name, displayName: composition && bakeComposition ? name : snapshot.current.displayName || name, type: composition && bakeComposition ? 'application/pdf' : snapshot.current.type, revision: snapshot.revision, selection: snapshot.selection, hasScene: !!scene, hasComposition: !!composition,
     losses: composition && bakeComposition ? ['composition-baked'] : scene && (scene.objects.length || Object.keys(scene.fields).length || scene.flatten) ? ['scene-baked'] : [] };
 }
 

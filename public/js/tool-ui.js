@@ -59,6 +59,8 @@ let resultModule;
 let pendingResult = null;
 let resultGeneration = 0;
 let resultGroupGeneration = 0;
+let activeRail = null, railIntent = 0;
+const sameOwner = (a, b) => a.taskId === b.taskId && a.revision === b.revision && a.generation === b.generation;
 let intakeGeneration = 0;
 const loadResultModule = retryableModule('./document-result.js');
 const loadResultUi = () => (resultModule ||= loadResultModule().catch((error) => { resultModule = null; throw error; }));
@@ -77,9 +79,10 @@ export function showDocumentIdentity() {
     if (dropzone) dropzone.after(identity); else document.querySelector('main')?.prepend(identity);
   }
   identity.classList.add('document-identity'); identity.replaceChildren();
-  const description = `${t('workspace.original', 'Original')}: ${snapshot.original.name} · ${t('workspace.current', 'Current')}: ${snapshot.current.name} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
+  const originalName = snapshot.original.displayName || snapshot.original.name, currentName = snapshot.current.displayName || snapshot.current.name;
+  const description = `${t('workspace.original', 'Original')}: ${originalName} · ${t('workspace.current', 'Current')}: ${currentName} · ${t('workspace.revision', 'Revision')} ${snapshot.revision}`;
   identity.title = description; identity.setAttribute('aria-label', description);
-  for (const [key, label, name] of [['original', t('workspace.original', 'Original'), snapshot.original.name], ['current', t('workspace.current', 'Current'), snapshot.current.name]]) {
+  for (const [key, label, name] of [['original', t('workspace.original', 'Original'), originalName], ['current', t('workspace.current', 'Current'), currentName]]) {
     const item = document.createElement('span'); item.className = 'document-identity-item';
     const labelElement = document.createElement('span'); labelElement.className = 'document-identity-label'; labelElement.textContent = `${label}: `;
     const nameElement = document.createElement('span'); nameElement.className = 'document-identity-name'; nameElement.title = name; nameElement.textContent = name;
@@ -98,6 +101,7 @@ export async function restoreCompositionHistory(kind, options = {}) {
 export async function reviewResult(bytes, name, options = {}) {
   if (options.operation && !options.operation.isCurrent()) return Promise.resolve(null);
   if (options.groupOwner !== undefined && options.groupOwner !== resultGroupGeneration) return null;
+  activeRail = null; railIntent++;
   if (options.groupOwner === undefined) { resultGroupGeneration++; document.getElementById('documentResultGroup')?.remove(); }
   const generation = ++resultGeneration;
   await ensureDocumentSession();
@@ -116,7 +120,9 @@ export async function reviewResult(bytes, name, options = {}) {
       if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return null;
       const now = documentSession.snapshot();
       if (compositionOwner && (now.taskId !== compositionOwner.taskId || now.revision !== compositionOwner.revision || now.generation !== compositionOwner.generation)) return null;
-      const snapshot = compositionOwner ? documentSession.publishComposition(value.bytes, value.name, { ...value, expectedTaskId: compositionOwner.taskId, expectedRevision: compositionOwner.revision }) : documentSession.adopt(value.bytes, value.name, value); showDocumentIdentity();
+      const snapshot = compositionOwner ? documentSession.publishComposition(value.bytes, value.name, { ...value, expectedTaskId: compositionOwner.taskId, expectedRevision: compositionOwner.revision }) : documentSession.adopt(value.bytes, value.name, value);
+      if (value === artifact && pendingResult === artifact) activeRail?.adopt(value, now, snapshot);
+      showDocumentIdentity();
       // Synchronous notification. Consumers own cancellation/busy/errors for any
       // subsequent asynchronous hydration; this callback does not delay adoption.
       options.onAdopt?.(snapshot, documentSession.current()); return snapshot;
@@ -126,6 +132,7 @@ export async function reviewResult(bytes, name, options = {}) {
 
 export function clearResult() {
   pendingResult = null;
+  activeRail = null; railIntent++;
   resultGeneration++;
   resultGroupGeneration++;
   const panel = document.getElementById('documentResult'); if (panel) panel.hidden = true;
@@ -441,17 +448,24 @@ export async function takeChainedFile() {
 export async function offerChain(bytes, name, targets, options = {}) {
   const generation = resultGeneration;
   if (options.operation && !options.operation.isCurrent()) return;
+  const intent = ++railIntent; activeRail = null;
   await ensureDocumentSession();
-  if (generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return;
+  if (intent !== railIntent || generation !== resultGeneration || (options.operation && !options.operation.isCurrent())) return;
   const artifact = sessionCore.createArtifact(bytes, name, { ...(pendingResult?.name === name ? pendingResult : {}), ...options });
-  const owner = documentSession.snapshot();
-  let continuationOwner = owner;
+  const reviewed = pendingResult;
+  const paired = reviewed && ['name', 'displayName', 'type', 'capabilities', 'boundary'].every((key) => JSON.stringify(artifact[key]) === JSON.stringify(reviewed[key])) && artifact.bytes.length === reviewed.bytes.length && artifact.bytes.every((byte, index) => byte === reviewed.bytes[index]);
+  let continuationOwner = documentSession.snapshot();
   const continuationOperation = options.continuationOperation || options.operation;
-  const ownsContinuation = () => {
-    const now = documentSession.snapshot();
-    return generation === resultGeneration && now.taskId === owner.taskId && (!continuationOperation || continuationOperation.isCurrent()) &&
+  const rail = {};
+  const owns = (now) => {
+    return activeRail === rail && intent === railIntent && generation === resultGeneration && now.taskId === continuationOwner.taskId && (!continuationOperation || continuationOperation.isCurrent()) &&
       (!options.continuationOperation || (now.revision === continuationOwner.revision && now.generation === continuationOwner.generation));
   };
+  const ownsContinuation = () => owns(documentSession.snapshot());
+  // Only this rail's guarded synchronous Use/stash commit can move its owner.
+  const transfer = (before, next) => { if (owns(before) && sameOwner(next, documentSession.snapshot())) continuationOwner = next; };
+  rail.adopt = (value, before, next) => { if (paired && value === reviewed && pendingResult === reviewed) transfer(before, next); };
+  activeRail = rail;
   let row = document.getElementById('chainRow');
   if (!row) { row = document.createElement('div'); row.id = 'chainRow'; row.className = 'chain-row'; (document.getElementById('documentResult') || document.querySelector('main') || document.body).appendChild(row); }
   row.textContent = '';
@@ -476,9 +490,10 @@ export async function offerChain(bytes, name, targets, options = {}) {
       try {
         if (!ownsContinuation()) return;
         btn.disabled = true;
+        const before = documentSession.snapshot();
         const handoff = await stashForChain(artifact.bytes, artifact.name, target.slug, { ...artifact,
           operation: { signal: continuationOperation?.signal, isCurrent: ownsContinuation },
-          ...(options.continuationOperation ? { onAdoptionOwner: (next) => { continuationOwner = next; } } : {}),
+          onAdoptionOwner: (next) => transfer(before, next),
         });
         if (!handoff.isCurrent()) return;
         const lang = getLang();

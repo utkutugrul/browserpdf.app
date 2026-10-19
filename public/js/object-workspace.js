@@ -24,7 +24,7 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
   assetCleanups.push(() => { if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); });
   let drawing = false, pointerId, signatureSequence = 0, renderSequence = 0, timer, rendering = Promise.resolve(), busy = false;
   const disabledBeforeExport = new WeakMap();
-  let controller = null, lastRendered = null, lastKey = null, fieldRows = new Map();
+  let controller = null, lastRendered = null, lastKey = null, hasEditedScene = false, fieldRows = new Map();
   assertOwner(); documentSession.beginScene();
   const scene = () => documentSession.scene();
   const source = documentSession.resource(scene().sourceRef);
@@ -50,8 +50,8 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
         busy = true; controls();
         const operation = documentOperations.begin();
         const input = await getWorkspaceInput({ operation }); if (!input) return;
-        documentSession.publishScene(input.bytes, input.name, { capabilities: input.capabilities });
-        const handoff = await stashForChain(input.bytes, input.name, slug, { capabilities: input.capabilities, operation });
+        documentSession.publishScene(input.bytes, input.name, { name: input.name, displayName: input.displayName, type: input.type, capabilities: input.capabilities });
+        const handoff = await stashForChain(input.bytes, input.name, slug, { name: input.name, displayName: input.displayName, type: input.type, capabilities: input.capabilities, operation });
         if (!operation.isCurrent() || !handoff.isCurrent()) return;
         const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
       } catch (error) { showError(error.message); busy = false; controls(); }
@@ -196,9 +196,10 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
   }
   function change(edit) {
     if (busy || disposed || !isCurrent()) return false;
-    const next = scene(); edit(next);
+    const revision = documentSession.snapshot().revision, next = scene(); edit(next);
     document.querySelectorAll('.field-error').forEach((node) => node.remove());
     try { documentSession.changeScene(next); } catch (error) { showError(error.message); controls(); return false; }
+    if (documentSession.snapshot().revision !== revision) hasEditedScene = true;
     controller?.abort(); lastKey = null; clearResult(); showDocumentIdentity(); controls(); overlay(); schedule(); return true;
   }
   function controls() {
@@ -211,7 +212,9 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
     for (const button of toolbar.querySelectorAll('button')) button.disabled = transitioning;
     $('fileInput').disabled = busy; $('dropzone').setAttribute('aria-disabled', String(busy));
     const state = documentSession.snapshot(); undo.disabled = transitioning || !state.canUndo; redo.disabled = transitioning || !state.canRedo;
-    const objects = scene().objects; list.replaceChildren();
+    // Text-bound annotations keep native PDF quads. Only Highlight edits them;
+    // generic object coordinates/resize controls must never detach those quads.
+    const allObjects = scene().objects, objects = allObjects.filter((o) => o.kind !== 'highlight'); list.replaceChildren();
     for (const [index, object] of objects.entries()) { const option = document.createElement('option'); option.value = object.id; option.textContent = `${object.kind === 'text' ? object.text.slice(0, 35) : object.kind} · Page ${object.pageIndex + 1} · ${index + 1}`; list.append(option); }
     if (selected && !objects.some((o) => o.id === selected)) selected = null;
     list.value = selected || ''; const object = objects.find((o) => o.id === selected);
@@ -225,14 +228,16 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
     $('previousThumbnailSet').disabled = busy || preparing || pageWindow === 0;
     $('nextThumbnailSet').disabled = busy || preparing || pageWindow + 12 >= sourcePdf.numPages;
     canvas.style.pointerEvents = pageReady && !preparing ? '' : 'none'; layer.hidden = !pageReady || preparing; widgetLayer.hidden = !pageReady;
-    $('applyBtn').disabled = transitioning || !pageReady || (!objects.length && !Object.keys(scene().fields).length && !(scene().flatten && fields.length));
+    $('applyBtn').disabled = transitioning || !pageReady || (!hasEditedScene && !allObjects.length && !Object.keys(scene().fields).length && !(scene().flatten && fields.length));
     status.textContent = preparing ? t('workspace.preparing_draft', 'Preparing the latest draft… Editing remains available; apply or place it when ready.') : !pageReady ? t('workspace.loading_page', 'Loading page…') : pendingImages ? t('workspace.adding_images', 'Adding images… {n} pending.', { n: pendingImages }) : t('workspace.scene_identity', '{n} editable objects · Revision {revision}. {state}', { n: objects.length, revision: state.revision, state: lastKey === JSON.stringify(scene()) ? t('workspace.scene_applied', 'Applied scene; current result is ready to review.') : t('workspace.scene_pending', 'Pending scene changes; apply to update the current document.') });
+    if (allObjects.length !== objects.length) status.textContent += ' ' + t('highlight.edit_in_mode', 'Text highlights are preserved. Open Highlight to edit their color, note or selection.');
     const selectedKind = objects.find((o) => o.id === selected)?.kind;
     if (mode === 'add-image') shell.draftLabel.textContent = selectedKind === 'image' ? t('workspace.selected_image_properties', 'Selected image properties · upload adds another') : t('workspace.new_image_properties', 'New image · choose scope before upload');
     pageNumber.value = String(pageIndex + 1);
   }
   function selectObject(id) {
     if (busy || preparations.size) return;
+    if (scene().objects.find((o) => o.id === id)?.kind === 'highlight') return;
     ++textSequence; selected = id; const o = scene().objects.find((o) => o.id === id); if (!o) return;
     if (o.pageIndex !== pageIndex) void selectPage(o.pageIndex);
     if (o.kind === 'text' && $('textInput')) { textDraft = { text: o.text, fontSize: o.fontSize, weight: o.weight, color: [...o.color], width: o.width, height: o.height }; $('textInput').value = o.text; if ($('sizeSlider') && mode === 'add-text') $('sizeSlider').value = String(o.fontSize); if ($('fontSelect')) $('fontSelect').value = { bold: 'helvetica-bold', italic: 'times-roman', code: 'courier' }[o.weight] || 'helvetica'; }
@@ -407,9 +412,9 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
       canvas.width = verifiedCanvas.width; canvas.height = verifiedCanvas.height; canvas.getContext('2d').drawImage(verifiedCanvas, 0, 0);
       pageReady = true; canvas.setAttribute('aria-busy','false'); canvas.dataset.sceneRevision=String(documentSession.snapshot().revision);
       viewport = verifiedViewport; canvas.dataset.pdfPage = String(pageIndex + 1); canvas.dataset.pdfScale = String(viewport.scale);
-      lastRendered = output; lastKey = JSON.stringify(scene()); overlay(); widgets();
-      await reviewResult(output.bytes, artifact.name, { operation, allowAdopt: false }); if (!operation.isCurrent()) return;
-      await offerChain(output.bytes, artifact.name, [], { operation });
+      lastRendered = output; lastKey = JSON.stringify(scene()); hasEditedScene = true; overlay(); widgets();
+      await reviewResult(output.bytes, artifact.name, { ...artifact, operation, allowAdopt: false }); if (!operation.isCurrent()) return;
+      await offerChain(output.bytes, artifact.name, [], { ...artifact, operation });
     } catch (error) { if (operation.isCurrent()) showError(error.message); }
     finally { if (!disposed && !navigating) { busy = false; controls(); } }
   }
@@ -417,7 +422,7 @@ export async function openObjectWorkspace(mode, parsed, { isCurrent = () => true
     const focused = document.activeElement?.classList.contains('scene-object') ? document.activeElement.dataset.objectId : null;
     layer.replaceChildren(); if (!visual || !canvas.clientWidth) return;
     const sx = canvas.getBoundingClientRect().width / visual.width, sy = canvas.getBoundingClientRect().height / visual.height;
-    for (const object of scene().objects.filter((o) => o.pageIndex === pageIndex)) {
+    for (const object of scene().objects.filter((o) => o.pageIndex === pageIndex && o.kind !== 'highlight')) {
       const box = document.createElement('div'); box.className = 'scene-object' + (object.id === selected ? ' is-selected' : ''); box.dataset.objectId = object.id; box.tabIndex = 0; box.setAttribute('role', 'button'); box.setAttribute('aria-label', `${object.kind} object on page ${pageIndex + 1}`);
       Object.assign(box.style, { left: object.x * sx + 'px', top: object.y * sy + 'px', width: object.width * sx + 'px', height: object.height * sy + 'px' });
       box.addEventListener('click', (e) => { e.stopPropagation(); selectObject(object.id); });

@@ -31,7 +31,8 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
   const heading = document.createElement('h2'); heading.id = 'documentResultHeading'; heading.textContent = t('workspace.review_result', 'Review your result');
   const identity = document.createElement('p'); identity.id = 'documentResultIdentity';
   const source = session?.original;
-  identity.textContent = `${t('workspace.original', 'Original')}: ${source?.name || artifact.name} · ${t('workspace.result', 'Result')}: ${artifact.name} · ${t('workspace.revision', 'Revision')} ${session?.revision || 0} · ${(artifact.bytes.length / 1000).toFixed(1)} KB`;
+  const displayName = (value) => value?.displayName || value?.name;
+  identity.textContent = `${t('workspace.original', 'Original')}: ${displayName(source) || displayName(artifact)} · ${t('workspace.result', 'Result')}: ${displayName(artifact)} · ${t('workspace.revision', 'Revision')} ${session?.revision || 0} · ${(artifact.bytes.length / 1000).toFixed(1)} KB`;
   const status = document.createElement('p'); status.id = 'documentResultStatus'; status.setAttribute('role', 'status');
   const controls = document.createElement('div'); controls.className = 'btn-row';
   const preview = document.createElement('div'); preview.className = 'document-result-preview'; preview.id = 'documentResultPreview';
@@ -45,6 +46,9 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
     'structure-inspection-incomplete': 'Some document structures could not be inspected.', 'crop-hidden-content': 'Cropping hides content; it does not securely remove it.',
     'scene-baked': 'This operation includes pending edits in the PDF. Undo restores the preceding editable state.',
     'composition-baked': 'This operation includes the image composition in the PDF. Undo restores the preceding editable state.',
+    'redaction-selected-pages-rasterized': 'Pages with redaction masks become images and lose selectable/searchable text and vector detail. Other supported pages keep their text.',
+    'redaction-document-rasterized': 'Every page becomes an image. Searchable text, editable fields and annotations, links, bookmarks, attachments, tags and vector detail are not retained. Any existing digital signature is invalidated.',
+    'redaction-metadata-removed': 'Source Info and XMP metadata are omitted from this new PDF. The original remains separately available in this task.',
   };
   if (artifact.boundary?.losses?.length) {
     const losses = document.createElement('ul'); losses.id = 'documentResultLosses';
@@ -53,7 +57,7 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
   }
   function button(label, onClick, id) { const element = document.createElement('button'); element.type = 'button'; element.className = 'btn btn-secondary'; element.textContent = label; if (id) element.id = id; element.addEventListener('click', onClick); controls.append(element); return element; }
   button(t('workspace.download_result', 'Download result'), () => download(artifact), 'downloadResultBtn');
-  if (adopt) button(t('workspace.use_result', 'Use this result'), () => { try { const next = adopt(artifact); if (!next) return; identity.textContent = `${t('workspace.original', 'Original')}: ${source?.name || artifact.name} · ${t('workspace.result', 'Result')}: ${artifact.name} · ${t('workspace.revision', 'Revision')} ${next.revision || 0} · ${(artifact.bytes.length / 1000).toFixed(1)} KB`; status.textContent = t('workspace.current_result', 'This result is now the current document.'); } catch (error) { fail(error); } }, 'useResultBtn');
+  if (adopt) button(t('workspace.use_result', 'Use this result'), () => { try { const next = adopt(artifact); if (!next) return; identity.textContent = `${t('workspace.original', 'Original')}: ${displayName(source) || displayName(artifact)} · ${t('workspace.result', 'Result')}: ${displayName(artifact)} · ${t('workspace.revision', 'Revision')} ${next.revision || 0} · ${(artifact.bytes.length / 1000).toFixed(1)} KB`; status.textContent = t('workspace.current_result', 'This result is now the current document.'); } catch (error) { fail(error); } }, 'useResultBtn');
   let pageNumber = Math.max(1, (Number.isSafeInteger(session?.selection?.[0]) ? session.selection[0] : 0) + 1);
   let doc = null;
   let loadedValue = null;
@@ -96,8 +100,8 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
     try { loaded = await task.promise; } catch (error) { if (generation !== currentGeneration || loadGeneration !== previewGeneration) return; throw error; }
     if (generation !== currentGeneration || loadGeneration !== previewGeneration) { await task.destroy(); return; }
     doc = loaded; loadedValue = value;
-    pageNumber = Math.max(1, Math.min(doc.numPages, pageNumber)); canvas.setAttribute('aria-label',value.name); preview.replaceChildren(canvas); await renderPage();
-    if (generation === currentGeneration && loadGeneration === previewGeneration) status.textContent = `${value === artifact ? t('workspace.result', 'Result') : t('workspace.original', 'Original')}: ${value.name}. ${t('workspace.preview_ready', 'The actual file is shown below. Download when ready.')}`;
+    pageNumber = Math.max(1, Math.min(doc.numPages, pageNumber)); canvas.setAttribute('aria-label',displayName(value)); preview.replaceChildren(canvas); await renderPage();
+    if (generation === currentGeneration && loadGeneration === previewGeneration) status.textContent = `${value === artifact ? t('workspace.result', 'Result') : t('workspace.original', 'Original')}: ${displayName(value)}. ${t('workspace.preview_ready', 'The actual file is shown below. Download when ready.')}`;
   }
   async function loadImage(getValue, original) {
     const loadGeneration = ++previewGeneration, previous = activeTask; activeTask = null; doc = null; loadedValue = null;
@@ -117,8 +121,8 @@ export async function showDocumentResult(artifact, { session, download, adopt, i
         if (bitmap.width > 4096 || bitmap.height > 4096 || bitmap.width * bitmap.height > 16000000) throw new RangeError('This original image exceeds the preview limits.');
         const scale = Math.min(1,1200 / Math.max(bitmap.width,bitmap.height),Math.sqrt(2000000 / (bitmap.width * bitmap.height)));
         canvas.width = Math.max(1,Math.floor(bitmap.width * scale)); canvas.height = Math.max(1,Math.floor(bitmap.height * scale)); canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
-        canvas.setAttribute('aria-label',value.name); canvas.removeAttribute('data-pdf-page'); preview.replaceChildren(canvas);
-        status.textContent = `${original ? t('workspace.original', 'Original') : t('workspace.result', 'Result')}: ${value.name}${original ? '' : '. ' + t('workspace.preview_ready','The actual file is shown below. Download when ready.')}`; preview.setAttribute('aria-busy', 'false'); pageStatus.textContent = '';
+        canvas.setAttribute('aria-label',displayName(value)); canvas.removeAttribute('data-pdf-page'); preview.replaceChildren(canvas);
+        status.textContent = `${original ? t('workspace.original', 'Original') : t('workspace.result', 'Result')}: ${displayName(value)}${original ? '' : '. ' + t('workspace.preview_ready','The actual file is shown below. Download when ready.')}`; preview.setAttribute('aria-busy', 'false'); pageStatus.textContent = '';
       } finally { bitmap.close(); }
     });
   }

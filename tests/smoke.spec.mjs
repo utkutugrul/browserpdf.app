@@ -341,7 +341,6 @@ async function placementCanvasBox(page) {
   const canvas = page.locator('#placementCanvas');
   await expect(canvas).toBeVisible();
   // Shared workspaces publish the requested page before enabling placement.
-  // Legacy Highlight/Redact have no aria-busy attribute and remain supported.
   await expect.poll(() => canvas.getAttribute('aria-busy')).not.toBe('true');
   await expect(canvas).not.toHaveCSS('pointer-events', 'none');
   await canvas.scrollIntoViewIfNeeded();
@@ -370,13 +369,15 @@ test('redact: covered text is gone from the output, other pages keep theirs', as
   test.slow(); // the roundtrip OCRs the flattened page
   await open(page, 'redact');
   await page.setInputFiles('#fileInput', fx('report.pdf'));
-  const box = await placementCanvasBox(page);
+  await expect(page.locator('#viewerSection')).toHaveAttribute('aria-busy', 'false');
+  const canvas = page.locator('#pdfCanvas'); await canvas.scrollIntoViewIfNeeded(); const box = await canvas.boundingBox();
+  await expect(page.locator('#redactMaskLayer')).toBeVisible();
   await page.mouse.move(box.x + box.width * 0.06, box.y + box.height * 0.04);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.13, { steps: 5 });
   await page.mouse.up();
-  await expect(page.locator('#applyBtn')).toBeEnabled();
-  const download = await grabDownload(page, () => page.click('#applyBtn'), /-redacted\.pdf$/);
+  await expect(page.locator('#redactApplyBtn')).toBeEnabled();
+  const download = await grabDownload(page, () => page.click('#redactApplyBtn'), /-redacted\.pdf$/);
   const out = path.join(FIXTURES, 'redacted-roundtrip.pdf');
   await download.saveAs(out);
   const text = await extractedText(page, out);
@@ -399,18 +400,26 @@ test('add-text: the stamped string extracts back out of the output', async ({ pa
   expect(text, 'original text must survive').toMatch(/Quarterly/);
 });
 
-test('highlight: draws a highlight without destroying the page text', async ({ page }) => {
+test('highlight: native text selection creates a persistent appearance and preserves searchable page text', async ({ page }) => {
   await open(page, 'highlight');
   await page.setInputFiles('#fileInput', fx('report.pdf'));
-  const box = await placementCanvasBox(page);
-  await page.mouse.move(box.x + box.width * 0.1, box.y + box.height * 0.06);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.1, { steps: 5 });
-  await page.mouse.up();
-  await expect(page.locator('#applyBtn')).toBeEnabled();
-  const download = await grabDownload(page, () => page.click('#applyBtn'), /\.pdf$/);
+  await expect(page.locator('#viewerSection')).toHaveAttribute('aria-busy', 'false'); const before = await page.locator('#pdfCanvas').evaluate((canvas) => canvas.toDataURL());
+  const phrase = page.locator('#readerTextLayer span').filter({ hasText: /^Quarterly Report 2026$/ }); await phrase.scrollIntoViewIfNeeded();
+  const points = await phrase.evaluate((element) => [0, element.firstChild.length].map((offset) => {
+    const text = element.firstChild, range = document.createRange(); range.setStart(text, offset ? text.length - 1 : 0); range.setEnd(text, offset ? text.length : 1); const rect = range.getBoundingClientRect();
+    for (const fraction of [.1, .01, .25, .4]) { const x = offset ? rect.right - rect.width * fraction : rect.left + rect.width * fraction, y = rect.top + rect.height / 2, caret = document.caretRangeFromPoint(x, y); if (caret?.startContainer === text && caret.startOffset === offset) return [x, y]; } return null;
+  }));
+  expect(points.every(Boolean)).toBe(true); await page.mouse.move(...points[0]); await page.mouse.down(); await page.mouse.move(...points[1], { steps: 8 }); await page.mouse.up();
+  expect(await page.evaluate(() => getSelection().toString())).toBe('Quarterly Report 2026'); await expect(page.locator('#addHighlightBtn')).toBeEnabled(); await page.click('#addHighlightBtn');
+  await expect(page.locator('#viewerSection')).toHaveAttribute('aria-busy', 'false'); expect(await page.locator('#pdfCanvas').evaluate((canvas) => canvas.toDataURL())).not.toBe(before);
+  await expect(page.locator('#highlightApplyBtn')).toBeEnabled();
+  const download = await grabDownload(page, () => page.click('#highlightApplyBtn'), /\.pdf$/);
   const out = path.join(FIXTURES, 'highlight-roundtrip.pdf');
   await download.saveAs(out);
+  const doc = await PDFDocument.load(readFileSync(out)), refs = doc.getPage(0).node.Annots().asArray(); expect(refs).toHaveLength(1);
+  const annotation = doc.context.lookup(refs[0]); expect(annotation.lookup(PDFName.of('Subtype')).toString()).toBe('/Highlight'); expect(annotation.lookup(PDFName.of('QuadPoints')).asArray()).toHaveLength(8);
+  const appearance = annotation.lookup(PDFName.of('AP')).lookup(PDFName.of('N')); expect(appearance).toBeInstanceOf(PDFRawStream); expect(appearance.contents.length).toBeGreaterThan(0);
+  const gs = appearance.dict.lookup(PDFName.of('Resources')).lookup(PDFName.of('ExtGState')).lookup(PDFName.of('GS0')); expect(gs.lookup(PDFName.of('ca')).asNumber()).toBe(.4); expect(gs.lookup(PDFName.of('BM')).toString()).toBe('/Multiply');
   const text = await extractedText(page, out);
   expect(text).toMatch(/Quarterly Report 2026/);
 });

@@ -222,8 +222,8 @@ export async function openPageEffectWorkspace(mode, { isCurrent = () => true } =
     if(hydrating||processing||!owns())return;
     if(dirty){status.textContent=t('pages.review_before_mode','Review and use the result, or discard pending settings before changing tools.');return;}
     const request=documentOperations.begin(); const current=await getWorkspaceInput({operation:request}); if(!current||!owns()||!request.isCurrent())return;
-    if(current.hasScene)documentSession.publishScene(current.bytes,current.name,{capabilities:current.capabilities});
-    const handoff=await stashForChain(current.bytes,current.name,slug,{capabilities:current.capabilities,operation:request}); if(!owns()||!request.isCurrent()||!handoff.isCurrent())return;
+    if(current.hasScene)documentSession.publishScene(current.bytes,current.name,{name:current.name,displayName:current.displayName,type:current.type,capabilities:current.capabilities});
+    const handoff=await stashForChain(current.bytes,current.name,slug,{name:current.name,displayName:current.displayName,type:current.type,capabilities:current.capabilities,operation:request}); if(!owns()||!request.isCurrent()||!handoff.isCurrent())return;
     const lang=getLang();location.href=`${lang==='en'?'':'/'+lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
   }
   for (const control of Object.values(controls)) { control.dataset.initialValue = control.value; control.dataset.initialChecked = String(control.checked); }

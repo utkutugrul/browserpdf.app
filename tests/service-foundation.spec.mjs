@@ -108,12 +108,31 @@ test('Fill & Sign Unicode values are transactional and repeated Apply never dupl
 
 test('form and flatten failures preserve chosen bytes and draft revision and visibly block success', async ({ page }) => {
   await open(page, 'fill-sign'); await page.setInputFiles('#fileInput', path.join(fixtures, 'form.pdf')); await expect(page.locator('#fieldsSection')).toBeVisible();
+  const canvas = page.locator('#placementCanvas'), apply = page.locator('#applyBtn');
+  const revision = () => page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision);
+  const readyScene = async (expectedRevision) => {
+    await expect(canvas).toHaveAttribute('data-scene-revision', String(expectedRevision));
+    await expect(canvas).toHaveAttribute('aria-busy', 'false');
+    await expect(canvas).toHaveAttribute('data-pdf-page', '1');
+  };
+  await readyScene(await revision());
+  const input = page.locator('#fieldsList .field-row').filter({ hasText: 'full_name' }).locator('input');
+  const chosen = await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes]);
+  await input.fill('FAIL FIELD'); const fieldRevision = await revision();
+  // Preview and Apply share the same PDF builder. Prepare this native draft
+  // successfully before injecting a fault into the explicit Apply transaction.
+  await readyScene(fieldRevision); await expect(apply).toBeEnabled();
   await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); window.originalSetText = lib.PDFTextField.prototype.setText; lib.PDFTextField.prototype.setText = function (value) { if (value === 'FAIL FIELD') throw new Error('injected field failure'); return window.originalSetText.call(this, value); }; });
-  const input = page.locator('#fieldsList .field-row').filter({ hasText: 'full_name' }).locator('input'); const chosen = await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes]); await input.fill('FAIL FIELD'); const fieldRevision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.click('#applyBtn');
+  await apply.click();
   await expect(page.locator('.field-error').first()).toContainText('injected field failure'); await expect(page.locator('#errorSection')).toBeVisible(); await expect(page.locator('#documentResult')).toHaveCount(0);
+  await expect(apply).toBeEnabled();
   expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(fieldRevision); expect(await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes])).toEqual(chosen);
-  await input.fill('İpek'); await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); window.originalFlatten = lib.PDFForm.prototype.flatten; lib.PDFForm.prototype.flatten = () => { throw new Error('injected flatten failure'); }; });
-  await page.check('#flattenInput'); const flattenRevision = await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision); await page.click('#applyBtn'); await expect(page.locator('#errorText')).toContainText('could not be flattened');
+  await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); lib.PDFTextField.prototype.setText = window.originalSetText; });
+  await input.fill('İpek'); await page.check('#flattenInput'); const flattenRevision = await revision();
+  await readyScene(flattenRevision); await expect(apply).toBeEnabled();
+  await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); window.originalFlatten = lib.PDFForm.prototype.flatten; lib.PDFForm.prototype.flatten = () => { throw new Error('injected flatten failure'); }; });
+  await apply.click(); await expect(page.locator('#errorText')).toContainText('could not be flattened');
+  await expect(page.locator('#documentResult')).toHaveCount(0); await expect(apply).toBeEnabled();
   expect(await page.evaluate(async () => (await import('/js/tool-ui.js')).documentSession.snapshot().revision)).toBe(flattenRevision); expect(await page.evaluate(async () => [...(await import('/js/tool-ui.js')).documentSession.snapshot({includeBytes:true}).current.bytes])).toEqual(chosen);
   await page.evaluate(async () => { const lib = await (await import('/js/lib-loader.js')).ensurePdfLib(); lib.PDFForm.prototype.flatten = window.originalFlatten; lib.PDFTextField.prototype.setText = window.originalSetText; });
   await page.click('#applyBtn'); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); expect(await currentText(page)).toContain('İpek'); expect(await currentText(page)).not.toContain('FAIL FIELD');

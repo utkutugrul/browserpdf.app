@@ -271,6 +271,113 @@ but a newer direct page/search/thumbnail render does not invalidate it. This is
 a source-review seam awaiting a held-resolver actual-page regression. Full
 View PDF service acceptance and the complete 32-service scope remain open.
 
+### Navigation ownership extension after `1184fc6`
+
+The paragraph above records the pre-fix seam. Root subsequently confirmed it
+at runtime in `/tmp/browserpdf-root-reader-navigation-prefix-first/report.json`:
+a held named page-3 destination overwrote a newer native page-2 choice.
+
+The current extension routes explicit page, search-result, thumbnail, keyboard
+and zoom/Fit choices through one navigation epoch. Mode continuation also
+invalidates a pending destination. Internal render and incidental resize keep
+the existing navigation intent; source replacement/disposal cancels the old
+workspace. Native outline/link listeners return their actual async action,
+allowing tests to observe completion through destination resolution and any
+resulting render.
+
+`tests/reader-navigation.spec.mjs` generates its own PDF inputs. Its three held
+resolver cases choose page 2 through native page/search/thumbnail controls,
+then require exact text, selection/task and PNG pixels after the obsolete
+handler settles. Each compares against an explicitly rendered page-3 artifact.
+The positive resize case requires the intended destination to finish on page 3;
+replacement requires exact new-source pixels and state to survive release.
+These tests do not depend on Root's private fixtures or harness.
+
+The first allocated gate passed **8/8**, zero skipped/flaky/unexpected or
+top-level errors, in **11,387.147 ms**. It includes all five new cases and the
+existing Unicode/native Shift/outline, strict four-rotation/CropBox/UserUnit
+geometry and CSS-zoom cases. JSON and real PNG/PDF artifacts are retained at
+`/tmp/browserpdf-highlight-navigation-checkpoint1-first8-20261019.json` and the
+matching artifact directory. All 172 frozen public/test JS/MJS/CSS/HTML hashes
+stayed unchanged; the browser closed. The Reader text unit gate passed **6/6**
+in **121.093792 ms**; syntax and whitespace checks pass.
+
+```sh
+rtk proxy env BASE_URL=http://localhost:8788 PLAYWRIGHT_JSON_OUTPUT_NAME=/tmp/browserpdf-highlight-navigation-checkpoint1-first8-20261019.json npx playwright test tests/reader-navigation.spec.mjs tests/reader-workspace.spec.mjs --grep 'held named Reader|incidental Reader resize|replacing the Reader source|reader selects original|reader text geometry|reader CSS zoom' --workers=1 --retries=0 --output=/tmp/browserpdf-highlight-navigation-checkpoint1-first8-20261019 --reporter=line,json
+```
+
+Root's independent postfix then passed with the native outline handler's actual
+Promise completion observed in
+`/tmp/browserpdf-root-reader-navigation-postfix-complete/report.json`. After
+release, the chosen rotated page 2 retained its exact text and complete PNG SHA,
+with zero page errors/non-GET requests; the browser closed. This accepts the
+bounded navigation correction. The controlled Reader refresh and Highlight
+integration remain gates; this evidence does not close the full View PDF row,
+remaining annotation work or the all-32 program.
+
+## Controlled refresh and continuation contract
+
+The optional `beforeContinueMode(slug)` opening callback may return a Promise.
+`true` or `undefined` permits the existing transition; `false` leaves the user
+in the Reader and restores its controls without baking, publishing or storing
+a handoff. The adapter can focus its own explicit Review/Discard controls.
+After the callback, Reader verifies the captured task, revision, generation,
+navigation intent and lifetime before getting workspace input. Its own scene
+publication deliberately rebinds that exact owner before guarded storage.
+Thrown current errors remain visible; stale completion cannot publish or
+navigate. Callers keep unapplied local redaction masks outside the PDF scene.
+
+The returned Reader handle now also exposes:
+
+```js
+reader.setDisabled(true); // finite boolean; replacement remains reachable
+try {
+  await reader.refresh({ operation }); // optional {signal,isCurrent()}
+} finally {
+  reader.setDisabled(false); // only while this caller still owns its operation
+}
+```
+
+`refresh` obtains the canonical chosen task through guarded
+`getWorkspaceInput`. It serializes one candidate and checks task/revision/
+generation, refresh ownership and cancellation at every await. The selected
+candidate page must actually render into a bounded temporary canvas, prepare
+its direct TextLayer and read annotations before replacing the old PDF, cache
+or visible DOM. A candidate failure preserves those old objects and pixels.
+One old page and one serial candidate can temporarily retain two canvases,
+each at most 1,200 pixels per edge/2M pixels; candidate cleanup releases its
+canvas and unadopted PDF task. This is not a hard PDF-engine heap guarantee.
+
+Successful refresh keeps page/zoom and the existing search-input node, focus
+and caret. Source-specific text, search, outline and thumbnail caches reset.
+The old task is retired only after the verified swap. Cancellation/disposal
+checks prevent an obsolete candidate or its cleanup from clearing a new task.
+`setDisabled` gates explicit Reader controls and invalidates pending named
+destinations; its owning caller remains responsible for gating Apply and its
+own property controls. `refresh` uses the logical display viewport separately
+from the bounded native canvas, as ordinary Reader rendering does.
+
+`tests/reader-refresh.spec.mjs` exercises these exported APIs in the retained
+real Reader host; native route intake is separate annotation-route acceptance.
+Its three cases cover an actual held render failure with exact old PDF/text
+layer/query identities, search results and PNG pixels preserved, followed by
+a successful refresh with retained focus/caret; disposed held completion versus
+an actual new chosen task and exact pixels; and native mode continuation
+blocked by `false` or stale ownership with restored controls and zero IndexedDB
+read-write transactions.
+
+The allocated gate passed **11/11**, zero skipped/flaky/unexpected or top-level
+errors, in **13,729.170 ms**. It includes all three API cases and the eight
+navigation/Unicode/native Shift/four-rotation/zoom cases above. JSON and actual
+PNGs remain at `/tmp/browserpdf-reader-refresh-first11-20261019.json` and its
+matching directory. All 178 frozen public/test source hashes stayed unchanged;
+the browser closed. Highlight native selection and mixed-scene route acceptance
+were still open at this earlier API gate; see the later native evidence below.
+
+```sh
+rtk proxy env BASE_URL=http://localhost:8788 PLAYWRIGHT_JSON_OUTPUT_NAME=/tmp/browserpdf-reader-refresh-first11-20261019.json npx playwright test tests/reader-refresh.spec.mjs tests/reader-navigation.spec.mjs tests/reader-workspace.spec.mjs --grep 'Reader refresh|held Reader refresh|Reader beforeContinueMode|held named Reader|incidental Reader resize|replacing the Reader source|reader selects original|reader text geometry|reader CSS zoom' --workers=1 --retries=0 --output=/tmp/browserpdf-reader-refresh-first11-20261019 --reporter=line,json
+```
+
 ## Annotation and redaction preflight (not route acceptance)
 
 The next checkpoint verified the installed pdf-lib 1.17.1 low-level writer
@@ -291,9 +398,51 @@ pixels. This is an API feasibility proof, not BrowserPDF route evidence.
 Arbitrarily angled, skewed and vertical writing need a visible support limit
 unless separately proven.
 
-Redaction remains open. The planned bounded plain-page path reconstructs safe
+At this historical preflight, redaction remained open. The bounded plain-page path reconstructs safe
 primitive content/font resources in fresh pages without page-object copying;
 unknown/interactive/reference graphs require explicit whole-document raster
 review. Both repeated-widget and internal-Link/Dest orphan hazards still need
 portable actual route/export tests, including decoded streams, all PageLeaf
 objects and source Info/XMP secrets.
+
+## Native Highlight and reviewed lifecycle checkpoint
+
+`setDisabled` now returns immediately for the same boolean. Repeated caller
+control updates preserve a real in-progress page-number edit. The focused
+same-lock/native page draft and property/held-preview/Undo cases passed in
+`/tmp/browserpdf-highlight-native-corrected5-20261019.json`; that gate also
+retains three failed tails. Unsupported/collapsed/outside native selections
+and held review publication versus an unrelated same-task edit subsequently
+passed in `/tmp/browserpdf-highlight-native-failed3-postfix-20261019.json`.
+The latter recovery reopened the actual PDF containing the newer note.
+
+The remaining four-rotation helper failure used a collapsed-caret midpoint
+that did not hit rotated text. Root's independent native character-hit probe
+passed five steps at
+`/tmp/browserpdf-root-highlight-native-charhit-second/report.json`, including
+all four native selections, multiline, Unicode/color/opacity, delete/clear/Undo,
+and one downloaded PDF with exact raw quads, explicit AP transparency, retained
+original green AP/note, searchable original text and matching preview pixels.
+Root's six-step Turkish mixed journey also passed at
+`/tmp/browserpdf-root-highlight-mixed-first/report.json`: Text/Image/Signature
+through Highlight, Add Text, Highlight edit/delete/Undo and one actual export
+with each surviving object once. Both reports record zero errors/non-GET
+requests and one explicit download. Earlier endpoint failures remain preserved.
+
+Fresh route review found two separate lifecycle defects. Selected-property
+input now invalidates the prior result generation immediately, including held
+continuation and retained download callbacks. Continuations also check the
+adapter's current pending/dirty/failure locks. An invalid replacement now
+awaits the retained opening before resuming it, with a fresh intake-owner check.
+
+The allocated focused gate passed **3/3**, zero skipped/flaky/unexpected or
+top-level errors, in **6,924.537 ms**. Its portable fixture uses real native
+first/last-character hit testing and mouse input with strict selected-text,
+raw-quad/AP and repeated-byte assertions. The new lifecycle cases hold actual
+native IDB completion through a property edit, then verify stale callback
+suppression and the new note in a saved PDF; and hold A's first CSS/opening,
+choose invalid B, then verify A's enabled native Add and actual annotation PDF.
+JSON/artifacts: `/tmp/browserpdf-highlight-reviewed-lifecycle-first3-20261019.json`
+and its matching directory. All 185 public/test source hashes stayed unchanged
+(`90fcf1f9d2f9298770b98857dd107c5d6383c12e507ce2fb16782abb4b66831f`);
+the browser closed. Responsive/locale/final service gates remain separate.

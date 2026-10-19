@@ -23,7 +23,17 @@ async function open(page, mode, bytes) {
   await page.goto('/' + mode);
   await page.setInputFiles('#fileInput', { name: 'route-source.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
   await expect(page.locator('#pageTask')).toBeVisible();
-  await expect.poll(() => page.locator('#previewCanvas').evaluate((canvas) => canvas.width)).toBeGreaterThan(0);
+  // A newly created canvas is already 300x150 before owned hydration finishes.
+  // Wait for the actual page and its interactive selection controls instead.
+  await expect(page.locator('#pageTask')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#pageSelection')).toHaveJSProperty('inert', false);
+  await expect(page.getByRole('textbox', { name: 'Page ranges', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Select range', exact: true })).toBeEnabled();
+  await expect(page.locator('#pagePreviewNumber')).toBeEnabled();
+  await expect(page.locator('#pagePreviewNumber')).toHaveValue('1');
+  await expect(page.locator('#pagePreviewStatus')).toHaveText(/^1 \/ \d+ · Source page 1$/);
+  await expect(page.locator('#previewCanvas')).toHaveAttribute('width', /^[1-9]\d*$/);
+  await expect(page.locator('#previewCanvas')).toHaveAttribute('height', /^[1-9]\d*$/);
 }
 async function range(page, value) { await page.getByRole('textbox', { name: 'Page ranges', exact: true }).fill(value); await page.getByRole('button', { name: 'Select range', exact: true }).click(); }
 async function result(page, testInfo, name) {

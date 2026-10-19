@@ -204,10 +204,11 @@ test('clear invalidates a delayed file read so stale selection and tools cannot 
     let release;
     const gate = new Promise((resolve) => { release = resolve; });
     window.__releasePrivacyRead = release;
-    File.prototype.arrayBuffer = async function delayedRead() { await gate; return original.call(this); };
+    File.prototype.arrayBuffer = async function delayedRead() { window.__privacyReadStarted = true; await gate; return original.call(this); };
   });
   await page.setInputFiles('#fileInput', fixture('privacy-rich.pdf'));
   await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'true');
+  await expect.poll(() => page.evaluate(() => window.__privacyReadStarted)).toBe(true);
   await expect(page.locator('#clearBtn')).toBeEnabled();
   await page.click('#clearBtn');
   await page.evaluate(() => window.__releasePrivacyRead());
@@ -221,9 +222,10 @@ test('clear invalidates a delayed file read so stale selection and tools cannot 
     let release;
     const gate = new Promise((resolve) => { release = resolve; });
     window.__releaseFailedPrivacyRead = release;
-    File.prototype.arrayBuffer = async function failedRead() { await gate; throw new Error('delayed read failure'); };
+    File.prototype.arrayBuffer = async function failedRead() { window.__privacyFailedReadStarted = true; await gate; throw new Error('delayed read failure'); };
   });
   await page.setInputFiles('#fileInput', fixture('privacy-rich.pdf'));
+  await expect.poll(() => page.evaluate(() => window.__privacyFailedReadStarted)).toBe(true);
   await page.click('#clearBtn');
   await page.evaluate(() => window.__releaseFailedPrivacyRead());
   await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'false');
@@ -236,14 +238,38 @@ test('clear during delayed runtime loading suppresses stale scan and cleanup com
   const consoleErrors = [];
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   await installTestModelContext(page);
+  await page.addInitScript(() => {
+    const add = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function (type, listener, options) {
+      if (type !== 'click' || typeof listener !== 'function') return add.call(this, type, listener, options);
+      return add.call(this, type, function (event) { const value = listener.call(this, event); if (this.id === 'scanBtn' && value?.then) { window.privacyScanHandlerSettled = false; Promise.resolve(value).then(() => { window.privacyScanHandlerSettled = true; }, () => { window.privacyScanHandlerSettled = true; }); } return value; }, options);
+    };
+  });
   await page.route('**/pdf.min.mjs', async (route) => { await new Promise((resolve) => setTimeout(resolve, 300)); await route.continue(); });
   await page.route('**/pdf-lib.min.js', async (route) => { await new Promise((resolve) => setTimeout(resolve, 300)); await route.continue(); });
   await page.goto('/privacy-scan');
   await page.setInputFiles('#fileInput', fixture('privacy-rich.pdf'));
+  await expect(page.locator('#scanBtn')).toBeEnabled();
+  // Intake now validates with PDF.js before readiness. Hold the actual next
+  // scanner metadata read rather than assuming its runtime is still unloaded.
+  await page.evaluate(async () => {
+    const entry = document.querySelector('script[src$="js/privacy-scan.js"]'), ui = await import(new URL('./tool-ui.js', entry.src).href), runtime = await import(new URL('./lib-loader.js', entry.src).href);
+    const task = (await runtime.ensurePdfJs()).getDocument({ data: ui.documentSession.current().bytes.slice(), ...runtime.PDFJS_ASSET_URLS });
+    try { const prototype = Object.getPrototypeOf(await task.promise), native = prototype.getMetadata; let first = true;
+      window.restorePrivacyMetadata = () => { prototype.getMetadata = native; };
+      prototype.getMetadata = async function (...args) {
+        const value = await native.apply(this, args);
+        if (first) { first = false; window.privacyNativeMetadataCompleted = true; window.privacyMetadataHeld = true; await new Promise((resolve) => { window.releasePrivacyMetadata = resolve; }); }
+        return value;
+      };
+    } finally { await task.destroy(); }
+  });
   await page.click('#scanBtn');
+  await expect.poll(() => page.evaluate(() => window.privacyMetadataHeld)).toBe(true);
+  expect(await page.evaluate(() => window.privacyNativeMetadataCompleted)).toBe(true);
   await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'true');
   await page.click('#clearBtn');
-  await page.waitForTimeout(500);
+  await page.evaluate(() => window.releasePrivacyMetadata()); await expect.poll(() => page.evaluate(() => window.privacyScanHandlerSettled)).toBe(true); await page.evaluate(() => window.restorePrivacyMetadata());
   await expect(page.locator('#scanResults')).toBeHidden();
   await expect(page.locator('#errorSection')).toBeHidden();
   await expect(page.locator('#successSection')).toBeHidden();

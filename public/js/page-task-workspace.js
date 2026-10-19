@@ -82,8 +82,8 @@ export async function openPageTask(mode, { isCurrent = () => true } = {}) {
       if (!value || !owns()) return;
       // Preserve an existing editable scene across modes. Page results themselves
       // enter the canonical session only through explicit result adoption.
-      if (value.hasScene) documentSession.publishScene(value.bytes, value.name, { capabilities: value.capabilities });
-      const handoff = await stashForChain(value.bytes, value.name, slug, { capabilities: value.capabilities, operation: request });
+      if (value.hasScene) documentSession.publishScene(value.bytes, value.name, { name: value.name, displayName: value.displayName, type: value.type, capabilities: value.capabilities });
+      const handoff = await stashForChain(value.bytes, value.name, slug, { name: value.name, displayName: value.displayName, type: value.type, capabilities: value.capabilities, operation: request });
       if (!request.isCurrent() || !owns() || !handoff.isCurrent()) return;
       const lang = getLang(); location.href = `${lang === 'en' ? '' : '/' + lang}/${slug}?workflow=${encodeURIComponent(handoff.workflowId)}&file=${encodeURIComponent(handoff.fileId)}`;
     } catch (error) { busy = false; update(); throw error; }

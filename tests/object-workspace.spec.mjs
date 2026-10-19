@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { createCanvas } from '@napi-rs/canvas';
-import { PDFDocument, PDFDict, PDFName, PDFNumber, StandardFonts, degrees } from 'pdf-lib';
+import { PDFDocument, PDFDict, PDFName, PDFNumber, PDFHexString, StandardFonts, degrees, decodePDFRawStream } from 'pdf-lib';
 import { createDocumentSession } from '../public/js/core/document-session.js';
 import { boundedViewport } from '../public/js/core/bounded-renderer.js';
 let rootFixtures;
@@ -176,4 +177,45 @@ test('Apply freezes all live field editors and preserves visible values through 
   await page.click('#applyBtn'); await expect.poll(()=>page.evaluate(()=>window.held)).toBe(true); await expect(input).toBeDisabled(); await expect(page.locator('#fieldsList [data-field=customer_name]')).toBeDisabled(); await expect(page.locator('#textInput')).toBeDisabled(); await page.keyboard.type('MUST NOT ENTER');
   await expect(input).toHaveValue('İpek before Apply'); await page.evaluate(()=>{window.releaseSave();window.restoreSave()}); await expect(page.locator('#documentResultStatus')).toContainText('actual file'); await expect(input).toBeEnabled();
   const [result]=await Promise.all([page.waitForEvent('download'),page.click('#downloadResultBtn')]); const file=testInfo.outputPath('delayed.pdf');await result.saveAs(file);expect((await PDFDocument.load(await readFile(file))).getForm().getTextField('customer_name').getText()).toBe(await input.inputValue());
+});
+
+
+const emptySceneSha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+async function emptySceneSnapshot(page) {
+  return page.evaluate(async () => { const entry = document.querySelector('script[type=module][src^="js/"]'), ui = await import(new URL('./tool-ui.js', entry.src).href); return { state: ui.documentSession.snapshot(), scene: ui.documentSession.scene(), original: [...ui.documentSession.original().bytes], bytes: [...ui.documentSession.current().bytes] }; });
+}
+async function emptySceneReady(page, mode) {
+  const canvas = page.locator(mode === 'add-image' ? '#previewCanvas' : '#placementCanvas');
+  await expect(canvas).toHaveAttribute('aria-busy', 'false'); await expect.poll(async () => Number(await canvas.getAttribute('data-scene-revision'))).toBe((await emptySceneSnapshot(page)).state.revision);
+}
+async function emptySceneSource(mode) {
+  const doc = await PDFDocument.create(), page = doc.addPage([500, 400]), font = await doc.embedFont(StandardFonts.Helvetica);
+  page.drawText('EMPTY SCENE SOURCE TEXT', { x: 55, y: 320, size: 16, font });
+  const c = doc.context, gs = c.register(c.obj({ Type: 'ExtGState', ca: .55, CA: .55, BM: 'Multiply' })), ap = c.register(c.flateStream('q /ExistingGS gs 0 1 0 rg 54 96 200 20 re f Q', { Type: 'XObject', Subtype: 'Form', BBox: [54, 96, 254, 116], Resources: { ExtGState: { ExistingGS: gs } } }));
+  page.node.addAnnot(c.register(c.obj({ Type: 'Annot', Subtype: 'Highlight', Rect: [54, 96, 254, 116], QuadPoints: [54, 96, 254, 96, 254, 116, 54, 116], Contents: PDFHexString.fromText('Original – Yeşil not İstanbul'), AP: { N: ap }, F: 4 })));
+  return { name: `empty-source-${mode}.pdf`, mimeType: 'application/pdf', buffer: Buffer.from(await doc.save()), appearance: [...decodePDFRawStream(c.lookup(ap)).decode()] };
+}
+for (const mode of ['add-text', 'add-image', 'fill-sign']) test(`${mode} Delete-last reviews an edited empty scene directly and retains idempotent artifacts and Undo Redo`, async ({ page }, info) => {
+  const errors = []; page.on('pageerror', (error) => errors.push(error.message)); const file = await emptySceneSource(mode);
+  await page.addInitScript(() => localStorage.setItem('bpdf-consent', 'rejected')); await page.goto('/' + mode); await page.setInputFiles('#fileInput', { name: file.name, mimeType: file.mimeType, buffer: file.buffer });
+  await expect(page.locator('#workspaceModes')).toBeVisible(); await emptySceneReady(page, mode); await expect(page.locator('#applyBtn')).toBeDisabled(); const initial = await emptySceneSnapshot(page);
+  if (mode === 'add-text') { await page.fill('#textInput', 'ADDED EMPTY İpek'); await expect(page.locator('#placeDraftBtn')).toBeEnabled(); await page.click('#placeDraftBtn'); }
+  else if (mode === 'add-image') { await page.selectOption('#pageSelect', '1'); await page.setInputFiles('#imageInput', rootFixtures + 'transparent-signature.png'); }
+  else { await page.click('#sigModeType'); await page.fill('#typeSigInput', 'İpek Şahin'); await expect(page.locator('#signaturePreview')).toBeVisible(); await expect(page.locator('#placeDraftBtn')).toBeEnabled(); await page.click('#placeDraftBtn'); }
+  await expect(page.locator('#objectList option')).toHaveCount(1); await emptySceneReady(page, mode);
+  const first = await download(page, info, `${mode}-delete-last-before.pdf`), firstDoc = await PDFDocument.load(first);
+  if (mode === 'add-text') expect((await extracted(page, first))[0]).toContain('ADDED EMPTY İpek'); else expect(imageSizes(firstDoc, 0)).toHaveLength(1);
+  await page.selectOption('#objectList', (await page.locator('#objectList option').first().getAttribute('value'))); await page.click('#deleteObjectBtn');
+  await expect(page.locator('#objectList option')).toHaveCount(0); await emptySceneReady(page, mode); await expect(page.locator('#applyBtn')).toBeEnabled(); await expect(page.locator('#documentResult')).toBeHidden();
+  const empty = await download(page, info, `${mode}-delete-last-empty.pdf`), repeat = await download(page, info, `${mode}-delete-last-empty-repeat.pdf`); expect(emptySceneSha(repeat)).toBe(emptySceneSha(empty));
+  const checkEmpty = async (bytes) => {
+    const doc = await PDFDocument.load(bytes), annots = doc.getPage(0).node.Annots().asArray(); expect(annots).toHaveLength(1); const original = doc.context.lookup(annots[0]); expect(original.lookup(PDFName.of('Contents')).decodeText()).toBe('Original – Yeşil not İstanbul'); expect([...decodePDFRawStream(original.lookup(PDFName.of('AP')).lookup(PDFName.of('N'))).decode()]).toEqual(file.appearance);
+    expect(imageSizes(doc, 0)).toHaveLength(0); const text = (await extracted(page, bytes))[0]; expect(text).toContain('EMPTY SCENE SOURCE TEXT'); expect(text).not.toContain('ADDED EMPTY');
+    const current = await emptySceneSnapshot(page); expect(current.scene.objects).toHaveLength(0); expect(current.state.taskId).toBe(initial.state.taskId); expect(emptySceneSha(Buffer.from(current.original))).toBe(emptySceneSha(file.buffer)); expect(emptySceneSha(Buffer.from(current.bytes))).toBe(emptySceneSha(bytes));
+  };
+  await checkEmpty(empty);
+  await page.click('#undoEditBtn'); await expect(page.locator('#objectList option')).toHaveCount(1); await emptySceneReady(page, mode); const restored = await download(page, info, `${mode}-delete-last-undo.pdf`), restoredDoc = await PDFDocument.load(restored);
+  if (mode === 'add-text') expect((await extracted(page, restored))[0]).toContain('ADDED EMPTY İpek'); else expect(imageSizes(restoredDoc, 0)).toHaveLength(1);
+  await page.click('#redoEditBtn'); await expect(page.locator('#objectList option')).toHaveCount(0); await emptySceneReady(page, mode); await expect(page.locator('#applyBtn')).toBeEnabled(); const redone = await download(page, info, `${mode}-delete-last-redo.pdf`); expect(emptySceneSha(redone)).toBe(emptySceneSha(empty)); await checkEmpty(redone);
+  await info.attach(`${mode}-delete-last-artifacts`, { body: JSON.stringify({ taskId: initial.state.taskId, originalSHA: emptySceneSha(file.buffer), firstSHA: emptySceneSha(first), emptySHA: emptySceneSha(empty), repeatSHA: emptySceneSha(repeat), undoSHA: emptySceneSha(restored), redoSHA: emptySceneSha(redone) }), contentType: 'application/json' }); expect(errors).toEqual([]);
 });

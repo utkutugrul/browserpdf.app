@@ -77,18 +77,72 @@ Fresh verification/review agents run the relevant artifact suites and anti-patte
 
 Final evidence: exact test counts/commands, commit SHAs, clean/dirty status and remaining material limits. No row is complete merely because it gained a continuation link. Unfinished scope remains explicitly open.
 
+## Current accepted annotation checkpoint
+
+Root accepts the bounded Highlight/Reader/Redact functionality, chosen-copy
+Privacy dependency, typed display-name/MIME forwarding, shared continuation
+ownership, direct edited-empty-scene exports and fresh source/test review.
+The [Highlight checkpoint](../docs/highlight-checkpoint.md) and
+[Redact checkpoint](../docs/redaction-checkpoint.md) retain failed prefixes,
+cause-based helper corrections and independent actual-artifact proofs. For
+Redact, Review and the actual clean Download preserve source/current identity
+and local masks. An actionable continuation appears only after deliberate Use
+and successful verification of that exact current preview; the same rule holds
+through Cancel/Retry and committed history.
+
+Root's full 331-test invocation remains **324 passed/7 failed in 561,512.531 ms**
+(`/tmp/browserpdf-root-annotations-full-20261019-results.json`). The subsequent
+clean affected invocation passes **79/79 in 116,262.511 ms**, zero failed,
+skipped, flaky or top-level errors, with no retries
+(`/tmp/browserpdf-continuation-owner-gate-20261019-results.json`). It closes all
+seven stopped cases and verifies affected shared consumers and strict native
+idle budgets with all 286 frozen source paths unchanged. This is focused
+closure of the retained failures, not one clean full 331-test invocation. Actual
+document-handoff Node verification is **5/5 in 51.801459 ms**; the earlier author
+discovery count of three was incorrect.
+
+The final complete isolated Redact invocation passes **22/22 in 61,374.922 ms**,
+zero failed/skipped/flaky/top-level errors or retries, all **286** updated
+runtime/test/SDK/script hashes unchanged, browser closed and **33 actual PDFs**
+retained (`/tmp/browserpdf-redact-prerequisite-gate-20261019-results.json` and
+the matching `-final.json`/`-output`). It supersedes the prerequisite's pending
+runtime status; the earlier twenty-one-case aggregate remains historical.
+Root's independent pre-Use prefix and first passing explicit-Use postfix use
+the same 12,147-byte clean artifact, SHA-256
+`14327f38eeda3791a48561b3010f22e5767e89bf37686cbedd4312690d353a74`.
+The portable gate separately proves downloaded/chosen/Privacy identity with
+SHA-256 `f385893d38004a1fc851e47b61054b66d514c8fc49853dba73019dfdda18a316`;
+these are distinct generated corpora.
+
+Retained read-only nonbrowser checks pass: two SDK distribution/type processes
+(six exact distribution outputs and no-emit typecheck), all **eight** migration
+`--check` processes and **58/58** root Node tests in **5,341.333333 ms**, with
+all 231 relevant hashes unchanged
+(`/tmp/browserpdf-annotation-final-nonbrowser-20261019/summary.json`). Earlier
+unchanged SDK build/distribution/type/unit/package evidence, including its
+**8/8** unit tests, remains retained; no SDK rebuild is claimed here. The native
+idle gate passes below 100,000 local JavaScript bytes and at most sixteen
+requests without raising limits; it supplies no successful exact per-route
+byte attachment, so static estimates are not browser measurements.
+
+This accepts the functional annotation checkpoint and its appropriate affected
+regression/review. Commit execution is separate. Every service row remains
+**open** for complete locales, remaining Phase 3/4 and final all-32 verification;
+the later handoffs are planning documents, not implementation claims. No future
+commit SHA, main push, production deployment or PR is claimed.
+
 ## 32-service acceptance ledger
 
 State begins **open**. Each row requires its specific behavior and compatible session/result integration. The implementing worker adds evidence paths/test names and only then marks verified.
 
 | # | Service | Specific completion criteria | State / evidence |
 |---|---|---|---|
-| 1 | Add Text | Multiple selectable/movable text objects; real glyph preview; Unicode; exact rotated/CropBox transform; accumulation; undo/redo; idempotent export | open — [scene, preparation, keyboard and independent artifact evidence](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
-| 2 | Add Image | Correct selected-page preview; multiple images; drag/resize/keyboard; exact saved placement | open — [saved intake page/asset/order and independent scene journey](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
-| 3 | Fill & Sign | Priority: page-linked field placement; field/flatten errors block false success; drawn/typed/uploaded proportional movable/resizable keyboard signatures; non-form text mode; preview/export parity and no duplicate reapply | open — [form/signature, preparation, independent touch/bitmap and keyboard evidence](../docs/object-shell-checkpoint.md); final shared-handoff/locale acceptance pending |
-| 4 | Highlight | Text selection, editable per-object color/note/delete/undo; readable result with persistent highlights | open |
-| 5 | Redact | Exact coordinates; explicit lossy/page scope; verified removed text and metadata; direct post-redaction inspection; documented structural engine feasibility/evidence | open |
-| 6 | View PDF | Select/search text, outline/thumbnails/zoom, shared current document and page-linked forms without scripting surfaces | open — [Reader checkpoint accepted in `917f92e`, including full regression and actual saved-task evidence](../docs/reader-checkpoint.md); annotation navigation extension and complete locales remain pending |
+| 1 | Add Text | Multiple selectable/movable text objects; real glyph preview; Unicode; exact rotated/CropBox transform; accumulation; undo/redo; idempotent export | open — [scene, preparation, keyboard and independent artifact evidence](../docs/object-shell-checkpoint.md), plus [accepted direct Delete-last export/repeat/Undo/Redo and affected shared continuation regression](../docs/highlight-checkpoint.md); complete locales, remaining phases and final all-32 acceptance pending |
+| 2 | Add Image | Correct selected-page preview; multiple images; drag/resize/keyboard; exact saved placement | open — [saved intake page/asset/order and independent scene journey](../docs/object-shell-checkpoint.md), plus [accepted direct Delete-last export/repeat/Undo/Redo](../docs/highlight-checkpoint.md); complete locales, remaining phases and final all-32 acceptance pending |
+| 3 | Fill & Sign | Priority: page-linked field placement; field/flatten errors block false success; drawn/typed/uploaded proportional movable/resizable keyboard signatures; non-form text mode; preview/export parity and no duplicate reapply | open — [form/signature, preparation, independent touch/bitmap and keyboard evidence](../docs/object-shell-checkpoint.md), plus [accepted direct Delete-last export and strict Apply-time field/flatten fault recovery](../docs/highlight-checkpoint.md); complete locales, remaining phases and final all-32 acceptance pending |
+| 4 | Highlight | Text selection, editable per-object color/note/delete/undo; readable result with persistent highlights | open — [native four-rotation/multiline, localized mixed-scene and reviewed lifecycle evidence](../docs/reader-checkpoint.md) pass, as do three additional held-work replacement cases. [Direct Delete-last export, repeat bytes and Undo/Redo, plus all eight 320/390/768/1440 English-light and Arabic-dark actual-artifact contexts](../docs/highlight-checkpoint.md) have passing evidence. Desktop native start-affinity and preview probe-context failures are retained with cause-based test-only corrections and strict saved-artifact postfix proofs. Scoped annotation regression/review is accepted; complete locales, remaining phases and final all-32 acceptance remain pending |
+| 5 | Redact | Exact coordinates; explicit lossy/page scope; verified removed text and metadata; direct post-redaction inspection; documented structural engine feasibility/evidence | open — [fresh-context core, clean complete 22-case native gate and independent saved-artifact review](../docs/redaction-checkpoint.md), including explicit Use plus verified current preview before continuation, exact chosen-copy Privacy, eight responsive contexts and durable synchronization after Cancel/history/Retry. The historical 21-case aggregate, original post-Use Cancel mismatch, two fresh-B probe-context failures and pre-Use continuation prefix remain preserved with their corrections and passing postfix artifacts. Scoped annotation regression/review is accepted; complete locales, remaining phases and all-32 acceptance remain pending |
+| 6 | View PDF | Select/search text, outline/thumbnails/zoom, shared current document and page-linked forms without scripting surfaces | open — [Reader checkpoint accepted in `917f92e`, including full regression and actual saved-task evidence, with subsequent verified navigation/transactional-refresh extension](../docs/reader-checkpoint.md); scoped annotation regression/review is accepted; complete locales, remaining phases and final all-32 acceptance remain pending |
 | 7 | Edit Metadata | Before/after properties, controlled standard cleanup, same-document Privacy handoff | open |
 | 8 | Merge | Source thumbnails and page ranges, keyboard order, review combined current result | open — [actual range/order, transactional intake/clear, adoption and independent localized journey evidence](../docs/page-routes-checkpoint.md); final locale acceptance pending |
 | 9 | Split | Ranges/odd-even/Shift selection; named per-result list/group; chosen PDF continues | open — [checkpoint accepted in `917f92e`: clean 24-case effects file, legacy smoke and independent lifecycle/artifact review](../docs/page-effects-checkpoint.md); complete locales and final shared continuation acceptance remain pending |
@@ -106,14 +160,14 @@ State begins **open**. Each row requires its specific behavior and compatible se
 | 21 | PDF → Word | Actual text/table/list/image-oriented preview; explicit fidelity limits; cancel; verified DOCX and continuation | open |
 | 22 | Word → PDF | Unicode, numbered lists/tables/images; actual PDF review; evidence-based Office-fidelity feasibility | open |
 | 23 | Extract Text | Direct text model retains punctuation; page boundaries/source and OCR status; localized states | open |
-| 24 | PDF ↔ Images | Selection/resolution/memory estimate/cancel; output list; shared image composer and PDF review | open |
+| 24 | PDF ↔ Images | Selection/resolution/memory estimate/cancel; output list; shared image composer and PDF review | open — [bounded PDF-image export/composer checkpoint accepted in `1184fc6`](../docs/image-composer-checkpoint.md), using the [verified shared session/handoff contract](../docs/shared-composition-checkpoint.md); complete locales, Phase 4 continuity and final all-32 acceptance remain open |
 | 25 | Markdown → PDF | Shared workspace; actual paginated preview; Unicode; paper/margins/long-token wrap; export matches preview | open |
 | 26 | PDF → Excel | Empty extraction blocked/OCR offered; editable grids/column correction; page/table tabs and valid workbook output | open |
 | 27 | Excel → PDF | Unicode/no replacement; wrapping/no clipping; column widths; multi-sheet; actual print preview | open |
-| 28 | JPG/PNG → PDF | Same composer as Images; thumbnails/order/rotate/fit-fill/A4-Letter/margins; reviewed PDF; both URLs work | open |
+| 28 | JPG/PNG → PDF | Same composer as Images; thumbnails/order/rotate/fit-fill/A4-Letter/margins; reviewed PDF; both URLs work | open — [both retained entries share the bounded composer accepted in `1184fc6`](../docs/image-composer-checkpoint.md), using the [verified shared session/handoff contract](../docs/shared-composition-checkpoint.md); complete locales, Phase 4 continuity and final all-32 acceptance remain open |
 | 29 | Markdown Viewer | Same Markdown/PDF workspace; consistent parser/syntax; CommonMark support scope verified; generated PDF continues | open |
 | 30 | Workflows | Import current; output/report review and chosen-result continue; bounded recipe composition from shared cores | open |
-| 31 | Privacy Scan | What/where/action, affected-page opening, coverage limits, verified cleaned-copy continuation | open |
+| 31 | Privacy Scan | What/where/action, affected-page opening, coverage limits, verified cleaned-copy continuation | open — [narrow chosen-copy intake contract](../docs/privacy-intake-contract.md) passed independent native/idle gates and Root's chosen-Redact/held initial-read replacement/Clear artifacts; richer inspection/actions, chosen cleanup continuation and complete locales remain Phase 4 work |
 | 32 | Document Doctor | Plain problem/remedy explanation, least-lossy recommendation, affected-page/source-result review, chosen-copy continuation | open |
 
 ## Task architecture and cutover

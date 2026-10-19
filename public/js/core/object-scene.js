@@ -1,5 +1,8 @@
-import { embedUnicodeFont } from './pdf-fonts.js';
 import { visualTransform } from './page-geometry.js';
+import { writeHighlightAnnotation } from './highlight-annotations.js';
+
+// Annotation/image-only builds do not require the browser font loader.
+const embedUnicodeFont = async (doc, options) => (await import('./pdf-fonts.js')).embedUnicodeFont(doc, options);
 
 export function formModel(doc, lib) {
   const pages = doc.getPages();
@@ -57,6 +60,8 @@ export async function renderScenePdf({ scene, resource, pdfLib, pdfjs, pdfjsAsse
       signal?.throwIfAborted();
       const page = doc.getPages()[object.pageIndex];
       if (!page) throw new Error('An object refers to a missing page.');
+      if (object.kind === 'highlight') { writeHighlightAnnotation(doc, page, object, pdfLib); continue; }
+      if (!['text', 'image', 'signature'].includes(object.kind)) throw new Error('Unsupported workspace object.');
       if (!viewports.has(object.pageIndex)) viewports.set(object.pageIndex, (await pdf.getPage(object.pageIndex + 1)).getViewport({ scale: 1 }));
       const viewport = viewports.get(object.pageIndex);
       page.pushOperators(pdfLib.pushGraphicsState(), pdfLib.concatTransformationMatrix(...visualTransform(viewport)));

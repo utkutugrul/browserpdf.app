@@ -1,0 +1,14 @@
+.highlight-loaded #highlightActions { display:flex; flex-wrap:wrap; gap:.25rem; margin:.3rem 0; }
+.highlight-loaded #highlightActions .btn { min-height:34px; padding:.35rem .5rem; font-size:.75rem; }
+#highlightSelectionStatus { margin:.2rem 0; font-size:.75rem; line-height:1.35; overflow-wrap:anywhere; }
+#highlightPanel { min-width:0; }
+#highlightPanel>p { font-size:.75rem; margin:.3rem; overflow-wrap:anywhere; }
+#highlightProperties { display:flex; flex-wrap:wrap; gap:.5rem; padding:.3rem; min-width:0; }
+#highlightProperties label { display:flex; flex-direction:column; gap:.2rem; font-size:.8rem; min-width:0; }
+#highlightProperties label:has(#highlightList),#highlightProperties label:has(#highlightNote) { flex-basis:100%; }
+#highlightList,#highlightNote { width:100%; box-sizing:border-box; min-width:0; max-width:100%; }
+#highlightNote { resize:vertical; min-height:3rem; }
+#highlightColor { width:4rem; min-height:32px; padding:0; }
+#highlightOpacity { width:10rem; max-width:100%; }
+#highlightProperties .btn-row { display:flex; flex-wrap:wrap; gap:.3rem; }
+#highlightClearDocumentBtn { margin:.3rem; }

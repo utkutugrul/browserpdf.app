@@ -1,0 +1,25 @@
+.redact-loaded #redactMaskLayer { position:absolute; inset:0; z-index:4; touch-action:none; cursor:crosshair; outline-offset:3px; }
+.redact-loaded #redactMaskLayer[aria-disabled="true"] { pointer-events:none; cursor:wait; }
+.redact-loaded #viewerSection:not([data-redact-preview-state="ready"]) :is(#readerPageSurface,#readerPanels,#readerStatus) { visibility:hidden; }
+.redact-loaded .reader-text-layer { pointer-events:none; user-select:none; }
+.redact-loaded .redact-mask { position:absolute; min-width:0; min-height:0; padding:0; margin:0; border:1px solid #444; border-radius:0; box-sizing:border-box; background:rgb(0 0 0 / .8); cursor:move; touch-action:none; }
+.redact-loaded .redact-mask[aria-pressed="true"],.redact-loaded .redact-mask:focus-visible { outline:2px solid #087fff; outline-offset:2px; scroll-margin:5px; }
+.redact-loaded .redact-mask-draft { border:2px dashed #087fff; pointer-events:none; }
+.redact-loaded .redact-resize { position:absolute; inset-inline-end:-4px; bottom:-4px; width:12px; height:12px; border:1px solid white; background:#087fff; cursor:nwse-resize; }
+.redact-loaded #redactActions,.redact-loaded #redactDocumentActions { display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; margin:.4rem 0; }
+.redact-loaded #redactActions .btn,.redact-loaded #redactDocumentActions .btn { min-height:34px; padding:.4rem .55rem; font-size:.8rem; }
+.redact-loaded #redactStatus,.redact-loaded #redactEstimate,.redact-loaded #redactLossSummary,.redact-loaded #redactPanel p,.redact-loaded #redactUnsupportedReason { font-size:.8rem; line-height:1.45; margin:.3rem 0; overflow-wrap:anywhere; }
+.redact-loaded #redactPanel,.redact-loaded #redactOutputOptions { min-width:0; max-width:100%; }
+.redact-loaded #redactPanel[open],.redact-loaded #redactOutputOptions[open] { flex-basis:100%; }
+.redact-loaded #redactPanel>select { width:100%; max-width:100%; margin:.4rem 0; }
+.redact-loaded #redactProperties { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.4rem; }
+.redact-loaded #redactProperties label,.redact-loaded #redactOutputOptions>label { display:flex; flex-direction:column; gap:.2rem; min-width:0; font-size:.8rem; }
+.redact-loaded #redactProperties input,.redact-loaded #redactOutputOptions select { width:100%; min-width:0; max-width:100%; box-sizing:border-box; }
+.redact-loaded #redactProperties>.btn-row { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:.3rem; }
+.redact-loaded #redactOutputOptions>label { margin:.4rem 0; }
+.redact-loaded #redactRasterConsentLabel { flex-direction:row !important; align-items:start; line-height:1.5; }
+.redact-loaded #redactRasterConsent { flex:none; margin-block-start:.25rem; }
+.redact-loaded #redactFallbackPanel { padding:.6rem; border:1px solid var(--border-color,#aaa); border-radius:.4rem; }
+.redact-loaded #redactFallbackPanel[hidden],.redact-loaded #redactRasterConsentLabel[hidden] { display:none !important; }
+#redactTransitionStatus { font-size:.85rem; overflow-wrap:anywhere; }
+@media(max-width:480px) { .redact-loaded #redactActions { gap:.25rem; } .redact-loaded #redactActions .btn { font-size:.75rem; padding:.35rem .4rem; } }

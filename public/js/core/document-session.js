@@ -1,18 +1,24 @@
 'use strict';
 
 import { COMPOSITION_LIMITS, safeComposition, safeCompositionSources, imageDimensions, validateCompositionResources } from './composition-state.js';
+import { validateHighlight } from './highlight-annotations.js';
 export { COMPOSITION_LIMITS } from './composition-state.js';
 
 export const MAX_ARTIFACT_BYTES = 250 * 1024 * 1024;
 export const MAX_HISTORY_BYTES = 64 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 5;
 export const MAX_SESSION_BYTES = 512 * 1024 * 1024;
-export const BOUNDARY_LOSSES = Object.freeze(['page-copy-structures-unverified', 'page-copy-form-definitions', 'page-copy-document-metadata', 'page-copy-bookmarks', 'page-copy-tags', 'page-copy-named-resources', 'page-copy-labels', 'signature-rewrite', 'structure-inspection-incomplete', 'crop-hidden-content', 'scene-baked', 'composition-baked']);
+export const MAX_ARTIFACT_DISPLAY_NAME_LENGTH = 260;
+export const BOUNDARY_LOSSES = Object.freeze(['page-copy-structures-unverified', 'page-copy-form-definitions', 'page-copy-document-metadata', 'page-copy-bookmarks', 'page-copy-tags', 'page-copy-named-resources', 'page-copy-labels', 'signature-rewrite', 'structure-inspection-incomplete', 'crop-hidden-content', 'scene-baked', 'composition-baked', 'redaction-selected-pages-rasterized', 'redaction-document-rasterized', 'redaction-metadata-removed']);
 function boundary(value) { return value && ['page-copy', 'pdf-rewrite', 'raster-redaction'].includes(value.kind) ? { kind: value.kind, losses: [...new Set((value.losses || []).filter((code) => BOUNDARY_LOSSES.includes(code)))].slice(0, 12) } : undefined; }
 function safeScene(value) {
   if (!value) return null;
   if (value.version !== 1 || typeof value.sourceRef !== 'string' || !Array.isArray(value.objects) || value.objects.length > 300) throw new Error('Invalid workspace scene.');
   const objects = value.objects.map((o) => {
+    if (o.kind === 'highlight') {
+      if (typeof o.id !== 'string' || !o.id || o.id.length > 100 || !Number.isInteger(o.pageIndex) || o.pageIndex < 0) throw new Error('Invalid highlight object.');
+      return { id: o.id, kind: o.kind, pageIndex: o.pageIndex, ...validateHighlight(o) };
+    }
     if (!['text', 'image', 'signature'].includes(o.kind) || typeof o.id !== 'string' || ![o.x, o.y, o.width, o.height].every(Number.isFinite) || o.width <= 0 || o.height <= 0 || !Number.isInteger(o.pageIndex) || o.pageIndex < 0) throw new Error('Invalid workspace object.');
     const out = { id: o.id.slice(0, 100), kind: o.kind, pageIndex: o.pageIndex, x: o.x, y: o.y, width: o.width, height: o.height };
     if (o.kind === 'text') {
@@ -44,10 +50,21 @@ export function artifactType(name, type) {
   return MIME_BY_EXTENSION[String(name).split('.').pop().toLowerCase()] || 'application/octet-stream';
 }
 
+function artifactDisplayName(name, safeName, options) {
+  // A descriptor can preserve its label only for that exact filename. A new
+  // output name must not inherit a source label through {...current} options.
+  let value = (options.name === name && typeof options.displayName === 'string' ? options.displayName : String(name)).replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
+  if (!value.trim()) value = safeName.replace(/[\u007f-\u009f]/g, '');
+  if (!value.trim()) value = 'document.pdf';
+  if (value.length > MAX_ARTIFACT_DISPLAY_NAME_LENGTH) value = value.slice(0, MAX_ARTIFACT_DISPLAY_NAME_LENGTH - 1).replace(/[\ud800-\udbff]$/, '') + '…';
+  return value;
+}
+
 function artifactDetails(name, options) {
   const capabilities = {};
   for (const key of CAPABILITIES) if (typeof options.capabilities?.[key] === 'boolean') capabilities[key] = options.capabilities[key];
-  return { boundary: boundary(options.boundary), name: String(name).replace(/[\u0000-\u001f]/g, '').slice(0, 160), type: artifactType(name, options.type), capabilities };
+  const safeName = String(name).replace(/[\u0000-\u001f]/g, '').slice(0, 160);
+  return { boundary: boundary(options.boundary), name: safeName, displayName: artifactDisplayName(name, safeName, options), type: artifactType(name, options.type), capabilities };
 }
 
 export function createArtifact(bytes, name = 'document.pdf', options = {}) {
@@ -95,7 +112,7 @@ export function createDocumentSession() {
     for (const id of resources.keys()) if (!ids.has(id)) resources.delete(id);
   }
   const copy = (value) => value ? createArtifact(value.bytes, value.name, value) : null;
-  const metadata = (value) => value ? { boundary: boundary(value.boundary), name: value.name, type: value.type, size: value.bytes.length, capabilities: { ...value.capabilities } } : null;
+  const metadata = (value) => value ? { boundary: boundary(value.boundary), name: value.name, displayName: value.displayName, type: value.type, size: value.bytes.length, capabilities: { ...value.capabilities } } : null;
   const retainedBytes = () => [...new Set([original, current, ...history, ...future].filter(Boolean).map((a) => a.bytes))].reduce((n, bytes) => n + bytes.length, resourceBytes());
   function bound() {
     collectResources();
@@ -165,7 +182,8 @@ export function createDocumentSession() {
         if (ownedCopies.has(input)) return { ...artifactDetails(inputName, descriptor), bytes: ownedCopies.get(input) };
         const artifact = createArtifact(input, inputName, descriptor); ownedCopies.set(input, artifact.bytes); return artifact;
       };
-      const candidate = stageArtifact(bytes, name, options);
+      const currentDescriptor = options.current?.name === name ? { ...options, name: options.current.name, displayName: options.current.displayName } : options;
+      const candidate = stageArtifact(bytes, name, currentDescriptor);
       const source = options.original ? stageArtifact(options.original.bytes, options.original.name, options.original) : candidate;
       const incoming = Array.isArray(options.resources) ? options.resources : [];
       if (incoming.length > 128 || incoming.reduce((n, a) => n + (a.bytes?.byteLength || 0), 0) > 96 * 1024 * 1024) throw new RangeError('Workspace resources exceed 96 MB.');
@@ -211,7 +229,7 @@ export function createDocumentSession() {
     adopt(bytes, name, options = {}) {
       const next = createArtifact(bytes, name, { ...options, capabilities: options.capabilities || current?.capabilities });
       const adoptedTaskId = taskId || crypto.randomUUID();
-      if (!composition && current && current.type === next.type && JSON.stringify(current.capabilities) === JSON.stringify(next.capabilities) && current.bytes.length === next.bytes.length && current.bytes.every((byte, index) => byte === next.bytes[index])) { taskId = adoptedTaskId; current = { ...current, name: next.name }; return this.snapshot(); }
+      if (!composition && current && current.type === next.type && JSON.stringify(current.capabilities) === JSON.stringify(next.capabilities) && current.bytes.length === next.bytes.length && current.bytes.every((byte, index) => byte === next.bytes[index])) { taskId = adoptedTaskId; current = { ...current, name: next.name, displayName: next.displayName }; return this.snapshot(); }
       const stagedHistory = current ? [...history, entry()].slice(-MAX_HISTORY_ENTRIES) : [];
       validateStagedComposition(null, compositionSources, resources, stagedHistory, [], next, original || next, null);
       if (!original) original = copy(next);
@@ -234,7 +252,7 @@ export function createDocumentSession() {
         if (!copies.has(a.bytes)) copies.set(a.bytes, a.bytes.slice());
         result.bytes = copies.get(a.bytes); return result;
       };
-      const checkpoint = (a) => a.scene ? { name: a.name, type: a.type, capabilities: { ...a.capabilities }, boundary: boundary(a.boundary), sourceRef: a.scene.sourceRef, scene: cloneScene(a.scene) } : { ...transferArtifact(a), composition: safeComposition(a.composition), compositionPublishedRevision: a.compositionPublishedRevision ?? null };
+      const checkpoint = (a) => a.scene ? { name: a.name, displayName: a.displayName, type: a.type, capabilities: { ...a.capabilities }, boundary: boundary(a.boundary), sourceRef: a.scene.sourceRef, scene: cloneScene(a.scene) } : { ...transferArtifact(a), composition: safeComposition(a.composition), compositionPublishedRevision: a.compositionPublishedRevision ?? null };
       return { ...this.snapshot(), original: transferArtifact(original), current: transferArtifact(current), history: history.map(checkpoint), future: future.map(checkpoint), scene: cloneScene(scene), composition: safeComposition(composition), compositionSources: safeCompositionSources(compositionSources), resources: [...resources.values()].map(transferArtifact) };
     },
     composition() { return safeComposition(composition); },
@@ -246,7 +264,7 @@ export function createDocumentSession() {
       const first = staged.resources.get(next.items[0].originalRef);
       validateStagedComposition(next, staged.sources, staged.resources, [], [], first, first, null);
       assertCompositionOwner(guards, staged.ownerGeneration);
-      return this.begin(first.bytes, first.name, { type: first.type, composition: next, compositionSources: staged.sources, resources: [...staged.resources.values()] });
+      return this.begin(first.bytes, first.name, { name: first.name, displayName: first.displayName, type: first.type, composition: next, compositionSources: staged.sources, resources: [...staged.resources.values()] });
     },
     async startCompositionFromCurrent(pair, guards = {}) {
       assertCompositionOwner(guards);
