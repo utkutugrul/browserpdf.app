@@ -121,7 +121,7 @@ test('rich fixture reports bounded detectable structures without executing or fo
   expect(coreReport.pageAttachments.count).toBe(1);
   expect(coreReport.annotations.count).toBeGreaterThanOrEqual(3);
   expect(coreReport.linksAndActions.count).toBeGreaterThanOrEqual(1);
-  expect(coreReport.javascript).toEqual({ documentActions: 1, pageActions: 1, locations: [{ page: 1, count: 1 }] });
+  expect(coreReport.javascript).toEqual({ documentActions: 1, pageActions: 1, locations: [{ page: 1, count: 1 }], locationsOmitted: 0 });
   expect(coreReport.forms.fieldCount).toBe(1);
   expect(coreReport.forms.calculationOrderCount).toBe(1);
   expect(coreReport.invisibleText.operations).toBe(1);
@@ -138,6 +138,8 @@ test('cleanup is explicit, produces a real verified artifact, and leaves origina
   await page.goto('/privacy-scan');
   await page.setInputFiles('#fileInput', fixture('privacy-rich.pdf'));
   await page.click('#scanBtn');
+  await expect(page.locator('#scanResults')).toBeVisible();
+  await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'false');
   await expect(page.locator('#cleanupPanel')).toBeVisible();
   await expect(page.locator('#metadataCleanup')).toBeEnabled();
   await page.check('#metadataCleanup');
@@ -152,7 +154,12 @@ test('cleanup is explicit, produces a real verified artifact, and leaves origina
   expect(Buffer.compare(original, output)).not.toBe(0);
   await page.setInputFiles('#fileInput', { name: 'cleaned.pdf', mimeType: 'application/pdf', buffer: output });
   await page.click('#scanBtn');
-  await expect(page.locator('#findingList')).not.toContainText('Standard document metadata');
+  await expect(page.locator('#scanResults')).toBeVisible();
+  await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#findingList > li')).toHaveCount(13);
+  const metadata = page.locator('#findingList > li').filter({ has: page.getByText('Standard document metadata', { exact: true }) });
+  await expect(metadata).toHaveCount(1);
+  await expect(metadata.locator('.privacy-category-status')).toHaveText('0 · complete · Document level');
   await expect(page.locator('#findingList')).toContainText('XMP metadata');
   await expect(page.locator('#findingList')).toContainText('Catalog attachments');
 });
@@ -332,8 +339,25 @@ test('clean fixture yields no bounded findings without claiming privacy safety',
   await page.goto('/privacy-scan');
   await page.setInputFiles('#fileInput', fixture('privacy-clean.pdf'));
   await page.click('#scanBtn');
-  await expect(page.locator('#resultSummary')).toContainText('does not prove');
-  await expect(page.locator('#findingList li')).toHaveCount(0);
+  await expect(page.locator('#scanResults')).toBeVisible();
+  await expect(page.locator('.privacy-scan-workspace')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#resultSummary')).toContainText('No findings is not a privacy guarantee.');
+  const categories = [
+    ['Standard document metadata', 'Document level'], ['XMP metadata', 'Document level'],
+    ['Catalog attachments', 'Document level'], ['Page attachments', 'Page findings'],
+    ['Annotations', 'Page findings'], ['Links and actions', 'Page findings'],
+    ['Document JavaScript actions', 'Document level'], ['Page JavaScript actions', 'Page findings'],
+    ['Form fields', 'Document level'], ['Form calculation order', 'Document level'],
+    ['Signature fields', 'Document level'], ['Detectable invisible-text operations', 'Page findings'],
+    ['Sensitive text patterns', 'Page findings'],
+  ];
+  await expect(page.locator('#findingList > li')).toHaveCount(13);
+  await expect(page.locator('#findingList > li > div > strong')).toHaveText(categories.map(([label]) => label));
+  await expect(page.locator('#findingList > li .privacy-category-status')).toHaveText(categories.map(([, scope]) => `0 · complete · ${scope}`));
+  await expect(page.locator('#sensitiveDetails')).toBeHidden();
+  await expect(page.locator('#sensitiveDetails')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#sensitiveMatches > li')).toHaveCount(0);
+  await expect(page.locator('#privacyDetails > li')).toHaveCount(0);
   await expect(page.locator('#cleanupPanel')).toBeVisible();
   await expect(page.locator('#cleanupBtn')).toBeDisabled();
 });

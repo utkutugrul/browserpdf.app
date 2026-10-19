@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>(function(){try{var t=localStorage.getItem('pdf2md-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/privacy-workspace.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"PDF Privacy Scan - BrowserPDF","description":"Inspect a bounded set of detectable PDF structures and document-text patterns locally without opening links or executing embedded scripts.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","url":"https://browserpdf.app/privacy-scan","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Bounded detectable-structure inspection","Bounded sensitive-pattern locations","Verified standard document-info cleanup"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://browserpdf.app/"},{"@type":"ListItem","position":2,"name":"PDF Privacy Scan","item":"https://browserpdf.app/privacy-scan"}]}]}</script>
 </head>
 <body>
@@ -37,15 +38,24 @@
     </section>
     <aside class="trust-proof" aria-labelledby="scanProof"><div><strong id="scanProof" data-i18n="hub.privacy_proof_title">Your documents stay in this tab</strong><span data-i18n="privacy_scan.proof">BrowserPDF has no file-upload endpoint. The selected PDF and any raw text matches stay in this browser tab.</span></div></aside>
 
-    <section class="privacy-scan-workspace" aria-labelledby="scanFileHeading" aria-busy="false">
+    <section id="privacyWorkspace" class="privacy-scan-workspace" aria-labelledby="scanFileHeading" aria-busy="false">
       <h2 id="scanFileHeading" data-i18n="privacy_scan.choose">Choose one PDF</h2>
       <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="privacy_scan.drop_aria" aria-label="Choose one PDF or drop it here">
         <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
         <strong data-i18n="privacy_scan.drop_title">Choose a PDF or drop it here</strong>
-        <span data-i18n="privacy_scan.drop_help">The file is held only in page memory.</span>
+        <span data-i18n="privacy_workspace.drop_help">One PDF, up to 32 MiB and 1000 pages. Processing stays in this tab.</span>
       </div>
-      <div id="selectedFile" class="scan-file" hidden><span id="selectedFileName"></span><span id="selectedFileSize"></span></div>
-      <div class="btn-row"><button id="scanBtn" class="btn btn-primary" type="button" disabled data-i18n="privacy_scan.scan">Scan detectable risks</button><button id="clearBtn" class="btn btn-ghost" type="button" disabled data-i18n="merge.btn_clear">Clear all</button></div>
+      <details id="privacyDocumentNames" class="privacy-names" hidden><summary id="privacyDocumentNamesSummary" data-i18n="privacy_workspace.names">Document names</summary><div id="selectedFile" class="scan-file" hidden><span id="selectedFileName"></span><span id="selectedFileSize"></span></div></details>
+      <div class="btn-row privacy-toolbar"><button id="scanBtn" class="btn btn-primary" type="button" disabled data-i18n="privacy_workspace.scan">Scan detectable risks</button><button id="cancelBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.cancel">Cancel</button><button id="clearBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.clear">Clear</button><button id="retryBtn" class="btn btn-secondary" type="button" hidden data-i18n="privacy_workspace.retry">Retry retained preview / cleanup</button></div>
+      <p id="privacyStatus" role="status" aria-live="polite" data-i18n="privacy_workspace.empty">Choose a PDF of at most 32 MiB and 1000 pages.</p>
+      <button id="reloadRecoveryBtn" class="btn btn-secondary" type="button" hidden data-i18n="privacy_workspace.reload">Reload workspace and discard unsaved tab state</button>
+      <div id="privacyPageControls" class="privacy-page-controls" hidden><h3 data-i18n="privacy_workspace.current_page">Current PDF</h3><button id="previousPageBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.previous_page">Previous page</button><span id="privacyPage"></span><button id="nextPageBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.next_page">Next page</button><label for="privacyPageInput" data-i18n="privacy_workspace.page_number">Page</label><input id="privacyPageInput" type="number" inputmode="numeric" min="1" max="1000" value="1" disabled></div>
+      <div id="sourcePreview" class="privacy-preview" hidden>
+
+        <canvas id="privacyCanvas" width="0" height="0" aria-label="Current PDF preview"></canvas>
+      </div>
+      <p id="privacyDisclosures" class="privacy-disclosures"></p>
+      <div class="privacy-history"><button id="undoBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.undo">Undo chosen result</button><button id="redoBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.redo">Redo</button></div>
     </section>
 
     <section id="progressSection" class="progress-section" hidden aria-live="polite"><div class="progress-header"><span id="progressStatus" data-i18n="common.preparing">Preparing…</span></div><div id="progressTrack" class="progress-track" role="progressbar" aria-labelledby="progressStatus" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill" class="progress-fill"></div></div></section>
@@ -53,18 +63,24 @@
 
     <section id="scanResults" class="scan-results" aria-labelledby="resultsHeading" hidden>
       <div class="section-heading"><div><h2 id="resultsHeading" data-i18n="privacy_scan.results">Detectable findings</h2><p id="resultSummary"></p></div></div>
-      <ul id="findingList" class="finding-list"></ul>
-      <details id="sensitiveDetails" class="sensitive-details" hidden><summary data-i18n="privacy_scan.raw_matches">Show raw sensitive-pattern matches</summary><p class="device-warning" data-i18n="privacy_scan.raw_warning">Raw matches can contain private text. They remain collapsed and are never exposed to WebMCP.</p><ol id="sensitiveMatches"></ol></details>
+      <p id="privacyCoverage"></p>
+      <ul id="findingList" class="finding-list privacy-categories"></ul>
+      <h3 data-i18n="privacy_workspace.page_details">Selected-page findings</h3><ul id="privacyDetails" class="privacy-details"></ul>
+      <div class="privacy-page-controls"><button id="detailsPreviousBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.previous_details">Previous details</button><span id="detailsPage"></span><button id="detailsNextBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.next_details">Next details</button></div>
+      <details id="sensitiveDetails" class="sensitive-details" hidden><summary data-i18n="privacy_workspace.raw_matches">Show local raw sensitive-pattern matches</summary><p class="device-warning" data-i18n="privacy_workspace.raw_warning">Matches can contain private text and false positives. This selected-page window shows at most 25 rows. Raw values stay out of WebMCP, session history, handoffs and storage.</p><ol id="sensitiveMatches"></ol><div class="privacy-page-controls"><button id="rawPreviousBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.previous_details">Previous details</button><span id="rawPage"></span><button id="rawNextBtn" class="btn btn-ghost" type="button" disabled data-i18n="privacy_workspace.next_details">Next details</button></div></details>
     </section>
 
     <section id="cleanupPanel" class="scan-cleanup" aria-labelledby="cleanupHeading" hidden>
-      <h2 id="cleanupHeading" data-i18n="privacy_scan.cleanup_title">Optional verified cleanup</h2>
-      <label class="cleanup-choice"><input id="metadataCleanup" type="checkbox"><span><strong data-i18n="privacy_scan.cleanup_metadata">Remove standard document metadata</strong><small data-i18n="privacy_scan.cleanup_loss">Permanently removes detected Title, Author, Subject, Keywords, Creator, Producer, and document dates from a new copy only. Other categories are preserved and rescanned.</small></span></label>
-      <p id="signatureWarning" class="device-warning" hidden data-i18n="privacy_scan.signature_warning">A signature field is detectable. Rewriting the PDF can invalidate an existing digital signature.</p>
-      <button id="cleanupBtn" class="btn btn-secondary" type="button" disabled data-i18n="privacy_scan.cleanup">Create and verify cleaned copy</button>
+      <h2 id="cleanupHeading" data-i18n="privacy_workspace.cleanup_title">Optional standard Info cleanup</h2>
+      <label class="cleanup-choice"><input id="metadataCleanup" type="checkbox"><span><strong data-i18n="privacy_workspace.cleanup_metadata">Remove eight standard Info keys</strong><small data-i18n="privacy_workspace.cleanup_loss">Creates a new copy without Title, Author, Subject, Keywords, Creator, Producer, CreationDate and ModDate, including blank or nontext values. XMP, attachments, actions, forms, custom Info and hidden content are not selected for removal.</small></span></label>
+      <p id="signatureWarning" class="device-warning" hidden data-i18n="privacy_workspace.signature_warning">Every PDF rewrite can invalidate a digital signature, even when no signature field was detected.</p>
+      <button id="cleanupBtn" class="btn btn-secondary" type="button" disabled data-i18n="privacy_workspace.cleanup">Create and verify Info-cleaned copy</button>
     </section>
 
-    <section id="successSection" class="merge-result" role="status" aria-live="polite" hidden><div><h2 data-i18n="privacy_scan.ready">Verified cleaned PDF ready</h2><p id="successText"></p><ul id="lossManifest"></ul></div><button id="downloadBtn" class="btn btn-primary" type="button" data-i18n="privacy_scan.download">Download cleaned copy</button></section>
+    <section id="successSection" class="merge-result" role="status" aria-live="polite" hidden><div><h2 data-i18n="privacy_workspace.ready">Verified Info-cleaned copy</h2><p id="successText"></p><ul id="lossManifest"></ul></div><button id="downloadBtn" class="btn btn-primary" type="button" disabled data-i18n="privacy_workspace.download">Download reviewed copy</button></section>
+    <section id="privacyComparison" class="privacy-comparison" aria-live="polite"></section>
+    <section id="documentResult" class="document-result" aria-labelledby="documentResultHeading" inert hidden></section>
+    <div id="chainRow" class="chain-row" hidden></div>
     <section class="about"><h2 data-i18n="privacy_scan.limits_title">Important limits</h2><p data-i18n="privacy_scan.limits">This is not a comprehensive privacy, safety, malware, steganography, or hidden-content scan. It reports only the detectable structures and document-text patterns listed above. Pattern matches can be false positives. Embedded links and scripts are inspected as inert structure and never followed or executed.</p></section>
     <section class="about related-tools"><h2 data-i18n="common.related_tools">Related tools</h2><nav class="related-links" data-i18n-aria="common.related_tools" aria-label="Related tools"><a href="document-doctor" data-i18n="hub.document_doctor_title">Check PDF structure and rendering</a><a href="edit-metadata" data-i18n="hub.tool_edit_metadata">Edit Metadata</a><a href="workflows" data-i18n="hub.tool_workflows">PDF Workflows</a></nav></section>
   </main>

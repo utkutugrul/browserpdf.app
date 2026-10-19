@@ -1764,3 +1764,86 @@ Every actual request is GET; there are no page errors. Chromium is 151.0.7922.34
 Earlier failures and independent saved PDF/ZIP/BOM/idle proofs remain retained.
 This accepts the common three-service UI checkpoint. Full locale coverage and
 final service acceptance for 22, 25 and 29 remain open.
+
+### Privacy workspace scoped acceptance
+
+The Privacy workspace now reviews the actual selected PDF page, shows thirteen
+bounded categories with explicit coverage/status and keeps raw sensitive matches
+collapsed in local 25-row windows. Standard Info cleanup compares before/after,
+preserves the source and requires a positive selected-page result preview before
+manual Download or Use. Chosen bytes and typed source/history continue to Reader,
+Metadata or the stored Doctor handoff. This does not claim Doctor UI acceptance.
+
+Fresh UI review reproduces three P2s: restored canonical page selection was lost,
+resource IDs sharing backing buffers were undercounted, and original/resource
+aliases and future history copies escaped prospective Undo/Redo admission. The
+corrections restore/clamp the selected page, count entries independently of byte
+deduplication and reserve all three public history copies before mutation. An
+owned intake admission callback captures frozen own-data begin options after
+parsing/drain. A final focused review catches one further stale-owner callback
+after the last owner snapshot. Reordering caller callbacks before the final
+owner/signal check closes that counterexample: zero begins, A retained and exact
+false/zero failures preserved. All earlier failing probes remain retained.
+Final focused review:
+`/tmp/browserpdf-privacy-ui-final-callback-review-20261019.md`, SHA-256
+`985e198d8cc55a618270346590f97eed2d289d489dd6c425362f3dd123534c9d`.
+
+The first actual new UI invocation passes 31/36 in 40820.963 ms. All 26 functional
+author cases, four wide layouts and Root's independent golden journey pass.
+Four small-screen cases put the canvas below the 820-pixel viewport. The fifth
+failure is an authored idle-path regex treating the real js directory as a
+two-letter locale, not a measured runtime-budget failure. Report:
+`/tmp/browserpdf-root-privacy-workspace-native-first-20261019/report.json`, SHA-256
+`f800b6403b8c6de6ddec332ebf6c739790b46dbf87728314bf4b76325d691eba`.
+
+Root's unchanged EN320 diagnostic proves shared mobile button widths stack both
+page controls full-width, with duplicate heading/status margins. Scoped selected
+mobile CSS corrects those widths and margins while retaining every control,
+label and full name. The idle test maps literal root paths with containment and
+keeps the original 100000-byte/16-request limits and optional-import negatives.
+Fresh scoped review passes, SHA-256
+`41ce316151dd49dab82c9a5b76a7d444fbf71ce901f854a1ed59e10eba1b5e24`.
+Only the affected eight layouts and idle case are rerun: 9/9 pass in 10082.349 ms.
+Report: `/tmp/browserpdf-root-privacy-mobile-idle-native-first-20261019/report.json`,
+SHA-256 `c186e7ddbe466dc67c97a0606a6abb83d64e7e013f639ff69d16986b3c1c7d73`.
+The actual empty route requests eight first-party scripts totaling 72030 source
+bytes and eleven total resources, with no optional engine. Root visually inspects
+the corrected EN320 screenshot. No clean repeated all-36 invocation is claimed.
+
+Root's golden source has four rotations, CropBox/UserUnit, custom Info, XMP,
+attachment, form appearance and URI data. Page-four review and actual manual
+download produce the exact prior independently verified 3336-byte artifact,
+SHA-256 `77ff006474ba31ecb9f8e78c138506447a196b012ff5c02515ee4125d33a412c`.
+Use and the actual ready Reader retain that hash, source original and task. The
+rich saved-output preservation proof remains
+`/tmp/browserpdf-root-privacy-core-native-raw-keys-first-20261019/report.json`,
+SHA-256 `2734d37043dae0b1bbf2382574b183effda0a80be1e9bfb6ff5c51e7b09d0260`.
+
+The unchanged legacy UI eight-case invocation passes seven and fails only its
+obsolete clean-summary expectation. Its disabled-checkbox/busy/Clear/WebMCP
+scenario passes unchanged. The old cleanup negative is a transient false positive:
+it passes before the asynchronous report exists. Two test-only migrations now
+wait for a settled visible report, require all thirteen named categories and
+validate zero/complete metadata or clean statuses with their proper scope. All
+original/output-byte and XMP/attachment assertions remain. The other eleven test
+bodies stay exact. A single user-facing copy suffix replaces engineering memory
+accounting with a plain original-preservation/review instruction; scene/composition
+loss disclosures and all controller logic remain exact.
+
+Root's independent small-delta review passes, SHA-256
+`616cca11147a6008a176099f5da9edce16061fc17c3b447a1357144fb8f9ffa4`.
+Only the two affected legacy cases are rerun and pass in 4091.562 ms. Report:
+`/tmp/browserpdf-root-privacy-legacy-two-native-first-20261019/report.json`, SHA-256
+`136c54e2ab5c19d1be0360f1c0378849a9aa1b13eeb83c2628659e5b731938dc`.
+Final UI6 plus intentional phase5 test migration manifest:
+`/tmp/browserpdf-privacy-ui-legacy-two-copy-20261019/seven-path-sha256.json`, SHA-256
+`0abcdb4cf200ef838bde3176265eb33822eca9c0b14bd34d6124708636564c4d`.
+The other five accepted core/test/doc paths remain unchanged. Each new invocation
+preserves all 459 included source hashes/path inventory, 22 generated fixtures
+and private harness files, with zero skipped/flaky cases and no page errors or
+non-GET requests. Concurrent OCR41 and PDF-reader3 paths are never imported.
+
+This accepts the Privacy core/workspace checkpoint. Opaque scene-bake cleanup
+failures conservatively retain their fence and require reload; no heap or physical
+exit guarantee is made. Full locale coverage and final service31/all32 acceptance
+remain open. No production deployment is performed.
