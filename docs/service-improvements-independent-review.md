@@ -2035,3 +2035,55 @@ corpus is unused here. This accepts the pure reader/intake checkpoint only.
 Editable grids, spreadsheet print/export, PDF table extraction, service26/27
 workspaces, full locales and all32 final acceptance remain open. No production
 deployment occurs.
+## PDF Doctor policy and lifetime foundation, 2026-10-19
+
+Four new pure policy/lifetime/test/checkpoint paths add bounded diagnostic data,
+least-lossy advice and owned public PDF.js job lifetimes. Recommendations do not
+execute repairs. Rebuild admission requires failed strict and tolerant parsing
+plus complete deep page-render evidence; encrypted input is directed to Unlock.
+The shared 512 MiB retained, 96 MiB known resource and 128-entry limits remain.
+No existing Doctor route, SDK or UI imports these helpers.
+
+The initial retained owner seventy-two-case gate passes. Fresh independent review
+then finds four P2 defects: page cleanup after successful task destruction can
+create an impossible Retry, registered getter work can outlive page cleanup,
+a usage callback can insert a native handle after result validation, and the
+public timeout can await native work past the clarified sixty-second deadline.
+The original five RED controls remain unchanged. The last finding is an
+availability gap against Root's explicit deadline clarification, not an assertion
+that the earlier contract unambiguously specified public settlement.
+
+The corrected lifetime uses its tracked successful loadingTask.destroy FIRST as
+context-teardown acknowledgement, without private PDF.js methods or repeated
+destruction. Page getter/render FIRSTs drain before page cleanup. Validated owned
+result trees freeze before later caller callbacks. Finite public inspection and
+queue envelopes remain separate from actual native FIRSTs and retained leases.
+Late native exit alone cannot clear a failed deadline fence or admit successors.
+A genuine prior page-cleanup failure retains the same error; explicit Retry can
+release only after the exact owned teardown acknowledgement, without reparsing.
+Policy bytes remain unchanged.
+
+The owner runs twenty-two new focused controls and eighteen directly affected
+lifecycle controls, all passing, plus two syntax checks. Independent corrected
+review passes six controls in 69.477416 ms: five copied probes and one new neighbor.
+It verifies getter ordering, exact false cancellation, callback insertion refusal,
+finite public timeout with held leases, late-exit fencing and conservative prior
+cleanup failure/acknowledged Retry. These six controls include five corrected
+original probes and one new neighbor. The owner's 22/18 and original 72-case
+suites are not rerun by the reviewer.
+
+Corrected four-file manifest:
+`/tmp/browserpdf-doctor-first4-corrected-owner-20261019/corrected-four-manifest.json`,
+SHA-256 `9ea9c9d3e472c9575261abf8d04735b3993e32bc627578dac099dd32469f6ebc`.
+Independent corrected review:
+`/tmp/browserpdf-doctor-first4-corrected-fresh-review-20261019/review.md`, SHA-256
+`c5953fe7d48cb6a7f62f83dc5ed5e9beb271a78c0603d2e39cbc687d7296e4c4`.
+All 189 before/after verification rows remain exact, including thirty-four
+protected dependencies and the ordered 493-byte five-checkpoint aggregate.
+Repeated evidence roles are verification rows, not a unique-file count.
+
+This accepts the pure foundation only. Portable public-shaped facades and
+installed API source inspection do not establish actual PDF.js native behavior,
+physical worker exit or heap reclamation. Doctor v1/v2 core integration, SDK
+schema/distribution, UI, loss disclosure, locales and Doctor/all32 final gates
+remain open. No production deployment occurs.
