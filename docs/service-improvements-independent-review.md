@@ -525,3 +525,46 @@ All inspected artifact hashes remain unchanged. Root proof:
 and matching page pixels do not establish preservation of the complete document.
 Alternative engine discovery remains read-only, with Protect and Unlock separate
 open services; no automatic page-copy fallback is accepted.
+
+### Verified continuity commit and corrected document adapter checkpoint
+
+Root verifies the initial READ checkpoint commit and actual feature remote as
+`e8a3e92fdd0d46ee0fd479486ffd3f2e6fc2d45b`, parent `c4af338`. Its twelve approved
+paths, title-only message, empty index and unchanged accepted runtime hashes
+match. Root separately reopens all 21 actual saved native artifacts with ordinary
+pdf-lib and PDF.js, checking expected page text/order, old versus new source,
+edits and page numbering. Every artifact passes and its hash remains exact.
+Evidence: `/tmp/browserpdf-root-initial-handoff-commit-remote-verification-20261019.json`
+and `/tmp/browserpdf-root-continuity-artifacts-20261019.json`.
+
+The six-path pure document adapter A checkpoint adds bounded DOCX reading,
+actual structured DOCX writing and literal plain-text serialization on the
+accepted ZIP/model foundation. Initial owner evidence is 17/17 Node cases in
+1,037.524625 ms. Fresh independent review then finds three real missing cases:
+first nested numbering start12 becomes7, both markup compatibility branches
+are concatenated, and simple fields silently flatten. The new regression
+invocation against that original core records 17 passed/three failed in
+929.613167 ms. Original probes, DOCX files and failed results remain intact.
+
+The corrected-source gate passes 20/20 in 1,096.277959 ms. Focused fresh review
+passes at `/tmp/browserpdf-docx-adapters-corrected-review-20261019.md`, replaying
+the exact original failed inputs. An independent Python ZIP/XML oracle derives
+the saved numbering sequences `[7,12]`, `[7,12,8]` and `[7,12,8,12]`, with exact
+levels, restart flags and a shared concrete instance. A later used-child
+restart14 preserves the earlier12 and continues15 correctly on a new instance.
+Unsupported ancestor continuation rejects before output. Compatibility branches
+and simple/complex fields now reject precisely; successful literal Unicode
+successors preserve text and input bytes after each rejection.
+
+Root's independent corrected six-control invocation also passes at
+`/tmp/browserpdf-root-docx-independent-corrected-20261019/report.json`. It checks
+source list7/8, table, exact local image/extent, literal styles and Unicode,
+actual saved DOCX/readback, plain text, pre-abort plus successor, and independent
+Buffer ownership/disposal. The original simple artifact remains byte-identical:
+8,464 bytes, SHA-256
+`9f27e0dab78a6e505f8d041da0335cb93ba59db154d56d7fd3371755054587b9`.
+The separate standard-library ZIP/XML/media inspection remains passing.
+All six corrected paths and six accepted foundation/ZIP-writer hashes remain
+exact through review. No browser, Office display, PDF typography, converter
+route, shared resource integration or completed document service is inferred.
+This accepts pure adapter A for separately reviewed caller integration.
