@@ -2168,3 +2168,84 @@ are never imported.
 This accepts the PDF source/intake checkpoint. Recognition accuracy, searchable
 writer integration, direct-image intake, workspace UI, locales and final OCR/all32
 acceptance remain open. No production deployment occurs.
+## Spreadsheet source and XLSX writer checkpoint, 2026-10-19
+
+Accept the five-file PDF table source/projector and bounded XLSX writer checkpoint.
+This is source/export acceptance; the editable grid, route UI, PDF print layout,
+Use handoff, full locales and final service rows remain open.
+
+The source retains the exact original PDF text items, chunk-scoped styles, page
+selection and geometry before strict projection. Every actual item is represented
+once in a cell or an explicit unplaced record. Unsupported angles and content
+outside reviewed regions remain visible. Whole-workbook export refuses unresolved
+content without producing bytes. XLSX export preserves supported source formulas
+and cached values without claiming fresh calculation. Literal formula-looking
+strings remain strings. Supported dates, number formats, cell distinctions,
+merges, hidden sheets and print ranges retain their declared behavior.
+
+The five SSX corrections are independently reviewed: valid Error cancellation
+with exact outer reasons, no credit from late usage notifications, independent
+native destroy capture after loading-promise faults, supported decimal-string
+Print_Area sheet identity, and preservation of a first null cleanup cause. Final
+source review is `/tmp/browserpdf-spreadsheet-export-ssx05-fresh-review-20261019/review.md`,
+SHA-256 `addc0f2dd15db253e88f6cd09ef3d45c78005648d23c957ca3f6f43ea1e82524`.
+The final five-file manifest is
+`/tmp/browserpdf-spreadsheet-export-ssx05-corrected-20261019/freeze-manifest.json`,
+SHA-256 `6fcf666e02df0e10d9fcda3a535e619ec7bcde2c9338059836f8a6a1d3972c41`.
+Original failing controls and before-images remain retained; closed broad matrices
+are not rerun.
+
+The first actual Chromium invocation is retained as 1 PASS / 1 FAIL in 4156.549 ms.
+Its XLSX case saves two genuine downloads, 6175 and 6621 bytes, then reopens those
+same saved bytes through pinned public SheetJS 0.18.5. Turkish, Greek and Cyrillic
+text, TAB/CR/LF, literal escape sequences, source formula/cache, date1904 and serial0,
+false/error/blank/empty/absent cells, merge backing, very-hidden sheets and quoted
+print-area names pass. Root independently verifies ZIP layout, CRCs and XML
+against its original oracle: 248 checks pass. The ordinary output hash is
+`1b430108d2b8020ce31e103f900ac8fcc35c466485897364282a51463f20acd7`;
+the authored output hash is
+`91258902d16633be4f533a9fff4db63fcdb1f82d9bb77cbee0d83caec1ad7076`.
+The original private ZIP verifier shadowed Python next; its unchanged assertions
+pass after only renaming that local identifier. Both versions and failure remain.
+
+The PDF case initially fails the private group threshold after completing the
+actual extraction/projection/inference/refusal checks. Independent source counting
+proves the fixed-input maximum is49: source18 + app12 + SDK12 + witness6 + fixture1.
+The former strict<48 excludes even the initial48. Only this private assertion
+changes to strict<50; product128-group and 96 MiB limits remain unchanged. The
+addendum SHA-256 is
+`43b620815d85a42a50e16f5edbddb6d9b1e734f9e1d64d0634d24100c1f9d1d5`.
+The affected PDF-only successor passes in2932.463 ms, with the XLSX case retained
+from its original pass and not rerun. Its report is
+`/tmp/browserpdf-root-spreadsheet-export-native-pdf-groups-20261019/report.json`,
+SHA-256 `6ae11c47fef96386911bd7fa6feb14c453f4c2434cdc643db17cd80f61cce0e7`.
+
+Actual public PDF.js 6.2.108 retains40 native items in four chunks and eight style
+entries. Four pages preserve fractional CropBox, rotations0/90/180/270 and
+UserUnit1/2/1.25/2.5. Root's separate saved-data oracle verifies literal source
+operators, viewport baselines/angles/scales, strict item projection, complete
+provenance coverage, explicit unplaced content and whole-output refusal:381 checks
+pass. The first private oracle compared text-only96 UTF-16 units with the witness's
+512 units including retained font names/families. Its successor recomputes all
+those strings from saved raw data; the original failure is preserved and no
+native rerun follows that metadata correction.
+
+Original/current hashes and canonical owner remain unchanged through both export
+profiles and PDF work. Each actual page/stream/reader and native loading/destroy
+FIRST is observed; no duplicate reader or copied stream substitutes for it.
+Source/projector/inference/writer ownership drains and releases. PDF peak known
+resource usage is98420314 bytes in49 groups; peak retained usage is98429920 bytes.
+SDK/app ownership stays charged until the awaited actual page close. These are
+logical ownership bounds, not physical heap or worker-exit proof.
+
+Root ZIP/XML proof:
+`/tmp/browserpdf-root-spreadsheet-saved-xlsx-verification-20261019.json`, SHA-256
+`57f04dbdd05588f18a3556aaca83b6f59b42664de48143fe18fe1f7d041564ee`.
+Root PDF proof:
+`/tmp/browserpdf-root-spreadsheet-pdf-export-verification-20261019.json`, SHA-256
+`2cdbebfb2b3e5a55ddc0b82366a80f3b388f9cef49b23085c9069bc895025b1f`.
+All503 included source hashes/path inventory,22 generated fixtures and private
+harness files remain exact across the affected native gate. There are zero
+skips, flaky cases, page errors, non-GET requests or excluded imports. Concurrent
+Reader5 and Doctor19 paths are explicit exceptions and are never imported.
+This accepts only the source/export checkpoint. No production deployment occurs.
