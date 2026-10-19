@@ -12,7 +12,7 @@ import {
   offerChain,
   takeChainedFile,
   wireDropzone,
-  readPdfFile, readExternalPdfFile, documentSession, reviewResult,
+  readPdfFile, readExternalPdfFile, documentSession, reviewResult, createOperationScope,
 } from './tool-ui.js';
 import { t } from './i18n.js';
 
@@ -49,6 +49,9 @@ let pendingImports = 0;
 let importEpoch = 0;
 const activeImportBatches = new Set();
 let pagesAdapter = null, importQueue = Promise.resolve(), reservedBytes = 0, reservedFiles = 0;
+let localIntent = 0, initialPending = false, initialSource = null;
+const handoffIntake = createOperationScope();
+const sameOwner = (owner) => { const now = documentSession.snapshot(); return owner.taskId === now.taskId && owner.revision === now.revision && owner.generation === now.generation; };
 
 const taskState = createTaskState({
   errorSection,
@@ -93,7 +96,7 @@ function renderList(focusTarget = null) {
     : t('merge.js_file_count_other', '{n} files', { n: items.length });
   mergeBtn.disabled = items.length < 2 || mergeInProgress || pendingImports > 0 || (pagesAdapter && !pagesAdapter.validMergeRanges(items));
   mergeWorkspace.setAttribute('aria-busy', String(pendingImports > 0));
-  clearBtn.disabled = items.length === 0 && pendingImports === 0;
+  clearBtn.disabled = items.length === 0 && pendingImports === 0 && !initialPending;
   mergeActionHint.hidden = items.length >= 2;
 
   items.forEach((item, index) => {
@@ -238,7 +241,7 @@ function selectionIsStable() {
 }
 
 function importBatchIsCurrent(batch) {
-  return batch.epoch === importEpoch && !batch.controller.signal.aborted;
+  return batch.epoch === importEpoch && !batch.controller.signal.aborted && (!batch.isCurrent || batch.isCurrent());
 }
 
 function invalidatePendingImports() {
@@ -263,7 +266,8 @@ function removeSelectedFile(id) {
   removeItem(id);
 }
 
-async function addFiles(fileArray) {
+async function addFiles(fileArray, options = {}) {
+  if (options.isCurrent && !options.isCurrent()) return;
   hideError();
   const pdfFiles = fileArray.filter((f) => looksLikePdfFile(f));
   if (pdfFiles.length < fileArray.length) {
@@ -275,7 +279,7 @@ async function addFiles(fileArray) {
     showError(t('pages.source_budget', 'Use at most 20 PDF sources and 250 MB combined.')); return;
   }
   reservedBytes += incomingBytes; reservedFiles += pdfFiles.length;
-  const batch = { epoch: importEpoch, controller: new AbortController(), bytes: incomingBytes, files: pdfFiles.length, released: false };
+  const batch = { epoch: importEpoch, controller: new AbortController(), bytes: incomingBytes, files: pdfFiles.length, released: false, isCurrent: options.isCurrent };
   activeImportBatches.add(batch);
   pendingImports = activeImportBatches.size;
   selectionWillChange();
@@ -307,6 +311,7 @@ async function addFiles(fileArray) {
         if (items.reduce((n, item) => n + item.pageCount, parsed.pageCount) > 10000) throw new RangeError('Keep between 1 and 10,000 source pages.');
         selectionWillChange();
         items.push({ id: nextId++, file, bytes, pageCount: parsed.pageCount });
+        if (options.native) history.replaceState(null, '', location.pathname);
       } catch (err) {
         if (!importBatchIsCurrent(batch)) break;
         showError(t('merge.js_err_read_file', 'Couldn\'t read "{name}": {message}.', { name: file.name, message: err?.message || t('merge.js_err_unknown', 'unknown error') }));
@@ -321,14 +326,21 @@ async function addFiles(fileArray) {
   }
 }
 
-wireDropzone(dropzone, fileInput, addFiles);
+wireDropzone(dropzone, fileInput, (files) => {
+  localIntent++; handoffIntake.cancel(); initialPending = false;
+  void addFiles(files, { native: true });
+});
 
 clearBtn.addEventListener('click', () => {
+  localIntent++; handoffIntake.cancel(); initialPending = false;
+  if (initialSource?.epoch === importEpoch && sameOwner(initialSource.owner)) documentSession.clear();
+  initialSource = null;
   invalidatePendingImports();
   selectionWillChange();
   items = [];
   hideError();
   taskState.hideProgress();
+  history.replaceState(null, '', location.pathname);
   renderList();
 });
 
@@ -441,6 +453,20 @@ mergeWebMcp = setupMergeWebMcp({
   mergeSelectedFiles,
 });
 
-takeChainedFile().then((file) => {
-  if (file) readPdfFile(file, { validate: true }).then((parsed) => { if (parsed) void addFiles([file]); });
+const initialIntent = localIntent, initialRequest = handoffIntake.begin(), initialOwner = documentSession.snapshot();
+const ownsInitial = () => initialIntent === localIntent && initialRequest.isCurrent();
+const initialParams = new URLSearchParams(location.search), initialWorkflow = initialParams.get('workflow'), initialFile = initialParams.get('file');
+initialPending = !!initialWorkflow && !!initialFile?.startsWith(`${initialWorkflow}:`);
+if (initialPending) renderList();
+void takeChainedFile({ signal: initialRequest.signal, isCurrent: () => ownsInitial() && sameOwner(initialOwner) }).then(async (file) => {
+  if (!file || !ownsInitial() || !sameOwner(initialOwner)) return;
+  const operation = { signal: initialRequest.signal, isCurrent: () => ownsInitial() && sameOwner(initialOwner) };
+  const parsed = await readPdfFile(file, { validate: true, operation });
+  if (!parsed || !ownsInitial() || !sameOwner(parsed.owner)) return;
+  // Once accepted, A is an additive source. A later source choice only revokes
+  // descriptor intake; Clear or a different canonical owner revokes this source.
+  const source = { owner: parsed.owner, epoch: importEpoch }; initialSource = source;
+  await addFiles([file], { isCurrent: () => initialSource === source && source.epoch === importEpoch && sameOwner(source.owner) });
+}).finally(() => {
+  if (initialIntent === localIntent) { initialPending = false; renderList(); }
 });

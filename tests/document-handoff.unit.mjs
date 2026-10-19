@@ -52,3 +52,72 @@ test('empty composition history opens a compatible mode without attempting PDF e
   session.redo(); env.stashCompositionForChain = async () => { throw new Error('Storage unavailable'); };
   await assert.rejects(restoreCompositionHistory('undo',{},env),/Storage unavailable/); assert.equal(session.composition(),null); assert.deepEqual(session.current().bytes,bytes('chosen')); assert.equal(session.historyTarget('undo').composition.items.length,0);
 });
+
+
+for (const phase of ['session', 'store', 'cleanup', 'workflow', 'files']) {
+  for (const replacement of ['native B', 'Clear', 'rejected B']) test(`initial ${phase} read loses to ${replacement} intent before later work or File delivery`, async () => {
+    const entered = deferred(), release = deferred(), calls = [];
+    let current = true;
+    const workflow = { id: 'initial-read', kind: 'handoff', fileRefs: ['initial-read:input'], inputDescriptor: { name: 'A.pdf', type: 'application/pdf' } };
+    const step = async (name, value) => { calls.push(name); if (name === phase) { entered.resolve(); await release.promise; } return value; };
+    const store = { cleanupExpired: () => step('cleanup'), getWorkflow: () => step('workflow', workflow), getFiles: () => step('files', [{ id: 'initial-read:input', workflowId: 'initial-read', bytes: bytes('A') }]) };
+    const env = environment(store);
+    env.ensureDocumentSession = () => step('session'); env.loadWorkflowStore = () => step('store', store);
+    const pending = takeChainedFile(workflow.id, workflow.fileRefs[0], env, { isCurrent: () => current });
+    await entered.promise;
+    current = false;
+    if (replacement === 'native B') env.documentSession.begin(bytes('B'), 'B.pdf');
+    if (replacement === 'Clear') env.documentSession.clear();
+    const expected = env.documentSession.transfer();
+    release.resolve();
+    assert.equal(await pending, null);
+    assert.deepEqual(calls, ['session', 'store', 'cleanup', 'workflow', 'files'].slice(0, ['session', 'store', 'cleanup', 'workflow', 'files'].indexOf(phase) + 1));
+    assert.deepEqual(env.documentSession.transfer(), expected);
+  });
+}
+
+test('initial read respects abort before loading and can retry a storage failure without losing typed descriptors', async () => {
+  const controller = new AbortController(); controller.abort(); let calls = 0;
+  const fileId = 'retry-read:input';
+  const workflow = { id: 'retry-read', kind: 'handoff', fileRefs: [fileId], inputDescriptor: { name: 'bounded-label', displayName: 'İstanbul current.pdf', type: 'application/pdf', capabilities: { searchable: true } } };
+  const store = {
+    async cleanupExpired() {},
+    async getWorkflow() { if (++calls === 1) throw new Error('Storage unavailable'); return workflow; },
+    async getFiles() { return [{ id: fileId, workflowId: workflow.id, bytes: bytes('CURRENT') }]; },
+  };
+  const env = environment(store), before = env.documentSession.transfer();
+  assert.equal(await takeChainedFile(workflow.id, fileId, env, { signal: controller.signal }), null); assert.equal(calls, 0);
+  assert.equal(await takeChainedFile(workflow.id, fileId, env), null);
+  const file = await takeChainedFile(workflow.id, fileId, env, { isCurrent: () => true });
+  assert.equal(file.name, 'bounded-label'); assert.equal(file.type, 'application/pdf');
+  assert.equal(file.browserpdfSession.displayName, 'İstanbul current.pdf');
+  assert.deepEqual(file.browserpdfSession.capabilities, { searchable: true });
+  assert.deepEqual(new Uint8Array(await file.arrayBuffer()), bytes('CURRENT'));
+  assert.deepEqual(env.documentSession.transfer(), before);
+});
+
+test('readPdfFile returns its exact commit owner when a newer task wins before the caller resumes', async () => {
+  const previousDocument = globalThis.document;
+  const node = () => ({ classList: { add() {} }, replaceChildren() {}, setAttribute() {}, append() {} });
+  globalThis.document = { readyState: 'loading', addEventListener() {}, getElementById() { return null; }, querySelector() { return null; }, createElement: node, createTextNode: (value) => value };
+  try {
+    const ui = await import('../public/js/tool-ui.js');
+    await ui.ensureDocumentSession();
+    const originalBegin = ui.documentSession.begin;
+    let accepted;
+    ui.documentSession.begin = (...args) => {
+      const committed = originalBegin(...args);
+      accepted = { taskId: committed.taskId, revision: committed.revision, generation: committed.generation };
+      queueMicrotask(() => originalBegin(bytes('newer B'), 'B.pdf'));
+      return committed;
+    };
+    try {
+      const result = await ui.readPdfFile(new File([bytes('accepted A')], 'A.pdf', { type: 'application/pdf' }));
+      assert.deepEqual(result.owner, accepted);
+      assert.deepEqual(Object.keys(result.owner).sort(), ['generation', 'revision', 'taskId']);
+      assert.notEqual(result.owner.taskId, ui.documentSession.snapshot().taskId);
+      assert.equal(ui.documentSession.current().name, 'B.pdf');
+      assert.deepEqual(result.bytes, bytes('accepted A'));
+    } finally { ui.documentSession.begin = originalBegin; }
+  } finally { globalThis.document = previousDocument; }
+});

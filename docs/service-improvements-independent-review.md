@@ -467,3 +467,61 @@ successful resume render's `hideError()` as a candidate cause. Its exact error
 lifecycle is being classified before a product correction. This invocation is
 not recorded as a passing matrix. Other workers resume only their disjoint pure
 document cores and isolated protection feasibility after this browser closes.
+
+### Verified pure-core commit and corrected initial READ acceptance
+
+The nine-path pure foundation checkpoint is committed and pushed as
+`c4af338685971e13f1eb887c2cf44946e1a0e400`, parent `a28b4ee`. Root independently
+checks actual feature remote, local HEAD and upstream identity, exact path set,
+all accepted hashes, title-only message and empty index. All forty audit files
+remain present and excluded work stays intact. The independent proof is
+`/tmp/browserpdf-root-pure-foundations-commit-remote-verification-20261019.json`.
+
+The corrected initial READ matrix passes all 21 cases in 66,839.374 ms, zero
+skipped/flaky cases or top-level errors. All 272 frozen runtime/test/SDK/script/
+package hashes, path inventory and configuration stay exact. All 21 actual
+network traces exclude the six concurrent new DOCX adapter paths. Evidence:
+`/tmp/browserpdf-initial-handoff-native-corrected-20261019-results.json` and its
+wrapper `final.json`. The added native error-lifecycle case preserves rejected-B
+feedback while A resumes, clears it after a successful edit, displays a later
+actual validation failure, then succeeds and saves a two-page numbered 9/10 PDF
+through Use and native Add Text continuation. Its artifact is 9,251 bytes,
+SHA-256 `7e2cd9d12c74bfa430bb709c994b09e1b3f24610517ab60c64f460f103866c55`.
+
+The combined configuration's anchored idle grep collected zero idle cases; no
+idle pass is inferred from it. The separate actual idle invocation passes 1/1
+in 756.662 ms, again with 272 unchanged hashes/path inventory/configuration and
+one retained network trace. Its unchanged assertions require fewer than 100,000
+first-party JavaScript bytes and at most sixteen requests on the five selected
+routes. Proof: `/tmp/browserpdf-initial-handoff-native-idle-20261019-results.json`.
+Neither invocation runs global setup or changes the durable server.
+
+Final focused quality and anti-pattern review reports no actionable finding at
+`/tmp/browserpdf-initial-handoff-final-corrections-review-20261019.md`; all ten
+source/test hashes match before and after. The earlier 44 passing Node cases
+remain scoped handoff/composition/text/resource evidence. Store/session sources
+and the stash write prefix are unchanged, so existing store/expiry evidence is
+retained without claiming a new store test invocation. The first 13/7 matrix
+and its six helper causes plus one corrected product feedback race stay intact.
+This accepts the narrow initial READ continuity checkpoint. Conversion routes,
+remaining platform work, all locales and final all-32 acceptance remain open.
+
+### Protection engine counterexamples
+
+The exact pinned Cantoo 2.7.4 public API fails all sixteen strict preservation
+cases across eight synthetic source PDFs, 44,402 aggregate input bytes. Five
+unencrypted load/save controls preserve their graphs; ten further classification
+controls distinguish encryption corruption from decryption reference loss.
+The bounded report and all original failed artifacts remain at
+`/tmp/browserpdf-protection-feasibility-20261019/report.md`. No application or
+dependency change follows this experiment.
+
+Root independently reopens two source PDFs, their plain-save controls and their
+actual unlocked outputs with ordinary pdf-lib. Original Unicode titles survive
+plain save but are absent after Unlock; catalog language `en-US` becomes empty,
+while the protected output still contains its plaintext literal language string.
+All inspected artifact hashes remain unchanged. Root proof:
+`/tmp/browserpdf-root-protection-counterexample-20261019.json`. Password access
+and matching page pixels do not establish preservation of the complete document.
+Alternative engine discovery remains read-only, with Protect and Unlock separate
+open services; no automatic page-copy fallback is accepted.

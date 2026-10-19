@@ -376,11 +376,16 @@ export async function readPdfFile(file, options = {}) {
     }
   }
   if (!ownsIntake()) return null;
-  try { await ensureDocumentSession(); if (!ownsIntake()) return null; documentSession.begin(bytes, file.name, { ...file.browserpdfSession, type: 'application/pdf' }); }
+  let owner;
+  try {
+    await ensureDocumentSession(); if (!ownsIntake()) return null;
+    const accepted = documentSession.begin(bytes, file.name, { ...file.browserpdfSession, type: 'application/pdf' });
+    owner = { taskId: accepted.taskId, revision: accepted.revision, generation: accepted.generation };
+  }
   catch (error) { if (ownsIntake()) showError(error.message); return null; }
   clearResult();
   showDocumentIdentity();
-  return { bytes, baseName: file.name.replace(/\.pdf$/i, '') || 'document' };
+  return { bytes, baseName: file.name.replace(/\.pdf$/i, '') || 'document', owner };
 }
 
 // Wires the multi-select OCR language chip row (same pattern as the
@@ -434,12 +439,18 @@ export async function stashCompositionForChain(targetSlug, options = {}) {
 }
 
 // Keep empty-page handoff checks ahead of the optional module request.
-export async function takeChainedFile() {
+export async function takeChainedFile(options = {}) {
   try {
     const params = new URLSearchParams(window.location.search);
     const workflowId = params.get('workflow'), fileId = params.get('file');
     if (!workflowId || !fileId || !fileId.startsWith(`${workflowId}:`)) return null;
-    return await (await loadHandoffSupport()).takeChainedFile(workflowId, fileId, handoffEnvironment);
+    const owner = documentSession.snapshot(), intake = intakeGeneration;
+    const isCurrent = () => intake === intakeGeneration && sameOwner(owner, documentSession.snapshot()) && !options.signal?.aborted && (!options.isCurrent || options.isCurrent());
+    if (!isCurrent()) return null;
+    const module = await loadHandoffSupport();
+    if (!isCurrent()) return null;
+    const file = await module.takeChainedFile(workflowId, fileId, handoffEnvironment, { signal: options.signal, isCurrent });
+    return isCurrent() ? file : null;
   } catch { return null; }
 }
 

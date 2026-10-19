@@ -119,13 +119,13 @@ export async function openPageEffectWorkspace(mode, { isCurrent = () => true } =
       if (owns() && token === logoEpoch) { logoPending = false; logoInvalid = true; preparing = false; failed = true; showError(error.message); update(); }
     }
   }
-  function schedule() {
+  function schedule({ preserveError = false } = {}) {
     clearTimeout(timer);
     if (logoPending || logoInvalid) { preparing = false; update(); return; }
-    failed = false; preparing = true; update(); timer = setTimeout(() => { void prepare(); }, 180);
+    failed = false; preparing = true; update(); timer = setTimeout(() => { void prepare({ preserveError }); }, 180);
   }
   function fail(error) { if (owns() && error.name !== 'AbortError') { preparing = rendering = false; failed = true; showError(error.message); update(); } }
-  async function prepare() {
+  async function prepare({ preserveError = false } = {}) {
     if (!owns() || !value || !panel || logoPending || logoInvalid) return;
     const token = epoch; controller?.abort(); const request = new AbortController(); controller = request; const signal = request.signal;
     const current = () => owns() && token === epoch && controller === request && !signal.aborted;
@@ -136,7 +136,7 @@ export async function openPageEffectWorkspace(mode, { isCurrent = () => true } =
       const result = mode === 'split' ? { bytes:value.bytes, capabilities:value.capabilities } : await applyPageEffect(value.bytes, options, { pdfLib,pdfjs,pdfjsAssets:PDFJS_ASSET_URLS,embedFont:embedUnicodeFont,signal });
       if (!current()) return;
       candidate = result; candidateEpoch = token; preparing = false;
-      if (await renderCurrentCandidate()) { if (current() && readyCandidate()) { failed = false; hideError(); update(); } }
+      if (await renderCurrentCandidate()) { if (current() && readyCandidate()) { failed = false; if (!preserveError) hideError(); update(); } }
     } catch (error) { if (current()) fail(error); }
   }
   async function renderCurrentCandidate() {
@@ -228,5 +228,5 @@ export async function openPageEffectWorkspace(mode, { isCurrent = () => true } =
   }
   for (const control of Object.values(controls)) { control.dataset.initialValue = control.value; control.dataset.initialChecked = String(control.checked); }
   await hydrate();
-  return { suspend(){suspended=true;invalidate();if((logoPending||logoInvalid)&&controls.watermarkLogoInput)controls.watermarkLogoInput.value='';logoEpoch++;logoPending=logoInvalid=false;pendingLogoName='';preparing=processing=false;root.setAttribute('aria-busy','true');for(const control of root.querySelectorAll('button,input,select'))control.disabled=true;}, resume(){suspended=false;if(owns())schedule();}, dispose(){if(disposed)return;invalidate();disposed=true;logoEpoch++;panel?.dispose();canvas.width=canvas.height=0;root.remove();document.body.classList.remove('page-effects-loaded');} };
+  return { suspend(){suspended=true;invalidate();if((logoPending||logoInvalid)&&controls.watermarkLogoInput)controls.watermarkLogoInput.value='';logoEpoch++;logoPending=logoInvalid=false;pendingLogoName='';preparing=processing=false;root.setAttribute('aria-busy','true');for(const control of root.querySelectorAll('button,input,select'))control.disabled=true;}, resume({preserveError=false}={}){suspended=false;if(owns())schedule({preserveError});}, dispose(){if(disposed)return;invalidate();disposed=true;logoEpoch++;panel?.dispose();canvas.width=canvas.height=0;root.remove();document.body.classList.remove('page-effects-loaded');} };
 }

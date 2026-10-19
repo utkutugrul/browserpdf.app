@@ -58,15 +58,21 @@ export async function stashForChain(bytes, name, targetSlug, options = {}, { ens
   return { workflowId, fileId: file.id, isCurrent };
 }
 
-export async function takeChainedFile(workflowId, fileId, { ensureDocumentSession, documentSession, getSessionCore, loadWorkflowStore }) {
+export async function takeChainedFile(workflowId, fileId, { ensureDocumentSession, documentSession, getSessionCore, loadWorkflowStore }, options = {}) {
+  const owns = () => !options.signal?.aborted && (!options.isCurrent || options.isCurrent());
   try {
+    if (!owns()) return null;
     await ensureDocumentSession();
-    const sessionCore = getSessionCore();
+    if (!owns()) return null;
     const store = await loadWorkflowStore();
+    if (!owns()) return null;
     await store.cleanupExpired();
+    if (!owns()) return null;
     const workflow = await store.getWorkflow(workflowId);
+    if (!owns()) return null;
     if (!workflow || !workflow.fileRefs.includes(fileId)) return null;
     const owned = await store.getFiles(workflowId, workflow.fileRefs);
+    if (!owns()) return null;
     const refs = new Map(owned.filter((value) => workflow.fileRefs.includes(value.id)).map((value) => [value.id, value]));
     const entry = refs.get(fileId);
     if (!entry || entry.workflowId !== workflowId) return null;
@@ -83,6 +89,7 @@ export async function takeChainedFile(workflowId, fileId, { ensureDocumentSessio
       history: restoreCheckpoints(workflow.historyCheckpoints, workflow.historyRefs, workflow.historyScenes), future: restoreCheckpoints(workflow.futureCheckpoints, workflow.futureRefs, workflow.futureScenes), scene: workflow.scene, composition: workflow.composition, compositionSources: workflow.compositionSources, compositionPublishedRevision: workflow.compositionPublishedRevision, resources };
     if (original?.workflowId === workflowId) inherited.original = { ...original, ...workflow.originalDescriptor, bytes: original.bytes };
     Object.defineProperty(file, 'browserpdfSession', { value: inherited });
+    if (!owns()) return null;
     return file;
   } catch {
     return null;
